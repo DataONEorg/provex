@@ -1,5 +1,5 @@
-PROPUB_ROOT=/Users/scdey/mySpace
+PROPUB_ROOT=/Users/sean/ProPubProj
 ENV_SEPARATOR=/
 DOT_PATH=/usr/local/bin/dot
-SL_DLV_PATH=/Users/scdey/mySpace/propub/exe/propub_sw.sh
-NI_DLV_PATH=/Users/scdey/mySpace/propub/exe/propub_in.sh
+SL_DLV_PATH=/Users/sean/ProPubProj/propub/exe/propub_sw.sh
+NI_DLV_PATH=/Users/sean/ProPubProj/propub/exe/propub_in.sh
