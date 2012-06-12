@@ -13,7 +13,7 @@ public class EnvInfo {
 	public void setSetupInfo(Constants constants) {
 		
 		FileDriver fd = new FileDriver();
-		lines = fd.readFile("/Users/scdey/mySpace/propub/exe/config.txt", "=");
+		lines = fd.readFile("/Users/sean/ProPubProj/propub/exe/config.txt", "=");
 		//lines = fd.readFile("C:\\saumen\\propub\\exe\\config_win.txt", "=");
 		
 		constants.PROPUB_ROOT = lines.get("PROPUB_ROOT");
