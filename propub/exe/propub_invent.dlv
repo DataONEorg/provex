@@ -1,0 +1,202 @@
+invent_data(d1,d11).
+invent_data(d2,d21).
+invent_data(d3,d31).
+invent_data(d4,d41).
+invent_data(d5,d51).
+invent_data(d6,d61).
+invent_data(a,a1).
+invent_data(b,b1).
+invent_data(c,c1).
+invent_data(d,d1).
+invent_data(e,e1).
+
+invent_actor(d1,d12).
+invent_actor(d2,d22).
+invent_actor(d3,d32).
+invent_actor(d4,d42).
+invent_actor(d5,d52).
+invent_actor(d6,d62).
+invent_actor(a,a2).
+invent_actor(b,b2).
+invent_actor(c,c2).
+invent_actor(d,d2).
+invent_actor(e,e2).
+
+%%%%%%%%%%%%%%%%% Set Inputs %%%%%%%%%%%%%%
+
+is_lineage :- lineage(_).
+all_lineage :- not is_lineage. 
+
+hide(X) :- abstract(X,_).
+hide(X) :- hide_node(X).
+
+%%%%%%%%%%%%%%%%% Base IDBs %%%%%%%%%%%%%%%
+
+node(D) :- 
+	data(D,_).
+node(A) :- 
+	actor(A,_).
+
+dep(X,Y) :-
+	used(X,Y).
+dep(X,Y) :-
+	gen_by(X,Y).
+
+l_dep(X,Y) :- 
+	lineage(X), 
+	dep(X,Y). 
+l_dep(Y,Z) :- 
+	l_dep(X,Y), 
+	dep(Y,Z).
+l_dep(X,Y) :- 
+	all_lineage, 
+	dep(X,Y).
+
+tcdep(X,Y) :- l_dep(X,Y).
+tcdep(X,Y) :- tcdep(X,Z), tcdep(Z,Y).
+
+%%%%%%%%%%%%%%%%% Frame Rules %%%%%%%%%%%%%%%
+
+del_node(N)  :- 
+	hide(N), 
+	node(N).
+
+del_dep(X,Y) :- 
+	hide(X), 
+	l_dep(X,Y).
+del_dep(X,Y) :- 
+	hide(Y), 
+	l_dep(X,Y).
+del_dep(X,Y) :- 
+	hide_edge(X,Y), 
+	l_dep(X,Y).
+
+in(Y) :- 
+	del_node(X), 
+	l_dep(X,Y), 
+	not del_node(Y).
+
+out(X) :- 
+	del_node(Y), 
+	l_dep(X,Y), 
+	not del_node(X). 
+
+in_dep(X,Y) :- 
+	tcdep(X,Y), 
+	in(Y), 
+	out(X).
+
+in_dep1(X,Y2):- 
+	in_dep(X,Y1), 
+	in_dep(X,Y2), 
+	tcdep(Y1,Y2). 
+
+in_dep2(X,Y) :- 
+	in_dep(X,Y), 
+	not in_dep1(X,Y).
+
+l_dep1(X,Y) :- 
+	l_dep(X,Y), 
+	not del_node(X), 
+	not del_node(Y). 
+
+tcdep1(X,Y) :- 
+	l_dep1(X,Y). 
+tcdep1(X,Y) :- 
+	tcdep1(X,Z), 
+	tcdep1(Z,Y).
+
+in_dep3(X,Y):- 
+	in_dep2(X,Y), 
+	tcdep1(X,Y). 
+
+in_dep4(X,Y) :- 
+	in_dep2(X,Y), 
+	not in_dep3(X,Y).
+
+in_actor(A) :- 
+	in(A), 
+	actor(A,_). 
+
+ins_data(A1, A1) :- 
+	in_actor(A), 
+        invent_data(A,A1). 
+ins_dep(A1,A) :- 
+	in_actor(A),
+        invent_data(A,A1).
+
+in_dep5(X,Y) :- 
+	in_dep4(X,Y), 
+	not in_actor(Y).
+
+in_dep5(X,Y1) :- 
+	in_dep4(X,Y), 
+	in_actor(Y),
+        invent_actor(Y,Y1).
+
+diff_in_dep(X1,X2):- 
+	in_dep5(X1,Y),
+	in_dep5(X2,_),
+	not in_dep5(X2,Y).
+
+diff_in_dep(X1,X2):- 
+	diff_in_dep(X2,X1).
+
+same_in_dep(X1,X2):- 
+	in_dep5(X1,_), 
+	in_dep5(X2,_),
+	not diff_in_dep(X1,X2). 
+
+not_smaller(X):- 
+	same_in_dep(X,Y), 
+	X > Y.
+
+unique(X):- 
+	out(X), 
+	not not_smaller(X).
+
+ins_data(Y1, Y1) :- 
+	actor(X,_), 
+	same_in_dep(X,Y), 
+	unique(Y),
+        invent_data(Y,Y1).
+
+ins_dep(X,Y1) :- 
+	actor(X,_), 
+	same_in_dep(X,Y), 
+	unique(Y),
+        invent_data(Y,Y1).
+
+ins_actor(S1, S1) :- 
+	unique(S),
+        invent_actor(S,S1).
+
+ins_dep(D,S1) :- 
+	same_in_dep(D,S), 
+	unique(S), 
+	data(D,_),
+        invent_actor(S,S1).
+
+ins_dep(D1,A1) :- 
+	same_in_dep(X,S), 
+	unique(S), 
+	actor(X,_),
+        invent_actor(S,A1),
+        invent_data(S,D1).
+
+ins_dep(A1,D) :- 
+	unique(S), 
+	in_dep5(S,D),
+        invent_actor(S,A1).
+
+f_dep(X,Y) :- l_dep(X,Y), not del_dep(X,Y).
+f_dep(X,Y) :- ins_dep(X,Y).
+
+l_data(X,R)   :-  data(X,R), not del_node(X).
+l_data(X,R)   :-  ins_data(X,R).
+
+l_actor(X,R)   :-  actor(X,R), not del_node(X).
+l_actor(X,R)   :-  ins_actor(X,R).
+
+l_used(X,Y)   :-  f_dep(X,Y), l_data(Y,_), l_actor(X,_).	
+l_gen_by(X,Y) :-  f_dep(X,Y), l_data(X,_), l_actor(Y,_).
