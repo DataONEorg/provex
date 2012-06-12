@@ -4,12 +4,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import parser.DLVToDot;
 import propub.Constants;
 
 public class DOTDriver {
-	private   String DOT_OUT_TYPE = "jpg";
+	private   String DOT_OUT_TYPE = "gif"; // was "jpg"
 	private   String DOT_OUT_EXTN = ".jpg";
 	
 	Constants constants;
@@ -58,6 +59,7 @@ public class DOTDriver {
           img = File.createTempFile("graph_", DOT_OUT_EXTN, new File(constants.DOT_TMP_DIR));
           Runtime rt = Runtime.getRuntime();
           String[] args = {constants.DOT_PATH, "-T" + DOT_OUT_TYPE, dotFile.getAbsolutePath(), "-o", img.getAbsolutePath()};
+		  System.out.println("Running graph command: " + Arrays.toString(args));
           Process p = rt.exec(args);
           
           p.waitFor();
