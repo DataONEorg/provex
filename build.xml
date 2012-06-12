@@ -15,17 +15,22 @@
 
 <target name="clean-compile" depends="clean,compile" />
 
+<target name="all" depends="clean-compile,run" />
+
 <target name="clean">
 	<delete dir="ProvenancePublisher/bin" />
 </target>
 
 <target name="compile">
+	<mkdir dir="ProvenancePublisher/bin" />
 	<javac srcdir="ProvenancePublisher/src" destdir="ProvenancePublisher/bin">
 		<classpath refid="compile.classpath" />
 	</javac>
 </target>
 
 <target name="run">
-	<java classpathref="runtime.classpath" classname="propub.ProPubApp" />
+	<java classpathref="runtime.classpath" classname="propub.ProPubApp" fork="true" />
 </target>
+
+</project>
 
