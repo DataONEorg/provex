@@ -1,0 +1,31 @@
+<project name="propub" default="clean-compile" basedir=".">
+
+<path id="compile.classpath">
+	<fileset dir="ProvenancePublisher/lib">
+		<include name="*.jar" />
+	</fileset>
+</path>
+
+<path id="runtime.classpath">
+	<fileset dir="ProvenancePublisher/lib">
+		<include name="*.jar" />
+	</fileset>
+	<pathelement location="ProvenancePublisher/bin" />
+</path>
+
+<target name="clean-compile" depends="clean,compile" />
+
+<target name="clean">
+	<delete dir="ProvenancePublisher/bin" />
+</target>
+
+<target name="compile">
+	<javac srcdir="ProvenancePublisher/src" destdir="ProvenancePublisher/bin">
+		<classpath refid="compile.classpath" />
+	</javac>
+</target>
+
+<target name="run">
+	<java classpathref="runtime.classpath" classname="propub.ProPubApp" />
+</target>
+
