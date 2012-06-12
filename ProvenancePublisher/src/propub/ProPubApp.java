@@ -438,7 +438,7 @@ public class ProPubApp extends javax.swing.JFrame {
 		EnvInfo ei = new EnvInfo();
 		ei.setSetupInfo(constants);
 		// SEAN: Make this no longer hardcoded, ask with a JFileChooser.
-		process(sessionId,id,stateNo, "/Users/scdey/mySpace/propub/data/pg.dlv");			
+		process(sessionId,id,stateNo, "/Users/sean/ProPubProj/propub/data/pg.dlv");			
 		
 		ht_ele = new ArrayList<Integer>();
 
@@ -491,6 +491,7 @@ public class ProPubApp extends javax.swing.JFrame {
 			jLabel_Graph.setIcon(new ImageIcon(myPicture));
 		} catch (Exception e) {
 			System.out.println("Errors..");
+			e.printStackTrace();
 		}
 	}
 	
