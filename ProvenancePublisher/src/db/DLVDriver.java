@@ -13,6 +13,7 @@ public class DLVDriver implements DBDriver {
 							+ "exe_dlv.bat" };
 			Process p = rt.exec(args);*/
 			Process p = rt.exec(dlvPath);
+			System.out.println("DLV command: " + dlvPath);
 			p.waitFor();
 
 		} catch (Exception ioe) {
