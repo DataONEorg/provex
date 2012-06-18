@@ -404,27 +404,30 @@ public class ProPubApp extends javax.swing.JFrame {
 				// Used the payload directly as the object sideloaded to
 				// setPerformed before, but now it will have to be a bit more
 				// complicated. Must combine all user requests along the path.
-
 				
+				// Collect all UR along path.
+				List<String> collectedUR = new ArrayList<String>();
+				// TODO: Remember, nothing says the root node cannot have user requests...
 
-				if (path.getPath().length == 1) {
-					// Click on root component
-					currentlySelectedTreeNode = payloadObject;
-					System.out.println("Currently selected ID: " + currentlySelectedId);
-					System.out.println("Return forced");
-					return;
-				}
+				//if (path.getPath().length == 1) {
+					//// Click on root component
+					//currentlySelectedTreeNode = payloadObject;
+					//System.out.println("Currently selected ID: " + currentlySelectedId);
+					//System.out.println("Return forced");
+					//return;
+				//}
 
 
-				List<URContext> contexts = new ArrayList<URContext>();
+				currentlySelectedPathContexts.clear();
 
 				Object[] pathElements = path.getPath();
 
 				System.out.println("Beginning printout");
-				for (int i = 1; i < pathElements.length; i++) {
+				// TODO: Use simpler foreach syntax now that we are not exempting first element.
+				for (int i = 0; i < pathElements.length; i++) {
 					PayloadTreeNode node = (PayloadTreeNode) pathElements[i];
 					URContext context = (URContext) node.getPayload();
-					contexts.add(context);
+					currentlySelectedPathContexts.add(context);
 				}
 
 				//System.out.println("===");
@@ -453,7 +456,9 @@ public class ProPubApp extends javax.swing.JFrame {
 	}
 
 	private Object currentlySelectedTreeNode = null;
+	private List<URContext> currentlySelectedPathContexts = new ArrayList<URContext>();
 	private Integer currentlySelectedId = -1;
+	private String assembledRequests = null;
 
 	private void jButton_IGActionPerformed(java.awt.event.ActionEvent evt) {
 		// TODO add your handling code here:
@@ -503,12 +508,27 @@ public class ProPubApp extends javax.swing.JFrame {
 			// Have to instruct the system that the selected treenode is now the root, so child queries should be added under this node.
 			base_id = currentlySelectedId;
 			// Also, have to assemble the URs and set that somewhere to get picked up by SLActionPerformed()
-			URContext context = (URContext) currentlySelectedTreeNode;
+			// They're in currentlySelectedPathContexts.
+			assembledRequests = assembleRequests();
+			System.out.println("Requests assembled and locked.");
+
 			// Basically, need to create a combined context that spiders up the tree.
 			System.out.println("cls: " + currentlySelectedTreeNode.getClass().getName());
 			System.out.println("Setting to: '" + currentlySelectedTreeNode + "'");
+			jTextArea_UR.setText("");
 
 		}
+	}
+
+	private String assembleRequests() {
+		if (currentlySelectedPathContexts.size() == 0) {
+			return "";
+		}
+		StringBuilder sb = new StringBuilder(currentlySelectedPathContexts.get(0).getUserRequestsText());
+		for (int i = 1; i < currentlySelectedPathContexts.size(); i++) {
+			sb.append("\n").append(currentlySelectedPathContexts.get(i).getUserRequestsText());
+		}
+		return sb.toString();
 	}
 
 	private void jButton_NIActionPerformed(java.awt.event.ActionEvent evt) {
@@ -588,8 +608,14 @@ public class ProPubApp extends javax.swing.JFrame {
 		//read ur and copy
 		String exeURFile  = getFileName(constants.PROPUB_EXE, "ur", "dlv");
 		String outURFile  = getFileName(sessionId,id,stateNo, constants.PROPUB_OUT, "ur", "dlv");
-		fd.writeFile(new StringBuffer(jTextArea_UR.getText()), exeURFile);
-		fd.writeFile(new StringBuffer(jTextArea_UR.getText()), outURFile);
+		if (assembledRequests == null) {
+			fd.writeFile(new StringBuffer(jTextArea_UR.getText()), exeURFile);
+			fd.writeFile(new StringBuffer(jTextArea_UR.getText()), outURFile);
+		}
+		else {
+			fd.writeFile(new StringBuffer(assembledRequests + "\n" + jTextArea_UR.getText()), exeURFile);
+			fd.writeFile(new StringBuffer(assembledRequests + "\n" + jTextArea_UR.getText()), outURFile);
+		}
 				
 		//call dlv
 		DLVDriver dlv = new DLVDriver();
