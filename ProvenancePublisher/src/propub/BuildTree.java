@@ -10,6 +10,9 @@ import java.util.Hashtable;
 import javax.swing.*;
 import javax.swing.tree.*;
 
+import types.URContext;
+import types.PayloadTreeNode;
+
 /** JTree with missing or custom icons at the tree nodes.
  *  1999 Marty Hall, http://www.apl.jhu.edu/~hall/java/
  */
@@ -23,8 +26,8 @@ public class BuildTree {
 		return tree;
 	}
 	
-	private void setChild(DefaultMutableTreeNode child, Hashtable<Integer, ArrayList> ht, Integer childKey) {
-		DefaultMutableTreeNode grandChild;
+	private void setChild(PayloadTreeNode child, Hashtable<Integer, ArrayList> ht, Hashtable<Integer, URContext> contexts, Integer childKey) {
+		PayloadTreeNode grandChild;
 		ArrayList<Integer> ht_list = null;
 		Integer i = null;
 		
@@ -32,26 +35,31 @@ public class BuildTree {
 		Iterator<Integer> iterator = ht_list.iterator(); 
 		while(iterator.hasNext()) {
 			i = iterator.next();
-			grandChild = new DefaultMutableTreeNode("Query:" + i);
+			grandChild = new PayloadTreeNode("Query:" + i);
+			URContext context = contexts.get(i);
+			grandChild.setPayload(context);
 			child.add(grandChild);	
 			if (ht.containsKey(i)) {
 				
 				System.out.println(i.toString());
 				
-				setChild(grandChild, ht, i);
+				setChild(grandChild, ht, contexts, i);
 				
 			}
 		} 	
 	}
 	
-	public JTree getTree(Hashtable<Integer, ArrayList> ht) {
+	public JTree getTree(Hashtable<Integer, ArrayList> ht, Hashtable<Integer, URContext> contexts) {
     
-		DefaultMutableTreeNode root = new DefaultMutableTreeNode("Query:0.0");
-		DefaultMutableTreeNode child;
+		PayloadTreeNode root = new PayloadTreeNode("Query:0.0");
+		Integer rootKey = new Integer(0);
+		URContext context = contexts.get(rootKey);
+		root.setPayload(context);
+		PayloadTreeNode child;
 		
 		System.out.println(ht.toString());
 		
-		ArrayList<Integer> ht_list = ht.get(new Integer(0));
+		ArrayList<Integer> ht_list = ht.get(rootKey);
 		Integer i = null;
 		Iterator<Integer> iterator = ht_list.iterator(); 
 		while(iterator.hasNext()) {
@@ -59,10 +67,12 @@ public class BuildTree {
 			
 			System.out.println("in getTree: "+i.toString());
 			
-			child = new DefaultMutableTreeNode("Query:" + i);
+			child = new PayloadTreeNode("Query:" + i);
+			context = contexts.get(i);
+			child.setPayload(context);
 			root.add(child);
 			if (ht.containsKey(i)) {
-				setChild(child, ht, i);
+				setChild(child, ht, contexts, i);
 			} 
 		} 
 

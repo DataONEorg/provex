@@ -19,6 +19,7 @@ import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 
 import parser.Model;
 
@@ -28,10 +29,15 @@ import dot.DOTDriver;
 import env.EnvInfo;
 import file.FileDriver;
 
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
+
+import types.URContext;
+import types.PayloadTreeNode;
 
 /**
  *
@@ -387,10 +393,17 @@ public class ProPubApp extends javax.swing.JFrame {
 				TreePath path = e.getPath();
 				Object clickedObj = path.getLastPathComponent();
 				System.out.println("Clicked on '" + clickedObj + "' (" + clickedObj.getClass().getName() + ")");
-				System.out.println("event!");
+				Object payloadObject = ((PayloadTreeNode) clickedObj).getPayload();
+
+				currentlySelectedTreeNode = payloadObject;
+				URContext context = (URContext) payloadObject;
+				jTextArea_UR.setText(context.getUserRequestsText());
+				System.out.println("Should set text to: '" + context.getUserRequestsText() + "'");
 			}
 		});
 	}
+
+	private Object currentlySelectedTreeNode = null;
 
 	private void jButton_IGActionPerformed(java.awt.event.ActionEvent evt) {
 		// TODO add your handling code here:
@@ -432,9 +445,14 @@ public class ProPubApp extends javax.swing.JFrame {
 	}
 
 	private void jButton_SetActionPerformed(java.awt.event.ActionEvent evt) {
-		System.out.println("set button activated");
-		System.out.println("cls: " + jTree_QT.getClass().getName());
-		// TODO add your handling code here:
+		if (currentlySelectedTreeNode == null) {
+			System.out.println("None selected, aborting set.");
+			JOptionPane.showMessageDialog(null, "Please click on an entry in the query tree first.");
+		}
+		else {
+			System.out.println("Setting to: '" + currentlySelectedTreeNode + "'");
+
+		}
 	}
 
 	private void jButton_NIActionPerformed(java.awt.event.ActionEvent evt) {
@@ -446,13 +464,21 @@ public class ProPubApp extends javax.swing.JFrame {
 		currState = 0;
 		process(sessionId,id,stateNo, null);
 		
-		ht_ele.add(new Integer(id));
+		Integer key = new Integer(id);
+		ht_ele.add(key);
 		System.out.println("Added " + id + ", so now ht_ele has: " + ht_ele);
 		htQueryTree.put(new Integer(base_id), ht_ele);
+		String userRequests = jTextArea_UR.getText();
+		URContext context = new URContext(userRequests);
+		queryTreeContexts.put(key, context);
+		// htQueryTree is a map that maps from Item ID -> ArrayList of child IDs.
+		// We need a companion map that maps from Item ID to URContext, which
+		// for the moment will just encapsulate User Requests.
+		//
 		System.out.println("Added " + base_id + ":" + ht_ele + " to: " + htQueryTree);
 
 		System.out.println("Right before ProPubApp call");
-		jTree_QT = bt.getTree(htQueryTree);
+		jTree_QT = bt.getTree(htQueryTree, queryTreeContexts);
 		addListener(jTree_QT);
 		jScrollPane_QT.setViewportView(jTree_QT);
 	}
@@ -558,6 +584,7 @@ public class ProPubApp extends javax.swing.JFrame {
 	int currState = 0;
 	
 	Hashtable<Integer, ArrayList> htQueryTree = new Hashtable<Integer, ArrayList>();
+	Hashtable<Integer, URContext> queryTreeContexts = new Hashtable<Integer, URContext>();
 	ArrayList<Integer> ht_ele;
 	int base_id = 0;
 	
