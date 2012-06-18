@@ -20,7 +20,6 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
-
 import parser.Model;
 
 import db.DLVDriver;
@@ -173,9 +172,6 @@ public class ProPubApp extends javax.swing.JFrame {
 				.add(jPanel_MenuLayout
 						.createSequentialGroup()
 						.addContainerGap()
-						.add(jButton_New)
-						.addPreferredGap(
-								org.jdesktop.layout.LayoutStyle.RELATED)
 						.add(jButton_Open)
 						.addPreferredGap(
 								org.jdesktop.layout.LayoutStyle.RELATED)
@@ -191,9 +187,6 @@ public class ProPubApp extends javax.swing.JFrame {
 						.addPreferredGap(
 								org.jdesktop.layout.LayoutStyle.RELATED, 178,
 								Short.MAX_VALUE)
-						.add(jButton_Explore)
-						.addPreferredGap(
-								org.jdesktop.layout.LayoutStyle.RELATED)
 						.add(jButton_First)
 						.addPreferredGap(
 								org.jdesktop.layout.LayoutStyle.RELATED)
@@ -206,7 +199,7 @@ public class ProPubApp extends javax.swing.JFrame {
 						.add(jButton_Last)
 						.addPreferredGap(
 								org.jdesktop.layout.LayoutStyle.RELATED)
-						.add(jButton_IG).addContainerGap()));
+						.addContainerGap()));
 		jPanel_MenuLayout
 				.setVerticalGroup(jPanel_MenuLayout
 						.createParallelGroup(
@@ -220,12 +213,9 @@ public class ProPubApp extends javax.swing.JFrame {
 										.add(jPanel_MenuLayout
 												.createParallelGroup(
 														org.jdesktop.layout.GroupLayout.BASELINE)
-												.add(jButton_New)
 												.add(jButton_Open)
 												.add(jButton_Save)
-												.add(jButton_IG)
 												.add(jButton_Last)
-												.add(jButton_Explore)
 												.add(jButton_Prev)
 												.add(jButton_Next)
 												.add(jButton_First)
@@ -396,14 +386,11 @@ public class ProPubApp extends javax.swing.JFrame {
 			public void valueChanged(TreeSelectionEvent e) {
 				TreePath path = e.getPath();
 				Object clickedObj = path.getLastPathComponent();
-				currentlySelectedQuery = clickedObj;
-				System.out.println("Selected '" + clickedObj + "' (" + clickedObj.getClass().getName() + ")");
+				System.out.println("Clicked on '" + clickedObj + "' (" + clickedObj.getClass().getName() + ")");
+				System.out.println("event!");
 			}
 		});
-		System.out.println("With that add, it now has " + tree.getTreeSelectionListeners().length + " tree selection listeners.");
 	}
-
-	private Object currentlySelectedQuery = null;
 
 	private void jButton_IGActionPerformed(java.awt.event.ActionEvent evt) {
 		// TODO add your handling code here:
@@ -446,8 +433,7 @@ public class ProPubApp extends javax.swing.JFrame {
 
 	private void jButton_SetActionPerformed(java.awt.event.ActionEvent evt) {
 		System.out.println("set button activated");
-		// Get the currently selected item in the jtree.
-		System.out.println("would set to: " + currentlySelectedQuery);
+		System.out.println("cls: " + jTree_QT.getClass().getName());
 		// TODO add your handling code here:
 	}
 
@@ -465,22 +451,6 @@ public class ProPubApp extends javax.swing.JFrame {
 		htQueryTree.put(new Integer(base_id), ht_ele);
 		System.out.println("Added " + base_id + ":" + ht_ele + " to: " + htQueryTree);
 
-		//htQueryTree.clear();
-		//ArrayList<Integer> list = new ArrayList<Integer>();
-		//list.add(new Integer(1));
-		//list.add(new Integer(2));
-		//list.add(new Integer(3));
-		//htQueryTree.put(new Integer(0), list);
-		//list = new ArrayList<Integer>();
-		//list.add(new Integer(123));
-		//htQueryTree.put(new Integer(1), list);
-		//list = new ArrayList<Integer>();
-		//list.add(new Integer(456));
-		//htQueryTree.put(new Integer(2), list);
-		//list = new ArrayList<Integer>();
-		//list.add(new Integer(789));
-		//htQueryTree.put(new Integer(3), list);
-		
 		System.out.println("Right before ProPubApp call");
 		jTree_QT = bt.getTree(htQueryTree);
 		addListener(jTree_QT);
@@ -507,7 +477,6 @@ public class ProPubApp extends javax.swing.JFrame {
 	}
 
 	private void process(int sessionId, int id, int stateNo, String file) {
-		System.out.println("process(sessionId=" + sessionId + ", id=" + id + ", stateNo=" + stateNo + ", file=" + file + ")");
 		//copy pg
 		FileDriver fd = new FileDriver();
 		if (file != null) {
@@ -542,7 +511,6 @@ public class ProPubApp extends javax.swing.JFrame {
 	
 
 	private void displayImage(ArrayList<String> model) {
-		System.out.println("A model looks like: " + model);
 		DOTDriver dot = new DOTDriver(constants);
 		String imgFile = dot.prepareImgage(model);
 		try {
