@@ -39,6 +39,8 @@ import javax.swing.event.TreeSelectionEvent;
 import types.URContext;
 import types.PayloadTreeNode;
 
+import java.util.List;
+
 /**
  *
  * @author  __USER__
@@ -390,22 +392,51 @@ public class ProPubApp extends javax.swing.JFrame {
 		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		tree.addTreeSelectionListener(new TreeSelectionListener() {
 			public void valueChanged(TreeSelectionEvent e) {
+				System.out.println("value changed = " + e);
 				TreePath path = e.getPath();
 				Object clickedObj = path.getLastPathComponent();
 				System.out.println("Clicked on '" + clickedObj + "' (" + clickedObj.getClass().getName() + ")");
-				Object payloadObject = ((PayloadTreeNode) clickedObj).getPayload();
+
+				PayloadTreeNode treeNode = (PayloadTreeNode) clickedObj;
+				Object payloadObject = treeNode.getPayload();
+				currentlySelectedId = treeNode.getId();
 
 				// Used the payload directly as the object sideloaded to
 				// setPerformed before, but now it will have to be a bit more
 				// complicated. Must combine all user requests along the path.
-				//
 
-				System.out.println("===");
-				for (Object o : path.getPath()) {
-					System.out.println("* " + o + " (" + o.getClass().getName() + ")");
+				
+
+				if (path.getPath().length == 1) {
+					// Click on root component
+					currentlySelectedTreeNode = payloadObject;
+					System.out.println("Currently selected ID: " + currentlySelectedId);
+					System.out.println("Return forced");
+					return;
 				}
-				System.out.println("---");
-				currentlySelectedTreeNode = null;
+
+
+				List<URContext> contexts = new ArrayList<URContext>();
+
+				Object[] pathElements = path.getPath();
+
+				System.out.println("Beginning printout");
+				for (int i = 1; i < pathElements.length; i++) {
+					PayloadTreeNode node = (PayloadTreeNode) pathElements[i];
+					URContext context = (URContext) node.getPayload();
+					contexts.add(context);
+				}
+
+				//System.out.println("===");
+				//int entry = 1;
+				//for (URContext context : contexts) {
+					//System.out.println("Entry " + entry);
+					//System.out.println("Model: " + context.getModelData());
+					//System.out.println("UR: " + context.getUserRequestsText());
+					//entry++;
+				//}
+				//System.out.println("---");
+				currentlySelectedTreeNode = payloadObject;
 
 				URContext context = (URContext) payloadObject;
 				jTextArea_UR.setText(context.getUserRequestsText());
@@ -422,6 +453,7 @@ public class ProPubApp extends javax.swing.JFrame {
 	}
 
 	private Object currentlySelectedTreeNode = null;
+	private Integer currentlySelectedId = -1;
 
 	private void jButton_IGActionPerformed(java.awt.event.ActionEvent evt) {
 		// TODO add your handling code here:
@@ -468,6 +500,9 @@ public class ProPubApp extends javax.swing.JFrame {
 			JOptionPane.showMessageDialog(null, "Please click on an entry in the query tree first.");
 		}
 		else {
+			// Have to instruct the system that the selected treenode is now the root, so child queries should be added under this node.
+			base_id = currentlySelectedId;
+			// Also, have to assemble the URs and set that somewhere to get picked up by SLActionPerformed()
 			URContext context = (URContext) currentlySelectedTreeNode;
 			// Basically, need to create a combined context that spiders up the tree.
 			System.out.println("cls: " + currentlySelectedTreeNode.getClass().getName());
@@ -486,9 +521,14 @@ public class ProPubApp extends javax.swing.JFrame {
 		process(sessionId,id,stateNo, null);
 		
 		Integer key = new Integer(id);
-		ht_ele.add(key);
-		System.out.println("Added " + id + ", so now ht_ele has: " + ht_ele);
-		htQueryTree.put(new Integer(base_id), ht_ele);
+		//ht_ele.add(key);
+		//System.out.println("Added " + id + ", so now ht_ele has: " + ht_ele);
+		// add key as a child to base_id
+		if (!htQueryTree.containsKey(base_id)) {
+			htQueryTree.put(base_id, new ArrayList<Integer>());
+		}
+		htQueryTree.get(base_id).add(key);
+		//htQueryTree.put(new Integer(base_id), ht_ele);
 		String userRequests = jTextArea_UR.getText();
 		String modelData = model.getModel();
 		URContext context = new URContext(userRequests, modelData);
@@ -497,7 +537,7 @@ public class ProPubApp extends javax.swing.JFrame {
 		// We need a companion map that maps from Item ID to URContext, which
 		// for the moment will just encapsulate User Requests.
 		//
-		System.out.println("Added " + base_id + ":" + ht_ele + " to: " + htQueryTree);
+		//System.out.println("Added " + base_id + ":" + ht_ele + " to: " + htQueryTree);
 
 		System.out.println("Right before ProPubApp call");
 		jTree_QT = bt.getTree(htQueryTree, queryTreeContexts);
@@ -514,6 +554,12 @@ public class ProPubApp extends javax.swing.JFrame {
 		ei.setSetupInfo(constants);
 		// SEAN: Make this no longer hardcoded, ask with a JFileChooser.
 		process(sessionId,id,stateNo, "/Users/sean/ProPubProj/propub/data/pg.dlv");			
+
+		String userRequests = jTextArea_UR.getText();
+		String modelData = model.getModel();
+		URContext rootContext = new URContext(userRequests, modelData);
+		// TODO: remove hardwired value 0.
+		queryTreeContexts.put(0, rootContext);
 		
 		ht_ele = new ArrayList<Integer>();
 

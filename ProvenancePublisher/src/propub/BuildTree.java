@@ -38,6 +38,7 @@ public class BuildTree {
 			grandChild = new PayloadTreeNode("Query:" + i);
 			URContext context = contexts.get(i);
 			grandChild.setPayload(context);
+			grandChild.setId(i);
 			child.add(grandChild);	
 			if (ht.containsKey(i)) {
 				
@@ -54,7 +55,9 @@ public class BuildTree {
 		PayloadTreeNode root = new PayloadTreeNode("Query:0.0");
 		Integer rootKey = new Integer(0);
 		URContext context = contexts.get(rootKey);
+		System.out.println("<<<<<<<< context used for root: " + context);
 		root.setPayload(context);
+		root.setId(rootKey);
 		PayloadTreeNode child;
 		
 		System.out.println(ht.toString());
@@ -70,6 +73,7 @@ public class BuildTree {
 			child = new PayloadTreeNode("Query:" + i);
 			context = contexts.get(i);
 			child.setPayload(context);
+			child.setId(i);
 			root.add(child);
 			if (ht.containsKey(i)) {
 				setChild(child, ht, contexts, i);
