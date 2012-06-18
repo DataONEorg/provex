@@ -20,6 +20,7 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
+
 import parser.Model;
 
 import db.DLVDriver;
@@ -27,6 +28,11 @@ import dot.DOTDriver;
 
 import env.EnvInfo;
 import file.FileDriver;
+
+import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeSelectionModel;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.event.TreeSelectionEvent;
 
 /**
  *
@@ -67,6 +73,7 @@ public class ProPubApp extends javax.swing.JFrame {
 		jPanel_MQ = new javax.swing.JPanel();
 		jScrollPane_QT = new javax.swing.JScrollPane();
 		jTree_QT = new javax.swing.JTree();
+		addListener(jTree_QT);
 
 		setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -382,28 +389,55 @@ public class ProPubApp extends javax.swing.JFrame {
 		pack();
 	}// </editor-fold>
 	//GEN-END:initComponents
+	
+	private void addListener(javax.swing.JTree tree) {
+		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+		tree.addTreeSelectionListener(new TreeSelectionListener() {
+			public void valueChanged(TreeSelectionEvent e) {
+				TreePath path = e.getPath();
+				Object clickedObj = path.getLastPathComponent();
+				currentlySelectedQuery = clickedObj;
+				System.out.println("Selected '" + clickedObj + "' (" + clickedObj.getClass().getName() + ")");
+			}
+		});
+		System.out.println("With that add, it now has " + tree.getTreeSelectionListeners().length + " tree selection listeners.");
+	}
+
+	private Object currentlySelectedQuery = null;
 
 	private void jButton_IGActionPerformed(java.awt.event.ActionEvent evt) {
 		// TODO add your handling code here:
 	}
 
 	private void jButton_LastActionPerformed(java.awt.event.ActionEvent evt) {
-		displayImage(model.getIntrmediateModel(model.getFinalStateNo()));
+		System.out.println("Skipping to state: " + model.getFinalStateNo());
+		currState = model.getFinalStateNo();
+		displayImage(model.getIntrmediateModel(currState));
 	}
 	private void jButton_NextActionPerformed(java.awt.event.ActionEvent evt) {
 		if (currState < model.getFinalStateNo()) {
 			currState++;
+			System.out.println("Moving to state: " + currState);
 			displayImage(model.getIntrmediateModel(currState));	
+		}
+		else {
+			System.out.println("Not moving, already at state: " + model.getFinalStateNo());
 		}
 	}
 	private void jButton_PrevActionPerformed(java.awt.event.ActionEvent evt) {
 		if (currState > 0) {
 			currState--;
-			displayImage(model.getIntrmediateModel(currState--));	
+			System.out.println("Moving to state: " + currState);
+			displayImage(model.getIntrmediateModel(currState));	
+		}
+		else {
+			System.out.println("Not moving, already at state 0");
 		}
 	}
 	private void jButton_FirstActionPerformed(java.awt.event.ActionEvent evt) {
-		displayImage(model.getIntrmediateModel(0));
+		System.out.println("Skipping to state: 0");
+		currState = 0;
+		displayImage(model.getIntrmediateModel(currState));
 	}
 
 	private void jButton_ExploreActionPerformed(java.awt.event.ActionEvent evt) {
@@ -411,6 +445,9 @@ public class ProPubApp extends javax.swing.JFrame {
 	}
 
 	private void jButton_SetActionPerformed(java.awt.event.ActionEvent evt) {
+		System.out.println("set button activated");
+		// Get the currently selected item in the jtree.
+		System.out.println("would set to: " + currentlySelectedQuery);
 		// TODO add your handling code here:
 	}
 
@@ -424,9 +461,29 @@ public class ProPubApp extends javax.swing.JFrame {
 		process(sessionId,id,stateNo, null);
 		
 		ht_ele.add(new Integer(id));
+		System.out.println("Added " + id + ", so now ht_ele has: " + ht_ele);
 		htQueryTree.put(new Integer(base_id), ht_ele);
+		System.out.println("Added " + base_id + ":" + ht_ele + " to: " + htQueryTree);
+
+		//htQueryTree.clear();
+		//ArrayList<Integer> list = new ArrayList<Integer>();
+		//list.add(new Integer(1));
+		//list.add(new Integer(2));
+		//list.add(new Integer(3));
+		//htQueryTree.put(new Integer(0), list);
+		//list = new ArrayList<Integer>();
+		//list.add(new Integer(123));
+		//htQueryTree.put(new Integer(1), list);
+		//list = new ArrayList<Integer>();
+		//list.add(new Integer(456));
+		//htQueryTree.put(new Integer(2), list);
+		//list = new ArrayList<Integer>();
+		//list.add(new Integer(789));
+		//htQueryTree.put(new Integer(3), list);
 		
+		System.out.println("Right before ProPubApp call");
 		jTree_QT = bt.getTree(htQueryTree);
+		addListener(jTree_QT);
 		jScrollPane_QT.setViewportView(jTree_QT);
 	}
 
@@ -450,6 +507,7 @@ public class ProPubApp extends javax.swing.JFrame {
 	}
 
 	private void process(int sessionId, int id, int stateNo, String file) {
+		System.out.println("process(sessionId=" + sessionId + ", id=" + id + ", stateNo=" + stateNo + ", file=" + file + ")");
 		//copy pg
 		FileDriver fd = new FileDriver();
 		if (file != null) {
@@ -484,6 +542,7 @@ public class ProPubApp extends javax.swing.JFrame {
 	
 
 	private void displayImage(ArrayList<String> model) {
+		System.out.println("A model looks like: " + model);
 		DOTDriver dot = new DOTDriver(constants);
 		String imgFile = dot.prepareImgage(model);
 		try {
