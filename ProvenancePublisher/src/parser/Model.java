@@ -19,6 +19,7 @@ public class Model {
 		this.constants = constants;
 		//read the model
 		model = fd.readFile(constants.PROPUB_EXE + constants.ENV_SEPARATOR + "out.txt").toString();
+		System.out.println("Building model from file " + (constants.PROPUB_EXE + constants.ENV_SEPARATOR + "out.txt"));
 		//making the model as set of facts
 		model = model.replaceAll("\\),", "\\).").replace("}", ".").replace("l_", "");
 		finalStateNo = fetchFinalStateNo();
