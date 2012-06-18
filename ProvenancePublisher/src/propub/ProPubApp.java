@@ -395,10 +395,28 @@ public class ProPubApp extends javax.swing.JFrame {
 				System.out.println("Clicked on '" + clickedObj + "' (" + clickedObj.getClass().getName() + ")");
 				Object payloadObject = ((PayloadTreeNode) clickedObj).getPayload();
 
-				currentlySelectedTreeNode = payloadObject;
+				// Used the payload directly as the object sideloaded to
+				// setPerformed before, but now it will have to be a bit more
+				// complicated. Must combine all user requests along the path.
+				//
+
+				System.out.println("===");
+				for (Object o : path.getPath()) {
+					System.out.println("* " + o + " (" + o.getClass().getName() + ")");
+				}
+				System.out.println("---");
+				currentlySelectedTreeNode = null;
+
 				URContext context = (URContext) payloadObject;
 				jTextArea_UR.setText(context.getUserRequestsText());
 				System.out.println("Should set text to: '" + context.getUserRequestsText() + "'");
+						
+				String modelData = context.getModelData();
+				System.out.println("Creating model from " + modelData.length() + " characters of data");
+				Model myModel = Model.fromString(modelData);
+				displayImage(myModel.getIntrmediateModel(model.getFinalStateNo()));
+				currState = model.getFinalStateNo();
+				model = myModel;
 			}
 		});
 	}
@@ -450,6 +468,9 @@ public class ProPubApp extends javax.swing.JFrame {
 			JOptionPane.showMessageDialog(null, "Please click on an entry in the query tree first.");
 		}
 		else {
+			URContext context = (URContext) currentlySelectedTreeNode;
+			// Basically, need to create a combined context that spiders up the tree.
+			System.out.println("cls: " + currentlySelectedTreeNode.getClass().getName());
 			System.out.println("Setting to: '" + currentlySelectedTreeNode + "'");
 
 		}
@@ -469,7 +490,8 @@ public class ProPubApp extends javax.swing.JFrame {
 		System.out.println("Added " + id + ", so now ht_ele has: " + ht_ele);
 		htQueryTree.put(new Integer(base_id), ht_ele);
 		String userRequests = jTextArea_UR.getText();
-		URContext context = new URContext(userRequests);
+		String modelData = model.getModel();
+		URContext context = new URContext(userRequests, modelData);
 		queryTreeContexts.put(key, context);
 		// htQueryTree is a map that maps from Item ID -> ArrayList of child IDs.
 		// We need a companion map that maps from Item ID to URContext, which
@@ -537,6 +559,7 @@ public class ProPubApp extends javax.swing.JFrame {
 	
 
 	private void displayImage(ArrayList<String> model) {
+		System.out.println("DisplayImage call");
 		DOTDriver dot = new DOTDriver(constants);
 		String imgFile = dot.prepareImgage(model);
 		try {

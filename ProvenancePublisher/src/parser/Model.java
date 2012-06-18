@@ -14,6 +14,11 @@ public class Model {
 	FileDriver  fd;
 	Constants   constants;
 	
+	private Model(String modelData) {
+		this.model = modelData;
+		finalStateNo = fetchFinalStateNo();
+	}
+
 	public Model(Constants   constants) {
 		fd = new FileDriver();
 		this.constants = constants;
@@ -24,6 +29,12 @@ public class Model {
 		model = model.replaceAll("\\),", "\\).").replace("}", ".").replace("l_", "");
 		finalStateNo = fetchFinalStateNo();
 	}
+
+	public static Model fromString(String modelData) {
+		Model model = new Model(modelData);
+		return model;
+	}
+		
 
 	public int getFinalStateNo() {
 		return finalStateNo;
