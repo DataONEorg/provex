@@ -22,6 +22,7 @@ public class DLVToDot {
 	Hashtable <String, String> ppEdges = new Hashtable<String, String>();
 	Hashtable <String, String> actorIDs = new Hashtable<String, String>();
 	Hashtable <String, String> dataIDs = new Hashtable<String, String>();
+	Hashtable <String, String> partOfEdge = new Hashtable<String, String>();
 
 	public void readInFile(String pgFileName, String ppFileName) {
 		
@@ -57,7 +58,8 @@ public class DLVToDot {
 			String line;   
 			line = bufRead.readLine();
 			while (line != null){
-				processLine(line);
+				//processLine(line);
+				processLineNew(line);
 				line = bufRead.readLine();
 			}
 			bufRead.close();
@@ -67,10 +69,16 @@ public class DLVToDot {
 	}
 	
 	public void readArrayList(ArrayList<String> model) {
-		Iterator<String> itr = model.iterator();
-		while (itr.hasNext()) {
-			processLine(itr.next());
-		}			
+		Iterator<String> itrDep = model.iterator();
+		while (itrDep.hasNext()) {
+			//processLine(itr.next());
+			processLineNew(itrDep.next());
+		}
+		Iterator<String> itrDataActor = model.iterator();
+		while (itrDataActor.hasNext()) {
+			//processLine(itr.next());
+			processLineDataActor(itrDataActor.next());
+		}
 	}
 	
 	private void processLine(String line) {
@@ -104,6 +112,42 @@ public class DLVToDot {
 			dataIDs.put(first, "");
 			edges.add("\"" + first + "\"->\"" + second + "\"");
 		}		
+	}
+	
+
+	private void processLineNew(String line) {
+		/*
+		 * expected file format:	
+		 * l_dep(node,node)
+		 */				
+		String first = line.split(",")[0].split("\\(")[1];
+		String second = line.split(",")[1].split("\\)")[0];
+		
+		if (line.contains("l_dep")){
+			edges.add("\"" + second + "\"->\"" + first + "\"");
+			partOfEdge.put(first, first);
+			partOfEdge.put(second, second);
+		} else if (line.contains("pv")){ 
+			ppEdges.put("\"" + second + "\"->\"" + first + "\"","");
+		} 	
+	}
+	private void processLineDataActor(String line) {
+		/*
+		 * expected file format:	
+		 * data(Data,URL)
+		 * actor(Invocation, Actor)
+		 */				
+		String first = line.split(",")[0].split("\\(")[1];
+		
+        if (line.contains("data")){
+        	if (partOfEdge.containsKey(first)) {
+        		dataIDs.put(first, "");	
+        	}
+		} else if (line.contains("actor")){ 
+        	if (partOfEdge.containsKey(first)) {
+        		actorIDs.put(first, "");
+        	}
+		} 		
 	}
 	
 	public void readInData(String [][] data){

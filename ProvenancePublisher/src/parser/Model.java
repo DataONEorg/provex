@@ -26,7 +26,8 @@ public class Model {
 		model = fd.readFile(constants.PROPUB_EXE + constants.ENV_SEPARATOR + "out.txt").toString();
 		System.out.println("Building model from file " + (constants.PROPUB_EXE + constants.ENV_SEPARATOR + "out.txt"));
 		//making the model as set of facts
-		model = model.replaceAll("\\),", "\\).").replace("}", ".").replace("l_", "");
+		//model = model.replaceAll("\\),", "\\).").replace("}", ".").replace("l_", "");
+		model = model.replaceAll("\\),", "\\).").replace("}", ".");
 		finalStateNo = fetchFinalStateNo();
 	}
 
@@ -56,6 +57,12 @@ public class Model {
 		ArrayList<String> intrState = new ArrayList<String>();
 		for (int i = 0; i < splitModel.length; i++) {
 			if (splitModel[i].contains("," + stateNo + ")")) {
+				intrState.add(splitModel[i]);
+			}
+			if (splitModel[i].contains("data")) {
+				intrState.add(splitModel[i]);
+			}
+			if (splitModel[i].contains("actor")) {
 				intrState.add(splitModel[i]);
 			}
 		}
