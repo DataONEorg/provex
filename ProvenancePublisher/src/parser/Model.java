@@ -14,7 +14,7 @@ public class Model {
 	FileDriver  fd;
 	Constants   constants;
 	
-	private Model(String modelData) {
+	public Model(String modelData) {
 		this.model = modelData;
 		finalStateNo = fetchFinalStateNo();
 	}
