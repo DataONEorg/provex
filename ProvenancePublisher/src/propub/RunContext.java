@@ -73,4 +73,26 @@ public class RunContext {
     public Model getModel() {
         return model;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        RunContext that = (RunContext) o;
+
+        if (model != null ? !model.equals(that.model) : that.model != null) return false;
+        if (pgFile != null ? !pgFile.equals(that.pgFile) : that.pgFile != null) return false;
+        if (urFile != null ? !urFile.equals(that.urFile) : that.urFile != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = model != null ? model.hashCode() : 0;
+        result = 31 * result + (pgFile != null ? pgFile.hashCode() : 0);
+        result = 31 * result + (urFile != null ? urFile.hashCode() : 0);
+        return result;
+    }
 }
