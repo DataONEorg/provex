@@ -7,6 +7,11 @@ public class PayloadTreeNode extends DefaultMutableTreeNode {
 		super(name);
 	}
 
+    public PayloadTreeNode(String name, Object payload) {
+        super(name);
+        setPayload(payload);
+    }
+
 	public void setId(Integer id) {
 		this.id = id;
 	}

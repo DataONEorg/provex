@@ -15,11 +15,17 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import java.net.URL;
+
 import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JFileChooser;
+import javax.swing.JScrollPane;
 
 import parser.Model;
 
@@ -40,6 +46,7 @@ import types.URContext;
 import types.PayloadTreeNode;
 
 import java.util.List;
+import java.util.Random;
 
 /**
  *
@@ -88,84 +95,97 @@ public class ProPubApp extends javax.swing.JFrame {
 				null, new javax.swing.border.SoftBevelBorder(
 						javax.swing.border.BevelBorder.RAISED)));
 
-		jButton_New.setText("New");
+		initButtonGraphic(jButton_New, "New", "general", "New", "newtext");
+		//jButton_New.setText("New");
 		jButton_New.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jButton_NewActionPerformed(evt);
 			}
 		});
 
-		jButton_Open.setText("Open");
+		//jButton_Open.setText("Open");
+		initButtonGraphic(jButton_Open, "Open", "general", "Open", "opentext");
 		jButton_Open.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jButton_OpenActionPerformed(evt);
 			}
 		});
 
-		jButton_Save.setText("Save");
+		//jButton_Save.setText("Save");
+		initButtonGraphic(jButton_Save, "Save", "general", "Save", "savetext");
 		jButton_Save.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jButton_SaveActionPerformed(evt);
 			}
 		});
 
-		jButton_SL.setText("SL");
+		//jButton_SL.setText("SL");
+		// SEAN: This is a stretch.
+		initButtonGraphic(jButton_SL, "SL", "general", "Remove", "Perform SL");
 		jButton_SL.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jButton_SLActionPerformed(evt);
 			}
 		});
 
-		jButton_NI.setText("NI");
+		//jButton_NI.setText("NI");
+		initButtonGraphic(jButton_NI, "NI", "general", "Add", "Perform NI");
 		jButton_NI.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jButton_NIActionPerformed(evt);
 			}
 		});
 
-		jButton_Set.setText("Set");
+		//jButton_Set.setText("Set");
+		initButtonGraphic(jButton_Set, "Set", "general", "Bookmarks", "Set");
 		jButton_Set.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jButton_SetActionPerformed(evt);
 			}
 		});
 
-		jButton_Explore.setText("Explore");
+		//jButton_Explore.setText("Explore");
+		initButtonGraphic(jButton_Explore, "Explore", "general", "Zoom", "Explore");
 		jButton_Explore.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jButton_ExploreActionPerformed(evt);
 			}
 		});
 
-		jButton_First.setText("<<");
+		//jButton_First.setText("<<");
+		initButtonGraphic(jButton_First, "First", "media", "Rewind", "Go to first step");
 		jButton_First.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jButton_FirstActionPerformed(evt);
 			}
 		});
 
-		jButton_Prev.setText("<");
+		//jButton_Prev.setText("<");
+		initButtonGraphic(jButton_Prev, "Previous", "navigation", "Back", "Back one step");
 		jButton_Prev.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jButton_PrevActionPerformed(evt);
 			}
 		});
 
-		jButton_Next.setText(">");
+		//jButton_Next.setText(">");
+		initButtonGraphic(jButton_Next, "Next", "navigation", "Forward", "Forward one step");
 		jButton_Next.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jButton_NextActionPerformed(evt);
 			}
 		});
 
-		jButton_Last.setText(">>");
+		//jButton_Last.setText(">>");
+		initButtonGraphic(jButton_Last, "Last", "media", "FastForward", "Go to last step");
 		jButton_Last.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jButton_LastActionPerformed(evt);
 			}
 		});
 
-		jButton_IG.setText("IG");
+		//jButton_IG.setText("IG");
+		initButtonGraphic(jButton_IG, "IG", "general", "ContextualHelp", "IG - Unknown functionality");
 		jButton_IG.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jButton_IGActionPerformed(evt);
@@ -299,6 +319,8 @@ public class ProPubApp extends javax.swing.JFrame {
 
 		jTabbedPane_First.addTab("My Queries", jPanel_MQ);
 
+		JScrollPane panelScrollPane = new JScrollPane(jPanel_Graph);
+
 		org.jdesktop.layout.GroupLayout jPanel_MainLayout = new org.jdesktop.layout.GroupLayout(
 				jPanel_Main);
 		jPanel_Main.setLayout(jPanel_MainLayout);
@@ -326,10 +348,11 @@ public class ProPubApp extends javax.swing.JFrame {
 														Short.MAX_VALUE))
 										.addPreferredGap(
 												org.jdesktop.layout.LayoutStyle.RELATED)
-										.add(jPanel_Graph,
+										.add(panelScrollPane,
 												org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
 												org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
 												org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)));
+										//.add(jPanel_Graph,
 		jPanel_MainLayout
 				.setVerticalGroup(jPanel_MainLayout
 						.createParallelGroup(
@@ -356,10 +379,11 @@ public class ProPubApp extends javax.swing.JFrame {
 														org.jdesktop.layout.LayoutStyle.RELATED)
 												.add(jTabbedPane_First, 0, 0,
 														Short.MAX_VALUE))
-										.add(jPanel_Graph,
+										.add(panelScrollPane,
 												org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
 												org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
 												org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))));
+										//.add(jPanel_Graph,
 
 		org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(
 				getContentPane());
@@ -387,7 +411,7 @@ public class ProPubApp extends javax.swing.JFrame {
 		pack();
 	}// </editor-fold>
 	//GEN-END:initComponents
-	
+
 	private void addListener(javax.swing.JTree tree) {
 		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		tree.addTreeSelectionListener(new TreeSelectionListener() {
@@ -397,60 +421,72 @@ public class ProPubApp extends javax.swing.JFrame {
 				Object clickedObj = path.getLastPathComponent();
 				System.out.println("Clicked on '" + clickedObj + "' (" + clickedObj.getClass().getName() + ")");
 
-				PayloadTreeNode treeNode = (PayloadTreeNode) clickedObj;
+                PayloadTreeNode treeNode = null;
+                try {
+                    treeNode = (PayloadTreeNode) clickedObj;
+                }
+                catch(ClassCastException ex) {
+                    if (clickedObj.toString().equals("Root!")) {
+                        System.out.println("CCE, but it's probably just the root");
+                    }
+                    else {
+                        System.out.println("Unexplained CCE!");
+                    }
+                }
 				Object payloadObject = treeNode.getPayload();
 				currentlySelectedId = treeNode.getId();
+                currentlySelectedTreeNode = treeNode;
 
-				// Used the payload directly as the object sideloaded to
-				// setPerformed before, but now it will have to be a bit more
-				// complicated. Must combine all user requests along the path.
-				
-				// Collect all UR along path.
-				List<String> collectedUR = new ArrayList<String>();
-				// TODO: Remember, nothing says the root node cannot have user requests...
-
-				//if (path.getPath().length == 1) {
-					//// Click on root component
-					//currentlySelectedTreeNode = payloadObject;
-					//System.out.println("Currently selected ID: " + currentlySelectedId);
-					//System.out.println("Return forced");
-					//return;
-				//}
-
-
-				currentlySelectedPathContexts.clear();
-
-				Object[] pathElements = path.getPath();
-
-				System.out.println("Beginning printout");
-				// TODO: Use simpler foreach syntax now that we are not exempting first element.
-				for (int i = 0; i < pathElements.length; i++) {
-					PayloadTreeNode node = (PayloadTreeNode) pathElements[i];
-					URContext context = (URContext) node.getPayload();
-					currentlySelectedPathContexts.add(context);
-				}
-
-				//System.out.println("===");
-				//int entry = 1;
-				//for (URContext context : contexts) {
-					//System.out.println("Entry " + entry);
-					//System.out.println("Model: " + context.getModelData());
-					//System.out.println("UR: " + context.getUserRequestsText());
-					//entry++;
-				//}
-				//System.out.println("---");
-				currentlySelectedTreeNode = payloadObject;
-
-				URContext context = (URContext) payloadObject;
-				jTextArea_UR.setText(context.getUserRequestsText());
-				System.out.println("Should set text to: '" + context.getUserRequestsText() + "'");
-						
-				String modelData = context.getModelData();
-				System.out.println("Creating model from " + modelData.length() + " characters of data");
-				Model myModel = Model.fromString(modelData);
-				displayImage(myModel.getIntrmediateModel(model.getFinalStateNo()));
-				currState = model.getFinalStateNo();
-				model = myModel;
+//				// Used the payload directly as the object sideloaded to
+//				// setPerformed before, but now it will have to be a bit more
+//				// complicated. Must combine all user requests along the path.
+//
+//				// Collect all UR along path.
+//				List<String> collectedUR = new ArrayList<String>();
+//				// TODO: Remember, nothing says the root node cannot have user requests...
+//
+//				//if (path.getPath().length == 1) {
+//					//// Click on root component
+//					//currentlySelectedTreeNode = payloadObject;
+//					//System.out.println("Currently selected ID: " + currentlySelectedId);
+//					//System.out.println("Return forced");
+//					//return;
+//				//}
+//
+//
+//				currentlySelectedPathContexts.clear();
+//
+//				Object[] pathElements = path.getPath();
+//
+//				System.out.println("Beginning printout");
+//				// TODO: Use simpler foreach syntax now that we are not exempting first element.
+//				for (int i = 0; i < pathElements.length; i++) {
+//					PayloadTreeNode node = (PayloadTreeNode) pathElements[i];
+//					URContext context = (URContext) node.getPayload();
+//					currentlySelectedPathContexts.add(context);
+//				}
+//
+//				//System.out.println("===");
+//				//int entry = 1;
+//				//for (URContext context : contexts) {
+//					//System.out.println("Entry " + entry);
+//					//System.out.println("Model: " + context.getModelData());
+//					//System.out.println("UR: " + context.getUserRequestsText());
+//					//entry++;
+//				//}
+//				//System.out.println("---");
+//				currentlySelectedTreeNode = payloadObject;
+//
+//				URContext context = (URContext) payloadObject;
+//				jTextArea_UR.setText(context.getUserRequestsText());
+//				System.out.println("Should set text to: '" + context.getUserRequestsText() + "'");
+//
+//				String modelData = context.getModelData();
+//				System.out.println("Creating model from " + modelData.length() + " characters of data");
+//				Model myModel = Model.fromString(modelData);
+//				displayImage(myModel.getIntrmediateModel(myModel.getFinalStateNo()));
+//				currState = myModel.getFinalStateNo();
+//				model = myModel;
 			}
 		});
 	}
@@ -465,31 +501,35 @@ public class ProPubApp extends javax.swing.JFrame {
 	}
 
 	private void jButton_LastActionPerformed(java.awt.event.ActionEvent evt) {
+        Model model = GlobalContext.getInstance().getCurrentRunContext().getModel();
 		System.out.println("Skipping to state: " + model.getFinalStateNo());
 		currState = model.getFinalStateNo();
 		displayImage(model.getIntrmediateModel(currState));
 	}
 	private void jButton_NextActionPerformed(java.awt.event.ActionEvent evt) {
+        Model model = GlobalContext.getInstance().getCurrentRunContext().getModel();
 		if (currState < model.getFinalStateNo()) {
 			currState++;
 			System.out.println("Moving to state: " + currState);
-			displayImage(model.getIntrmediateModel(currState));	
+			displayImage(model.getIntrmediateModel(currState));
 		}
 		else {
 			System.out.println("Not moving, already at state: " + model.getFinalStateNo());
 		}
 	}
 	private void jButton_PrevActionPerformed(java.awt.event.ActionEvent evt) {
+        Model model = GlobalContext.getInstance().getCurrentRunContext().getModel();
 		if (currState > 0) {
 			currState--;
 			System.out.println("Moving to state: " + currState);
-			displayImage(model.getIntrmediateModel(currState));	
+			displayImage(model.getIntrmediateModel(currState));
 		}
 		else {
 			System.out.println("Not moving, already at state 0");
 		}
 	}
 	private void jButton_FirstActionPerformed(java.awt.event.ActionEvent evt) {
+        Model model = GlobalContext.getInstance().getCurrentRunContext().getModel();
 		System.out.println("Skipping to state: 0");
 		currState = 0;
 		displayImage(model.getIntrmediateModel(currState));
@@ -506,40 +546,48 @@ public class ProPubApp extends javax.swing.JFrame {
 		}
 		else {
 			// Have to instruct the system that the selected treenode is now the root, so child queries should be added under this node.
-			base_id = currentlySelectedId;
+//			base_id = currentlySelectedId;
 			// Also, have to assemble the URs and set that somewhere to get picked up by SLActionPerformed()
 			// They're in currentlySelectedPathContexts.
-			assembledRequests = assembleRequests();
-			System.out.println("Requests assembled and locked.");
+//			assembledRequests = assembleRequests();
+			// TODO: Do something with the results.
 
 			// Basically, need to create a combined context that spiders up the tree.
-			System.out.println("cls: " + currentlySelectedTreeNode.getClass().getName());
-			System.out.println("Setting to: '" + currentlySelectedTreeNode + "'");
+            GlobalContext.getInstance().setCurrentContext((RunContext) ((PayloadTreeNode) currentlySelectedTreeNode).getPayload());
 			jTextArea_UR.setText("");
 
 		}
-	}
-
-	private String assembleRequests() {
-		if (currentlySelectedPathContexts.size() == 0) {
-			return "";
-		}
-		StringBuilder sb = new StringBuilder(currentlySelectedPathContexts.get(0).getUserRequestsText());
-		for (int i = 1; i < currentlySelectedPathContexts.size(); i++) {
-			sb.append("\n").append(currentlySelectedPathContexts.get(i).getUserRequestsText());
-		}
-		return sb.toString();
 	}
 
 	private void jButton_NIActionPerformed(java.awt.event.ActionEvent evt) {
 		// TODO add your handling code here:
 	}
 
-	private void jButton_SLActionPerformed(java.awt.event.ActionEvent evt) {	
+	private void jButton_SLActionPerformed(java.awt.event.ActionEvent evt) {
+
+        String userRequestString = jTextArea_UR.getText();
+        File userRequestFile = writeSafe(userRequestString, ".dlv");
+        RunContext newRunContext = GlobalContext.getInstance().getCurrentRunContext().withNewUserRequestFile(userRequestFile);
+        GlobalContext.getInstance().addChild(currentRunContext, newRunContext);
+
+        Model model = newRunContext.getModel();
+        currState = model.getFinalStateNo();
+        currentDisplayedModel = model;
+        displayLatestStageImage();
+
+        jTree_QT = GlobalContext.getInstance().buildTree();
+        addListener(jTree_QT);
+        jScrollPane_QT.setViewportView(jTree_QT);
+
+
+        // My code is over.
+        if (1 == 1) {
+            return;
+        }
 		id++;
 		currState = 0;
 		process(sessionId,id,stateNo, null);
-		
+
 		Integer key = new Integer(id);
 		//ht_ele.add(key);
 		//System.out.println("Added " + id + ", so now ht_ele has: " + ht_ele);
@@ -565,73 +613,144 @@ public class ProPubApp extends javax.swing.JFrame {
 		jScrollPane_QT.setViewportView(jTree_QT);
 	}
 
-	private void jButton_SaveActionPerformed(java.awt.event.ActionEvent evt) {
+    private File writeSafe(String string, String suffix) {
+        FileDriver fd = new FileDriver();
+        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+        Random random = new Random();
+        File newFile = new File(tmpDir, random.nextInt() + suffix);
+        fd.writeFile(new StringBuffer(string), newFile.getAbsolutePath());
+        return newFile;
+    }
+
+    private void jButton_SaveActionPerformed(java.awt.event.ActionEvent evt) {
 		// TODO add your handling code here:
 	}
 
-	private void jButton_OpenActionPerformed(java.awt.event.ActionEvent evt) {		
+	private void jButton_OpenActionPerformed(java.awt.event.ActionEvent evt) {
 		EnvInfo ei = new EnvInfo();
 		ei.setSetupInfo(constants);
-		// SEAN: Make this no longer hardcoded, ask with a JFileChooser.
-		process(sessionId,id,stateNo, "/Users/sean/ProPubProj/propub/data/pg.dlv");			
+		//JFileChooser chooser = new JFileChooser();
+		//FileNameExtensionFilter filter = new FileNameExtensionFilter("DLV input file", "dlv");
+		//chooser.setFileFilter(filter);
+		//int returnVal = chooser.showOpenDialog(this);
+		//if (returnVal == JFileChooser.APPROVE_OPTION) {
+			//process(sessionId, id, stateNo, chooser.getSelectedFile().getAbsolutePath());
+		//}
+		//else {
+			//// Do nothing.
+		//}
+        File inputFile = new File("/home/sean/ProPubProj/propub/data/pg2.dlv");
+        RunContext runContext = GlobalContext.getInstance().initialLoad(inputFile);
+        GlobalContext.getInstance().setCurrentContext(runContext);
+        Model model = runContext.getModel();
+        currentDisplayedModel = model;
+        currState = model.getFinalStateNo();
+        displayLatestStageImage();
+		//process(sessionId,id,stateNo, "/home/sean/ProPubProj/propub/data/pg2.dlv");
 
-		String userRequests = jTextArea_UR.getText();
-		String modelData = model.getModel();
-		URContext rootContext = new URContext(userRequests, modelData);
-		// TODO: remove hardwired value 0.
-		queryTreeContexts.put(0, rootContext);
-		
-		ht_ele = new ArrayList<Integer>();
 
+        // All this stuff should not be necessary now.
+//		String userRequests = jTextArea_UR.getText();
+//		String modelData = model.getModel();
+//		URContext rootContext = new URContext(userRequests, modelData);
+//		// TODO: remove hardwired value 0.
+//		queryTreeContexts.put(0, rootContext);
+//
+//		ht_ele = new ArrayList<Integer>();
+//
+//		if (!htQueryTree.containsKey(base_id)) {
+//			htQueryTree.put(base_id, new ArrayList<Integer>());
+//		}
+//		jTree_QT = bt.getTree(htQueryTree, queryTreeContexts);
+//		addListener(jTree_QT);
+//		jScrollPane_QT.setViewportView(jTree_QT);
+
+        jTree_QT = GlobalContext.getInstance().buildTree();
+        addListener(jTree_QT);
+        jScrollPane_QT.setViewportView(jTree_QT);
 	}
-	
 
-	private void jButton_NewActionPerformed(java.awt.event.ActionEvent evt) {
+
+
+    private void jButton_NewActionPerformed(java.awt.event.ActionEvent evt) {
 		// TODO add your handling code here:
 	}
 
 	private void process(int sessionId, int id, int stateNo, String file) {
+        System.out.println("Call to process, find out where this is from and kill it.");
+        if (1 == 1) {
+            System.exit(-1);
+        }
 		//copy pg
+		System.out.println("-----------------------------------------------------");
 		FileDriver fd = new FileDriver();
 		if (file != null) {
 			String inPGFile  = file;
-			String exePGFile = getFileName(constants.PROPUB_EXE, "pg", "dlv");	
-			String outPGFile = getFileName(sessionId,id,stateNo, constants.PROPUB_OUT, "pg", "dlv");	
+			String exePGFile = getFileName(constants.PROPUB_EXE, "pg", "dlv");
+			String outPGFile = getFileName(sessionId,id,stateNo, constants.PROPUB_OUT, "pg", "dlv");
+			System.out.println("'" + inPGFile + "' -> '" + outPGFile + "' (branch 1)");
 			fd.copyFile(inPGFile, outPGFile);
-			fd.copyFile(inPGFile, exePGFile);			
+			System.out.println("'" + inPGFile + "' -> '" + exePGFile + "' (branch 1)");
+			fd.copyFile(inPGFile, exePGFile);
 		} else {
 			String outPGFile  = getFileName(sessionId,id-1,stateNo, constants.PROPUB_OUT, "pg", "dlv");
 			String exePGFile = getFileName(constants.PROPUB_EXE, "pg", "dlv");
-			fd.copyFile(outPGFile, exePGFile);			
+			System.out.println("******* '" + outPGFile + "' -> '" + exePGFile + "' (branch 2)");
+			fd.copyFile(outPGFile, exePGFile);
 		}
 
 		//read ur and copy
 		String exeURFile  = getFileName(constants.PROPUB_EXE, "ur", "dlv");
 		String outURFile  = getFileName(sessionId,id,stateNo, constants.PROPUB_OUT, "ur", "dlv");
 		if (assembledRequests == null) {
+			System.out.println("No assembled requests");
 			fd.writeFile(new StringBuffer(jTextArea_UR.getText()), exeURFile);
+			System.out.println("UR data -> '" + exeURFile + "' (branch 3)");
 			fd.writeFile(new StringBuffer(jTextArea_UR.getText()), outURFile);
+			System.out.println("UR data -> '" + outURFile + "' (branch 4)");
 		}
 		else {
+			System.out.println("Some assembled requests");
 			fd.writeFile(new StringBuffer(assembledRequests + "\n" + jTextArea_UR.getText()), exeURFile);
+			System.out.println("UR data... -> '" + exeURFile + "' (branch 5)");
 			fd.writeFile(new StringBuffer(assembledRequests + "\n" + jTextArea_UR.getText()), outURFile);
+			System.out.println("UR data... -> '" + outURFile + "' (branch 6)");
 		}
-				
+
+		System.out.println("-----------------------------------------------------");
 		//call dlv
 		DLVDriver dlv = new DLVDriver();
-		dlv.exeDLV(constants.SL_DLV_PATH);
-		
-		//Set up the model
-		model = new Model(constants);
-		
-		//display image
-		displayImage(model.getIntrmediateModel(model.getFinalStateNo()));
-		//set query		
+		dlv.exeDLV(new String[] {constants.SL_DLV_PATH}); // Constructed an
+		// array so this will compile, but it still won't work.
+
+        // SEAN: At the moment, this is dead code anyway due to the return
+        // above. Just commented out to allow compilation.
+//		//Set up the model
+//		model = new Model(constants);
+//
+//		//display image
+//		displayImage(model.getIntrmediateModel(model.getFinalStateNo()));
+		//set query
 	}
-	
+
+    private void displayLatestStageImage() {
+        Model model = currentDisplayedModel;
+        int latestStage = model.getFinalStateNo();
+        displayImage(model.getIntrmediateModel(latestStage));
+        currState = latestStage;
+    }
 
 	private void displayImage(ArrayList<String> model) {
-		System.out.println("DisplayImage call");
+		FileDriver fd = new FileDriver();
+		StringBuffer sb = new StringBuffer();
+		for (String s : model) {
+			sb.append("% " + s + "\n");
+		}
+		fd.writeFile(sb, "/home/sean/model.txt");
+
+
+
+		System.out.println("DisplayImage call: model is: ");
 		DOTDriver dot = new DOTDriver(constants);
 		String imgFile = dot.prepareImgage(model);
 		try {
@@ -642,47 +761,47 @@ public class ProPubApp extends javax.swing.JFrame {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private String getFileName(int sessionId, int id, int stateNo, String dir, String file, String extn) {
-		String fileName = 
-				dir + 
+		String fileName =
+				dir +
 				constants.ENV_SEPARATOR +
 				file +
 				"_" +
 				sessionId + "." +
 				id + "." +
 				stateNo + "." +
-				extn; 
-		
+				extn;
+
 		return fileName;
 	}
 
 	private String getFileName(String dir, String file, String extn) {
-		String fileName = 
-				dir + 
+		String fileName =
+				dir +
 				constants.ENV_SEPARATOR +
 				file + "." +
-				extn; 
-		
+				extn;
+
 		return fileName;
 	}
-	
+
 	Constants constants = new Constants();
 	BuildTree bt = new BuildTree();
 	Hashtable<String, Query> htQuery = new Hashtable<String, Query>();
-	Model model;
-	
+//	Model model;
+
 	int sessionId = 0;
 	int id        = 0;
 	int stateNo   = 0;
 	int parentId  = 0;
 	int currState = 0;
-	
+
 	Hashtable<Integer, ArrayList> htQueryTree = new Hashtable<Integer, ArrayList>();
 	Hashtable<Integer, URContext> queryTreeContexts = new Hashtable<Integer, URContext>();
 	ArrayList<Integer> ht_ele;
 	int base_id = 0;
-	
+
 	/**
 	 * @param args the command line arguments
 	 */
@@ -690,9 +809,18 @@ public class ProPubApp extends javax.swing.JFrame {
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				new ProPubApp().setVisible(true);
-				
+
 			}
 		});
+	}
+
+	private static void initButtonGraphic(javax.swing.JButton button, String textLabel, String iconCategory, String iconName, String tooltip) {
+		//button.setText(textLabel);		// Only for now.
+		String urlString = "toolbarButtonGraphics/" + iconCategory + "/" + iconName + "24.gif";
+		URL url = ProPubApp.class.getClassLoader().getResource(urlString);
+		Icon icon = new ImageIcon(url);
+		button.setIcon(icon);
+		button.setToolTipText(tooltip);
 	}
 
 	//GEN-BEGIN:variables
@@ -720,6 +848,9 @@ public class ProPubApp extends javax.swing.JFrame {
 	private javax.swing.JTabbedPane jTabbedPane_First;
 	private javax.swing.JTextArea jTextArea_UR;
 	private javax.swing.JTree jTree_QT;
+
+    private RunContext currentRunContext = null;
+    private Model currentDisplayedModel = null;
 	// End of variables declaration//GEN-END:variables
 
 }
