@@ -8,8 +8,24 @@ import propub.Constants;
 import file.FileDriver;
 
 public class Model {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-	int         finalStateNo;
+        Model model1 = (Model) o;
+
+        if (model != null ? !model.equals(model1.model) : model1.model != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return model != null ? model.hashCode() : 0;
+    }
+
+    int         finalStateNo;
 	String      model;
 	FileDriver  fd;
 	Constants   constants;
