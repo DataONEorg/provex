@@ -416,7 +416,7 @@ public class ProPubApp extends javax.swing.JFrame {
 		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		tree.addTreeSelectionListener(new TreeSelectionListener() {
 			public void valueChanged(TreeSelectionEvent e) {
-				System.out.println("value changed = " + e);
+                FileDriver fd = new FileDriver();
 				TreePath path = e.getPath();
 				Object clickedObj = path.getLastPathComponent();
 				System.out.println("Clicked on '" + clickedObj + "' (" + clickedObj.getClass().getName() + ")");
@@ -434,7 +434,15 @@ public class ProPubApp extends javax.swing.JFrame {
                     }
                 }
 				Object payloadObject = treeNode.getPayload();
-				currentlySelectedId = treeNode.getId();
+                RunContext selectedRunContext = (RunContext) payloadObject;
+                currentDisplayedModel = selectedRunContext.getModel();
+                File userRequestFile = selectedRunContext.getUserRequestFile();
+                System.out.println("User request file of item selected: " + userRequestFile.getAbsolutePath());
+                System.out.println("UR signature: " + System.identityHashCode(selectedRunContext));
+                String userRequests = fd.readFile(userRequestFile.getAbsolutePath()).toString();
+                jTextArea_UR.setText(userRequests);
+                displayLatestStageImage();
+//				currentlySelectedId = treeNode.getId();
                 currentlySelectedTreeNode = treeNode;
 
 //				// Used the payload directly as the object sideloaded to
@@ -492,9 +500,9 @@ public class ProPubApp extends javax.swing.JFrame {
 	}
 
 	private Object currentlySelectedTreeNode = null;
-	private List<URContext> currentlySelectedPathContexts = new ArrayList<URContext>();
-	private Integer currentlySelectedId = -1;
-	private String assembledRequests = null;
+//	private List<URContext> currentlySelectedPathContexts = new ArrayList<URContext>();
+//	private Integer currentlySelectedId = -1;
+//	private String assembledRequests = null;
 
 	private void jButton_IGActionPerformed(java.awt.event.ActionEvent evt) {
 		// TODO add your handling code here:
@@ -568,7 +576,9 @@ public class ProPubApp extends javax.swing.JFrame {
         String userRequestString = jTextArea_UR.getText();
         File userRequestFile = writeSafe(userRequestString, ".dlv");
         RunContext newRunContext = GlobalContext.getInstance().getCurrentRunContext().withNewUserRequestFile(userRequestFile);
-        GlobalContext.getInstance().addChild(currentRunContext, newRunContext);
+        System.out.println("Adding child " + newRunContext + " of parent " + currentRunContext);
+//        GlobalContext.getInstance().addChild(GlobalContext.getInstance().getCurrentRunContext(), newRunContext);
+        GlobalContext.getInstance().addChildOfCurrentContext(newRunContext);
 
         Model model = newRunContext.getModel();
         currState = model.getFinalStateNo();
@@ -618,6 +628,7 @@ public class ProPubApp extends javax.swing.JFrame {
         File tmpDir = new File(System.getProperty("java.io.tmpdir"));
         Random random = new Random();
         File newFile = new File(tmpDir, random.nextInt() + suffix);
+        System.out.println("Writing string of length " + string.length() + ": " + newFile.getAbsolutePath());
         fd.writeFile(new StringBuffer(string), newFile.getAbsolutePath());
         return newFile;
     }
@@ -702,6 +713,7 @@ public class ProPubApp extends javax.swing.JFrame {
 		//read ur and copy
 		String exeURFile  = getFileName(constants.PROPUB_EXE, "ur", "dlv");
 		String outURFile  = getFileName(sessionId,id,stateNo, constants.PROPUB_OUT, "ur", "dlv");
+        String assembledRequests = null;  // SEAN: Just a placeholder to get this dead code to compile.
 		if (assembledRequests == null) {
 			System.out.println("No assembled requests");
 			fd.writeFile(new StringBuffer(jTextArea_UR.getText()), exeURFile);

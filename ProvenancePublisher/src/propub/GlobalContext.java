@@ -26,15 +26,20 @@ public class GlobalContext {
 	}
 
 	public void addChild(RunContext rcParent, RunContext rcChild) {
-		if (!tree.containsKey(rcParent)) {
-			tree.put(rcParent, new ArrayList<RunContext>());
+		if (!treeData.containsKey(rcParent)) {
+			treeData.put(rcParent, new ArrayList<RunContext>());
 		}
-		tree.get(rcParent).add(rcChild);
+		treeData.get(rcParent).add(rcChild);
 	}
 
+    public void addChildOfCurrentContext(RunContext runContext) {
+        System.out.println("Adding child of current context: child UR is: " + runContext.getUserRequestFile().getAbsolutePath());
+        addChild(getCurrentRunContext(), runContext);
+    }
+
     public void setCurrentContext(RunContext currentRunContext) {
-        System.out.println("Setting current context!");
         this.currentRunContext = currentRunContext;
+        System.out.println("Setting context to: " + GlobalContext.getInstance().getCurrentRunContext().getInstanceId());
     }
 
     public RunContext getCurrentRunContext() {
@@ -48,7 +53,7 @@ public class GlobalContext {
 
 	public List<RunContext> childrenBySessionId(Integer sessionId) {
 		RunContext rc = lookupBySessionId(sessionId);
-		return tree.get(rc);
+		return treeData.get(rc);
 	}
 
 	public RunContext nthChild(RunContext rc, Integer id) {
@@ -56,7 +61,7 @@ public class GlobalContext {
 	}
 
 	public List<RunContext> children(RunContext rc) {
-		return tree.get(rc);
+		return treeData.get(rc);
 	}
 
 
@@ -69,11 +74,14 @@ public class GlobalContext {
 
     private static GlobalContext instance = null;
 	private List<RunContext> topLevelItems = new ArrayList<RunContext>();
-    private Map<Object, Map<Integer, PayloadTreeNode>> nodeCache = new HashMap<Object, Map<Integer, PayloadTreeNode>>();
-	private Map<RunContext, List<RunContext>> tree = new HashMap<RunContext, List<RunContext>>();
+    private Map<RunContext, PayloadTreeNode> nodeCache = new HashMap<RunContext, PayloadTreeNode>();
+    private Map<RunContext, List<Integer>> positionCache = new HashMap<RunContext, List<Integer>>();
+	private Map<RunContext, List<RunContext>> treeData = new HashMap<RunContext, List<RunContext>>();
     private RunContext currentRunContext = null;
 
     public JTree buildTree() {
+        System.out.println("buildTree()");
+        System.out.println("topLevelItems: " + topLevelItems);
         JTree tree = new JTree();
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
         DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode) model.getRoot();
@@ -84,24 +92,57 @@ public class GlobalContext {
         // the model, and is therefore quite useless.
         {
             List<MutableTreeNode> rootChildren = new ArrayList<MutableTreeNode>();
-            System.out.println("Root node has " + rootChildren.size() + " children.");
             for (int i = 0; i < rootNode.getChildCount(); i++) {
                 rootChildren.add((MutableTreeNode) rootNode.getChildAt(i));
-                System.out.println("Added: " + rootNode.getChildAt(i) + " for removal");
             }
 
             for (MutableTreeNode rootChild : rootChildren) {
                 model.removeNodeFromParent(rootChild);
-                System.out.println("Removed: " + rootChild);
             }
         }
 
-        System.out.println("There are " + topLevelItems.size() + " TLIs");
-        int i = 1;
+        int i = 0;
         for (RunContext rc : topLevelItems) {
             PayloadTreeNode ptn = new PayloadTreeNode("Query " + i++, rc);
-            System.out.println("Inserting at root index: " + rootNode.getChildCount());
+            nodeCache.put(rc, ptn);
+            positionCache.put(rc, Arrays.asList(i++));
+            System.out.println("Inserting " + rc + " at root index: " + rootNode.getChildCount());
             model.insertNodeInto(ptn, rootNode, rootNode.getChildCount());
+        }
+
+        Queue<RunContext> queue = new LinkedList<RunContext>();
+        queue.addAll(topLevelItems);
+        while (!queue.isEmpty()) {
+            RunContext rc = queue.poll();
+            System.out.println("Popped " + rc);
+            // Add rc's children.
+            if (!treeData.containsKey(rc)) {
+                System.out.println("No children, skipping");
+                // Nothing to do.
+            }
+            else {
+                List<RunContext> children = treeData.get(rc);
+                System.out.println("Got " + children.size() + " children: " + children);
+                int j = 0;
+                for (RunContext child : children) {
+                    System.out.println("processing child: " + child);
+                    List<Integer> parentPosition = positionCache.get(rc);
+                    List<Integer> childPosition = new ArrayList<Integer>(parentPosition);
+                    childPosition.add(j++);
+                    positionCache.put(child, childPosition);
+
+                    String name = _createName(childPosition);
+
+                    PayloadTreeNode ptn = new PayloadTreeNode(name, child);
+                    PayloadTreeNode parentContextNode = nodeCache.get(rc);
+                    nodeCache.put(child, ptn);
+
+                    model.insertNodeInto(ptn, parentContextNode, parentContextNode.getChildCount());
+                }
+                queue.addAll(children);
+            }
+
+
         }
 
         expandAll(tree);
@@ -184,10 +225,26 @@ public class GlobalContext {
 //        return tree;
     }
 
+    private String _createName(List<Integer> position) {
+        return "Query " + _join(position, ".");
+    }
+
+    private String _join(List<?> list, String delimiter) {
+        if (list.size() == 0) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(list.get(0).toString());
+        for (int i = 1; i < list.size(); i++) {
+            sb.append(delimiter).append(list.get(i).toString());
+        }
+        return sb.toString();
+    }
+
     private static void expandAll(JTree tree) {
         int row = 0;
         while (row < tree.getRowCount()) {
             tree.expandRow(row++);
         }
     }
+
 }

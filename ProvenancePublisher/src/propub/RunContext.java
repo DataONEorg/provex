@@ -21,23 +21,39 @@ public class RunContext {
         this(pgFile, blankFile());
 	}
 
+    private static int instanceNum = 1;
+    private final int myInstanceNum;
+
     public RunContext(File pgFile, File urFile) {
+        this.myInstanceNum = instanceNum++;
         FileDriver fd = new FileDriver();
         Constants constants = new Constants();
         EnvInfo ei = new EnvInfo();
         ei.setSetupInfo(constants);
         DLVDriver dlv = new DLVDriver();
+        if (!urFile.getName().startsWith("blank")) {
+            System.out.println("Whoa");
+        }
         dlv.exeDLV(new String[] {constants.SL_DLV_PATH, pgFile.getAbsolutePath(), urFile.getAbsolutePath()});
 
         String modelString = fd.readFile(constants.PROPUB_EXE + constants.ENV_SEPARATOR + "out.txt").toString();
         modelString = modelString.replaceAll("\\),", "\\).").replace("}", ".");
 
         this.pgFile = pgFile;
-        this.urFile = blankFile();
+        this.urFile = urFile;
         this.model = new Model(modelString);
 
         //display image
 //		displayImage(model.getIntrmediateModel(model.getFinalStateNo()));
+    }
+
+    @Override
+    public String toString() {
+        return "rcInst" + myInstanceNum;
+    }
+
+    public int getInstanceId() {
+        return myInstanceNum;
     }
 
     public File getUserRequestFile() {
