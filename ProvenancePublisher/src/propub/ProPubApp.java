@@ -575,7 +575,7 @@ public class ProPubApp extends javax.swing.JFrame {
 
         String userRequestString = jTextArea_UR.getText();
         File userRequestFile = writeSafe(userRequestString, ".dlv");
-        RunContext newRunContext = GlobalContext.getInstance().getCurrentRunContext().withNewUserRequestFile(userRequestFile);
+        RunContext newRunContext = GlobalContext.getInstance().getCurrentRunContext().withNewUserRequestFile(userRequestFile, currState);
         System.out.println("Adding child " + newRunContext + " of parent " + currentRunContext);
 //        GlobalContext.getInstance().addChild(GlobalContext.getInstance().getCurrentRunContext(), newRunContext);
         GlobalContext.getInstance().addChildOfCurrentContext(newRunContext);
