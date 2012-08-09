@@ -21,6 +21,7 @@ public class GlobalContext {
 
 	private RunContext addTopLevel(File file) {
 		RunContext rc = new RunContext(file);
+        rc.setFileLoadContext(true);
 		topLevelItems.add(rc);
         return rc;
 	}
