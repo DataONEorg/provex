@@ -6,6 +6,7 @@ import java.util.Hashtable;
 import propub.Constants;
 
 import file.FileDriver;
+import propub.RunContext;
 
 public class Model {
     @Override
@@ -32,18 +33,6 @@ public class Model {
 	
 	public Model(String modelData) {
 		this.model = modelData;
-		finalStateNo = fetchFinalStateNo();
-	}
-
-	public Model(Constants   constants) {
-		fd = new FileDriver();
-		this.constants = constants;
-		//read the model
-		model = fd.readFile(constants.PROPUB_EXE + constants.ENV_SEPARATOR + "out.txt").toString();
-		System.out.println("Building model from file " + (constants.PROPUB_EXE + constants.ENV_SEPARATOR + "out.txt"));
-		//making the model as set of facts
-		//model = model.replaceAll("\\),", "\\).").replace("}", ".").replace("l_", "");
-		model = model.replaceAll("\\),", "\\).").replace("}", ".");
 		finalStateNo = fetchFinalStateNo();
 	}
 
