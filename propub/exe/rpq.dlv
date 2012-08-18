@@ -1,0 +1,60 @@
+% RPQ engine for both rpq/2 and rpq/4
+
+p(X,L,Y,X,L,Y) :- 
+	g(X,L,Y).
+
+
+p(X,L_or_M,Y,U,L2,V) :- 
+	p(X,L1,Y,U,L2,V), 
+	or(L1,_,L_or_M).
+p(X,L_or_M,Y,U,M2,V) :- 
+	p(X,M1,Y,U,M2,V), 
+	or(_,M1,L_or_M).
+
+
+p(X, L_conc_M,Y,U,L2,V) :- 
+	p(X,L1,Z,U,L2,V),
+	p(Z,M1,Y,_,_,_), 
+	conc(L1,M1,L_conc_M).
+p(X, L_conc_M,Y,U,M2,V) :- 
+	p(X,L1,Z,_,_,_),
+	p(Z,M1,Y,U,M2,V), 
+	conc(L1,M1,L_conc_M).
+
+
+p(X,L_plus,Y,U,L1,V) :- 
+	plus(L,L_plus),
+	p(X,L,Y,U,L1,V).
+p(X,L_plus,Y,U,L1,V) :- 
+	p(X,L,Z,U,L1,V),
+	p(Z, L_plus,Y,_,_,_), 
+	plus(L, L_plus).
+p(X,L_plus,Y,U,L1,V) :- 
+	p(X,L,Z,_,_,_),
+	p(Z, L_plus,Y,U,L1,V), 
+	plus(L, L_plus).
+
+
+p(X,L_star,X,U,L1,V) :- 
+	star(L,L_star),
+	p(X,L,_,U,L1,V).
+p(X,L_star,X,U,L1,V) :- 
+	star(L,L_star),
+	p(_,L,X,U,L1,V).
+p(X,L_star,Y,U,L1,V) :- 
+	p(X,L,Z,U,L1,V),
+	p(Z, L_star,Y,_,_,_), 
+	star(L, L_star).
+p(X,L_star,Y,U,L1,V) :- 
+	p(X,L,Z,_,_,_),
+	p(Z, L_star,Y,U,L1,V), 
+	star(L, L_star).
+
+
+rpq2(X,L,Y) :- 
+	p(X,L,Y,_,_,_), 
+	q(L).
+
+rpq4(X,L,Y,U,M,V) :- 
+	p(X,L,Y,U,M,V), 
+	q(L).

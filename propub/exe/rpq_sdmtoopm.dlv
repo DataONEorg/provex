@@ -1,0 +1,3 @@
+used(X,Y)   :- rpq4(_,_,_,X,L,Y), L="used".
+genBy(X,Y)  :- rpq4(_,_,_,X,L,Y), L="genBy".
+

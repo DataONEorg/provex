@@ -1,0 +1,3 @@
+g(X,L,Y) :- used(X,Y), L=used.
+g(X,L,Y) :- gen_by(X,Y), L=gen_by.
+
