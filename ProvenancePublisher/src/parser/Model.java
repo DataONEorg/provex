@@ -33,6 +33,7 @@ public class Model {
 	
 	public Model(String modelData) {
 		this.model = modelData;
+		model = model.replaceAll("all_lineage,", "");
 		finalStateNo = fetchFinalStateNo();
 	}
 

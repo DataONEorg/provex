@@ -4,6 +4,7 @@ import db.DLVDriver;
 import env.EnvInfo;
 import file.FileDriver;
 import parser.Model;
+import types.IconType;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -34,7 +35,17 @@ public class RunContext {
 	}
 
     private static int instanceNum = 1;
-    private final int myInstanceNum;
+
+	public void setIconType(IconType type) {
+		this.iconType = type;
+	}
+
+	public IconType getIconType() {
+		return iconType;
+	}
+
+	private final int myInstanceNum;
+	private IconType iconType = null;
 
     public RunContext(File pgFile, File urFile) {
         this.myInstanceNum = instanceNum++;

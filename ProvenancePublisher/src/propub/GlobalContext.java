@@ -1,12 +1,16 @@
 package propub;
 
+import types.IconType;
 import types.PayloadTreeNode;
 
 import javax.swing.*;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.*;
+import java.awt.*;
 import java.io.File;
+import java.net.URL;
 import java.util.*;
+import java.util.List;
 
 public class GlobalContext {
 
@@ -22,6 +26,7 @@ public class GlobalContext {
 	private RunContext addTopLevel(File file) {
 		RunContext rc = new RunContext(file);
         rc.setFileLoadContext(true);
+		rc.setIconType(IconType.FILE_LOAD);
 		topLevelItems.add(rc);
         return rc;
 	}
@@ -80,10 +85,48 @@ public class GlobalContext {
 	private Map<RunContext, List<RunContext>> treeData = new HashMap<RunContext, List<RunContext>>();
     private RunContext currentRunContext = null;
 
+	private class MyTreeCellRenderer extends DefaultTreeCellRenderer {
+		@Override
+		public Component getTreeCellRendererComponent(JTree jTree, Object o, boolean b, boolean b1, boolean b2, int i, boolean b3) {
+			JLabel label = (JLabel) super.getTreeCellRendererComponent(jTree, o, b, b1, b2, i, b3);
+			try {
+				PayloadTreeNode ptn = (PayloadTreeNode) o;
+				RunContext runContext = (RunContext) ptn.getPayload();
+				String urlString = null;
+				if (runContext.getIconType() == IconType.SWALLOW) {
+					urlString = "toolbarButtonGraphics/general/Remove24.gif";
+				}
+				else if (runContext.getIconType() == IconType.INVENT) {
+					urlString = "toolbarButtonGraphics/general/Add24.gif";
+				}
+				else if (runContext.getIconType() == IconType.FILE_LOAD) {
+					urlString = "toolbarButtonGraphics/general/Properties24.gif";
+				}
+				else {
+					urlString = "toolbarButtonGraphics/general/Help24.gif";
+				}
+				URL url = GlobalContext.class.getClassLoader().getResource(urlString);
+				Icon icon = new ImageIcon(url);
+				label.setIcon(icon);
+				return label;
+			}
+			catch(ClassCastException cce) {
+				String urlString = "toolbarButtonGraphics/general/Copy24.gif";
+				URL url = GlobalContext.class.getClassLoader().getResource(urlString);
+				Icon icon = new ImageIcon(url);
+				label.setIcon(icon);
+				return label;
+			}
+		}
+	}
+
     public JTree buildTree() {
         System.out.println("buildTree()");
         System.out.println("topLevelItems: " + topLevelItems);
         JTree tree = new JTree();
+
+		tree.setCellRenderer(new MyTreeCellRenderer());
+
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
         DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode) model.getRoot();
         rootNode.setUserObject("Root!");

@@ -2,6 +2,6 @@
 
 cd /Users/sean/ProPubProj/propub/exe
 
-dlv -silent propub_swallow.dlv pg.dlv ur.dlv > out.txt
+dlv -silent propub_swallow.dlv $1 $2 > out.txt
 
 exit

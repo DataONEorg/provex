@@ -78,7 +78,7 @@ public class FileDriver {
 		return htLines;
 	}
 	
-	private BufferedReader getFileHandle(String fileName) throws Exception{
+	public BufferedReader getFileHandle(String fileName) throws Exception{
 		FileReader fr = new FileReader(fileName);
 		BufferedReader br = new BufferedReader(fr);
 		return br;
