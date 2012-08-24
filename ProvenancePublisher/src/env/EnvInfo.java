@@ -5,15 +5,22 @@ import java.util.Hashtable;
 import propub.Constants;
 
 import file.FileDriver;
+import java.io.File;
 
 public class EnvInfo {
 	
 	Hashtable<String, String> lines = new Hashtable<String, String>();
 	
 	public void setSetupInfo(Constants constants) {
-		
+		System.out.println("Setting up!");
 		FileDriver fd = new FileDriver();
-		lines = fd.readFile("/Users/sean/ProPubProj/propub/exe/config.txt", "=");
+		File userDirectory = new File(System.getProperty("user.home"));
+		File configurationFile = new File(userDirectory, "propubrc");
+		if (!configurationFile.exists()) {
+			System.err.println("Configuration file not found at: " + configurationFile.getAbsolutePath());
+			System.exit(1);
+		}
+		lines = fd.readFile(configurationFile.getAbsolutePath(), "=");
 		//lines = fd.readFile("C:\\saumen\\propub\\exe\\config_win.txt", "=");
 		
 		constants.PROPUB_ROOT = lines.get("PROPUB_ROOT");

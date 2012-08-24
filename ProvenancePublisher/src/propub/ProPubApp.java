@@ -59,8 +59,15 @@ public class ProPubApp extends javax.swing.JFrame {
 	/** Creates new form ProPubApp */
 	public ProPubApp() {
 		super("ProPub: The Provenance Publisher");
+		initEnvironment();
 		initComponents();
 	}
+
+	private void initEnvironment() {
+		EnvInfo ei = new EnvInfo();
+		ei.setSetupInfo(constants);
+	}
+
 
 	//GEN-BEGIN:initComponents
 	// <editor-fold defaultstate="collapsed" desc="Generated Code">
@@ -730,8 +737,6 @@ public class ProPubApp extends javax.swing.JFrame {
 	}
 
 	private void jButton_OpenActionPerformed(java.awt.event.ActionEvent evt) {
-		EnvInfo ei = new EnvInfo();
-		ei.setSetupInfo(constants);
 		if ("sean".equals(System.getProperty("user.name"))) {
 			System.out.println("Welcome, Sean");
 			File loadFile = new File("/Users/sean/ProPubProj/propub/data/pg.dlv");
