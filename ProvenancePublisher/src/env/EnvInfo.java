@@ -28,6 +28,7 @@ public class EnvInfo {
 		constants.DOT_PATH = lines.get("DOT_PATH");
 		constants.SL_DLV_PATH = lines.get("SL_DLV_PATH");
 		constants.NI_DLV_PATH = lines.get("NI_DLV_PATH");
+		constants.RPQ_DLV_PATH = lines.get("RPQ_DLV_PATH");
 		
 		constants.setPaths();
 	}

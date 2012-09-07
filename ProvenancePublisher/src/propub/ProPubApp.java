@@ -505,7 +505,7 @@ public class ProPubApp extends javax.swing.JFrame {
 
 		JButton queryButton = new JButton("Query");
 		JButton closeButton = new JButton("Close");
-		final String dlvPath = "/Users/sean/ProPubProj/propub/exe/rpq.sh";
+		final String dlvPath = constants.RPQ_DLV_PATH;
 
 		queryButton.setAction(new AbstractAction() {
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -876,6 +876,7 @@ public class ProPubApp extends javax.swing.JFrame {
 		String imgFile = dot.prepareImgage(model);
 		try {
 			BufferedImage myPicture = ImageIO.read(new File(imgFile));
+			System.out.println("imgFile: " + imgFile);
 			jLabel_Graph.setIcon(new ImageIcon(myPicture));
 		} catch (Exception e) {
 			System.out.println("Errors..");
