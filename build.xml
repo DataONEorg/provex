@@ -23,7 +23,7 @@
 
 <target name="compile">
 	<mkdir dir="ProvenancePublisher/bin" />
-	<javac srcdir="ProvenancePublisher/src" destdir="ProvenancePublisher/bin">
+	<javac srcdir="ProvenancePublisher/src" destdir="ProvenancePublisher/bin" debug="true">
 		<classpath refid="compile.classpath" />
 	</javac>
 </target>
