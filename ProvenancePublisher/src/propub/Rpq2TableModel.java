@@ -108,6 +108,7 @@ public class Rpq2TableModel extends AbstractTableModel {
 				}
 			}
 
+			// NOTE: desiredRpqEdges currently contains the fields of all needed rpq4 facts.
 			StringBuilder sb = new StringBuilder();
 			for (String desiredRpqEdge : desiredRpqEdges) {
 				sb.append("--- ").append(desiredRpqEdge).append("\n");
