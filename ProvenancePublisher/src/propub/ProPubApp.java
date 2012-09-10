@@ -20,6 +20,8 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import java.util.regex.Pattern;
+
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -485,7 +487,7 @@ public class ProPubApp extends javax.swing.JFrame {
 
 		final JDialog dialog = new JDialog(this, "Regular Path Query", Dialog.ModalityType.APPLICATION_MODAL);
 		dialog.setLayout(new GridBagLayout());
-		dialog.setBounds(132, 132, 300, 200);
+//		dialog.setBounds(132, 132, 300, 200);
 		final JTextArea textArea = new JTextArea();
 		textArea.setRows(5);
 		textArea.setColumns(80);
@@ -507,15 +509,12 @@ public class ProPubApp extends javax.swing.JFrame {
 		JButton closeButton = new JButton("Close");
 		final String dlvPath = constants.RPQ_DLV_PATH;
 
-		queryButton.setAction(new AbstractAction() {
-			public void actionPerformed(ActionEvent actionEvent) {
-				RGrammar grammar = new RGrammar();
-				File factsFile = grammar.reGrammar(textArea.getText());
-				DLVDriver dlv = new DLVDriver();
-				File modelFile = writeToFile(currentDisplayedModel.getModel().substring(1));
-				dlv.exeDLV(new String[] {dlvPath, modelFile.getAbsolutePath(), factsFile.getAbsolutePath()});
-			}
-		});
+		RPQQueryButtonAction queryButtonAction = new RPQQueryButtonAction();
+		queryButtonAction.setDlvPath(dlvPath);
+		queryButtonAction.setTextArea(textArea);
+		queryButtonAction.setCallback(this);
+		queryButtonAction.setDialog(dialog);
+		queryButton.setAction(queryButtonAction);
 
 		closeButton.setAction(new AbstractAction() {
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -540,30 +539,6 @@ public class ProPubApp extends javax.swing.JFrame {
 
 		dialog.setVisible(true);
 
-	}
-
-	private static File writeToFile(String model) {
-		File f = null;
-		Writer w = null;
-		try {
-			f = File.createTempFile("model", ".txt");
-			w = new FileWriter(f);
-			w.write(model);
-		}
-		catch(IOException ex) {
-			ex.printStackTrace();
-		}
-		finally {
-			if (w != null) {
-				try {
-					w.close();
-				}
-				catch(IOException ex) {
-					ex.printStackTrace();
-				}
-			}
-		}
-		return f;
 	}
 
 	private void jButton_LastActionPerformed(java.awt.event.ActionEvent evt) {
@@ -658,10 +633,13 @@ public class ProPubApp extends javax.swing.JFrame {
 				return;
 			}
 
-			// Basically, need to create a combined context that spiders up the tree.
-            GlobalContext.getInstance().setCurrentContext(rc);
+			GlobalContext.getInstance().setCurrentContext(rc);
 			jTextArea_UR.setText("");
 
+			// Could whisper sweet nothings to an update method, or take a sledgehammer to it.
+			jTree_QT = GlobalContext.getInstance().buildTree();
+			addListener(jTree_QT);
+			jScrollPane_QT.setViewportView(jTree_QT);
 		}
 	}
 
@@ -737,9 +715,11 @@ public class ProPubApp extends javax.swing.JFrame {
 	}
 
 	private void jButton_OpenActionPerformed(java.awt.event.ActionEvent evt) {
+		EnvInfo ei = new EnvInfo();
+		ei.setSetupInfo(constants);
 		if ("sean".equals(System.getProperty("user.name"))) {
 			System.out.println("Welcome, Sean");
-			File loadFile = new File("/Users/sean/ProPubProj/propub/data/pg.dlv");
+			File loadFile = new File("/Users/sean/propub/propub/data/pg.dlv");
 			RunContext runContext = GlobalContext.getInstance().initialLoad(loadFile);
 			GlobalContext.getInstance().setCurrentContext(runContext);
 			Model model = runContext.getModel();
@@ -867,9 +847,6 @@ public class ProPubApp extends javax.swing.JFrame {
 		for (String s : model) {
 			sb.append("% " + s + "\n");
 		}
-		fd.writeFile(sb, "/home/sean/model.txt");
-
-
 
 		System.out.println("DisplayImage call: model is: ");
 		DOTDriver dot = new DOTDriver(constants);
@@ -943,6 +920,10 @@ public class ProPubApp extends javax.swing.JFrame {
 		Icon icon = new ImageIcon(url);
 		button.setIcon(icon);
 		button.setToolTipText(tooltip);
+	}
+
+	public Model getCurrentDisplayedModel() {
+		return currentDisplayedModel;
 	}
 
 	//GEN-BEGIN:variables
