@@ -343,7 +343,12 @@ public class ProPubApp extends javax.swing.JFrame {
 
 		jTabbedPane_First.addTab("My Queries", jPanel_MQ);
 
+		JTable artifactTable = new JTable(new ArtifactTableModel());
+		JPanel detailDisplay = new JPanel();
+
+		JSplitPane tabularSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, artifactTable, detailDisplay);
 		JScrollPane panelScrollPane = new JScrollPane(jPanel_Graph);
+		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, panelScrollPane, tabularSplitPane);
 
 		org.jdesktop.layout.GroupLayout jPanel_MainLayout = new org.jdesktop.layout.GroupLayout(
 				jPanel_Main);
@@ -372,7 +377,8 @@ public class ProPubApp extends javax.swing.JFrame {
 														Short.MAX_VALUE))
 										.addPreferredGap(
 												org.jdesktop.layout.LayoutStyle.RELATED)
-										.add(panelScrollPane,
+//										.add(panelScrollPane,
+										.add(splitPane,
 												org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
 												org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
 												org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)));
@@ -403,7 +409,8 @@ public class ProPubApp extends javax.swing.JFrame {
 														org.jdesktop.layout.LayoutStyle.RELATED)
 												.add(jTabbedPane_First, 0, 0,
 														Short.MAX_VALUE))
-										.add(panelScrollPane,
+//										.add(panelScrollPane,
+										.add(splitPane,
 												org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
 												org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
 												org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))));
@@ -848,12 +855,13 @@ public class ProPubApp extends javax.swing.JFrame {
 			sb.append("% " + s + "\n");
 		}
 
-		System.out.println("DisplayImage call: model is: ");
+		System.out.println("model----");
+		System.out.println(model);
+
 		DOTDriver dot = new DOTDriver(constants);
 		String imgFile = dot.prepareImgage(model);
 		try {
 			BufferedImage myPicture = ImageIO.read(new File(imgFile));
-			System.out.println("imgFile: " + imgFile);
 			jLabel_Graph.setIcon(new ImageIcon(myPicture));
 		} catch (Exception e) {
 			System.out.println("Errors..");
