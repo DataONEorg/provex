@@ -7,6 +7,7 @@ public class Constants {
 	public String DOT_PATH      ;  
 	public String SL_DLV_PATH   ;  
 	public String NI_DLV_PATH   ;        
+	public String RPQ_DLV_PATH  ;
 	
 	public String DOT_TMP_DIR   ; 
 	public String PROPUB_EXE    ;
