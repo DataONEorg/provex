@@ -2,9 +2,7 @@ package propub;
 
 import javax.swing.table.AbstractTableModel;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
+import java.util.*;
 
 public class Rpq2TableModel extends AbstractTableModel {
 	public Rpq2TableModel(Map<String, List<String>> predicateData) {
@@ -90,6 +88,32 @@ public class Rpq2TableModel extends AbstractTableModel {
             }
             return sb.toString();
         }
+		public String getSelectedPairsAsRpq4() {
+
+			// Calculate involved rpq2 elements
+			Set<String> involvedRpq2 = new HashSet<String>();
+			for (String val : predicateData.get("rpq2")) {
+				if (checkboxes.get(val)) {
+					involvedRpq2.add(val);
+				}
+			}
+
+			Set<String> desiredRpqEdges = new HashSet<String>();
+			for (String val : predicateData.get("rpq4")) {
+				for (String prefixPossibility : involvedRpq2) {
+					if (val.startsWith(prefixPossibility)) {
+						desiredRpqEdges.add(val);
+						break;
+					}
+				}
+			}
+
+			StringBuilder sb = new StringBuilder();
+			for (String desiredRpqEdge : desiredRpqEdges) {
+				sb.append("--- ").append(desiredRpqEdge).append("\n");
+			}
+			return sb.toString();
+		}
 
         private Map<String, List<String>> predicateData = null;
         private Map<String, Boolean> checkboxes = null;

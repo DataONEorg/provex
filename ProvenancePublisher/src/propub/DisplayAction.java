@@ -15,8 +15,10 @@ import java.io.IOException;
 
         @Override
         public void actionPerformed(ActionEvent evt) {
-            String selectedItemsAsFacts = model.getSelectedPairs();
-            System.out.println("Wrote out checked pairs as Datalog facts in the following file: " + writeToFile(selectedItemsAsFacts).getAbsolutePath());
+//            String selectedItemsAsFacts = model.getSelectedPairs();
+//            System.out.println("Wrote out checked pairs as Datalog facts in the following file: " + writeToFile(selectedItemsAsFacts).getAbsolutePath());
+			String s = model.getSelectedPairsAsRpq4();
+			System.out.println(s);
         }
 
 	private static File writeToFile(String model) {
