@@ -212,6 +212,7 @@ public class ProPubApp extends javax.swing.JFrame {
 			}
 		});
 
+		
 		org.jdesktop.layout.GroupLayout jPanel_MenuLayout = new org.jdesktop.layout.GroupLayout(
 				jPanel_Menu);
 		jPanel_Menu.setLayout(jPanel_MenuLayout);
