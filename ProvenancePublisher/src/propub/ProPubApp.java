@@ -29,6 +29,7 @@ import java.net.URL;
 
 import javax.imageio.ImageIO;
 
+import com.sun.org.apache.xerces.internal.util.DOMUtil;
 import parser.Model;
 
 import db.DLVDriver;
@@ -59,10 +60,17 @@ import java.util.Random;
 public class ProPubApp extends javax.swing.JFrame {
 
 	/** Creates new form ProPubApp */
-	public ProPubApp() {
+	private ProPubApp() {
 		super("ProPub: The Provenance Publisher");
 		initEnvironment();
 		initComponents();
+	}
+
+	public static ProPubApp getInstance() {
+		if (instance == null) {
+			instance = new ProPubApp();
+		}
+		return instance;
 	}
 
 	private void initEnvironment() {
@@ -877,7 +885,7 @@ public class ProPubApp extends javax.swing.JFrame {
 	public static void main(String args[]) {
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				new ProPubApp().setVisible(true);
+				ProPubApp.getInstance().setVisible(true);
 
 			}
 		});
@@ -926,4 +934,5 @@ public class ProPubApp extends javax.swing.JFrame {
     private Model currentDisplayedModel = null;
 	// End of variables declaration//GEN-END:variables
 
+	private static ProPubApp instance = null;
 }
