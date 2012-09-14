@@ -6,3 +6,10 @@ l_data(X,X,S)  :- g(X,L,_,S), L=gen_by.
 l_data(X,X,S)  :- g(_,L,X,S), L=used.
 l_actor(X,X,S)  :- g(_,L,X,S), L=gen_by.
 l_actor(X,X,S)  :- g(X,L,_,S), L=used.
+
+viz_data(A,B,C,D) :- 
+	l_data(A,_,_), 
+	meta_data(A,B,C,D).
+viz_data(A,B,C,D) :- 
+	l_actor(A,_,_), 
+	meta_actor(A,B,C,D).

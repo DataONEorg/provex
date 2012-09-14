@@ -19,150 +19,136 @@ next(S,S1) :-
         S1 = S + 1.
 
 changing(S) :-
-        del_dep(_,_,S).
+        delete_dep(_,_,S).
 changing(S) :-
-        ins_dep(_,_,S).
+        insert_dep(_,_,S).
 
 final(S) :-
         state(S),
         not changing(S).
 
 %%%%%%%%%%%%%%%%% Set Inputs %%%%%%%%%%%%%%
-s_abstract(X,Y,S) :- abstract(X,Y), S=0.
 
-node(D,R) :- data(D,R).
-node(A,R) :- actor(A,R).
+actor(G,G) :- 
+	abstract(_,G).
 
-is_lineage :- lineage(_).
-all_lineage :- not is_lineage. 
+s_abstract(X,Y,S) :- 
+	abstract(X,Y), 
+	S=0.
+
+is_lineage :- 
+	lineage(_).
+
+all_lineage :- 
+	not is_lineage. 
+
 %%%%%%%%%%%%%%%%% Base IDBs %%%%%%%%%%%%%%%
 
-dep(X,Y,S) :- 
+e(X,Y,S) :- 
 	used(X,Y), 
 	initial(S).
-dep(X,Y,S) :- 
+e(X,Y,S) :- 
 	gen_by(X,Y), 
 	initial(S).
 
+l_node(D,T) :- 
+	data(D,_), 
+	T="d".
+l_node(A,T) :- 
+	actor(A,_), 
+	T="i".
+
 l_dep(X,Y,S) :- 
 	lineage(X), 
-	dep(X,Y,S). 
+	e(X,Y,S). 
 l_dep(Y,Z,S) :- 
 	l_dep(X,Y,S), 
-	dep(Y,Z,S).
+	e(Y,Z,S).
 
 l_dep(X,Y,S) :- 
 	all_lineage, 
-	dep(X,Y,S).
+	e(X,Y,S).
+
 
 %%%%%%%%%%%%%%%%% Frame Rules %%%%%%%%%%%%%%%
 
-del_dep(X,Y,S) :- 
+delete_dep(X,Y,S) :- 
 	hide_edge(X,Y), 
 	l_dep(X,Y,S), S=0.
-del_dep(X,Y,S) :- 
+delete_dep(X,Y,S) :- 
 	hide_node(X), 
 	l_dep(X,Y,S), S=0.
-del_dep(X,Y,S) :- 
+delete_dep(X,Y,S) :- 
 	hide_node(Y), 
 	l_dep(X,Y,S), S=0.
 
-del_dep(X,Y,S) :- 
+delete_dep(X,Y,S) :- 
 	s_abstract(X,G,S), 
 	l_dep(X,Y,S).
-del_dep(X,Y,S) :- 
+delete_dep(X,Y,S) :- 
 	s_abstract(Y,G,S), 
 	l_dep(X,Y,S).
 
-int_dep(X,Y,S) :- 
-	s_abstract(X,G,S), 
-	s_abstract(Y,G,S), 
-	l_dep(X,Y,S).
-
-ins_dep(G,Y,S) :- 
+insert_dep(G,Y,S) :- 
 	s_abstract(X,G,S), 
 	l_dep(X,Y,S),
-	not int_dep(X,Y,S).
-ins_dep(X,G,S) :- 
+	not s_abstract(Y,G,S).
+insert_dep(X,G,S) :- 
 	s_abstract(Y,G,S), 
 	l_dep(X,Y,S),
-	not int_dep(X,Y,S).
+	not s_abstract(X,G,S).
 
 l_dep(X,Y,S1) :- 
 	l_dep(X,Y,S), 
 	next(S,S1), 
-	not del_dep(X,Y,S).
+	not delete_dep(X,Y,S).
 l_dep(X,Y,S1) :- 
-	ins_dep(X,Y,S), 
+	insert_dep(X,Y,S), 
 	next(S,S1).
-
-l_used(X,Y,S)   :-  l_dep(X,Y,S), data(Y,_), actor(X,_).	
-l_gen_by(X,Y,S) :-  l_dep(X,Y,S), data(X,_), actor(Y,_).
-l_gen_by(X,Y,S) :-  l_dep(X,Y,S), actor(X,_), actor(Y,_).
-
-l_data(X,R,S)   :-  l_dep(X,_,S), data(X,R).
-l_data(Y,R,S)   :-  l_dep(_,Y,S), data(Y,R).
-
-l_actor(X,R,S)   :-  l_dep(X,_,S), actor(X,R).
-l_actor(Y,R,S)   :-  l_dep(_,Y,S), actor(Y,R).
 
 %%%%%%%%%%%%%%%%% IC Rules %%%%%%%%%%%%%%%
 
-tcdep(X,Y,S) :- l_dep(X,Y,S).
-tcdep(X,Y,S) :- tcdep(X,Z,S), tcdep(Z,Y,S).
+tcdep(X,Y,S) :- 
+	l_dep(X,Y,S).
+tcdep(X,Y,S) :- 
+	l_dep(X,Z,S), 
+	tcdep(Z,Y,S).
 
-nc(X,Y,S) :- 
+% Cycle
+pv(X,Y,S) :- 
  	tcdep(X,Y,S), 
  	tcdep(Y,X,S), 
  	X!=Y. 
  
-nfs(X,Y,S) :- 
+% false structure
+pv(X,Y,S) :- 
  	l_dep(X,Y,S), 
- 	data(X,_), 
- 	data(Y,_).
-nfs(X,Y,S) :- 
- 	l_dep(X,Y,S), 
- 	actor(X,_), 
- 	actor(Y,_).
- 	
-wc(X,Y,S) :- 
+ 	l_node(X,T), 
+ 	l_node(Y,T).
+ 
+% write conflict	
+pv(X,Y,S) :- 
 	l_dep(X,Y,S),
 	l_dep(X,Z,S),
-	data(X,_),
-	actor(Y,_),
-	actor(Z,_),
+	l_node(X,TD), TD="d", 
+	l_node(Y,TI), TI="i",
+	l_node(Z,TI),
 	not Y=Z. 	
   
 %%%%%%%%%%%%%%%%% Fixes for IC violations %%%%%%%%%%%%%%%
 
-same_group(X,Y,S) :- 
-	nc(X,Y,S). 
-same_group(X,Y,S) :- 
-	nfs(X,Y,S). 
-same_group(X,Y,S) :- 
-	wc(X,Y,S). 
+s_abstract(Y,X,S) :- 
+	pv(X,Y,S), 
+	abstract(_,X). 
+s_abstract(X,Y,S) :- 
+	pv(X,Y,S), 
+	abstract(_,Y). 
+s_abstract(X,X,S) :- 
+	s_abstract(_,X,S).
 
-same_group(X,X,S) :- 
-	same_group(X,_,S).     % reflexive
-same_group(X,X,S) :- 
-	same_group(_,X,S).     % reflexive
-same_group(X,Y,S) :- 
-	same_group(Y,X,S).     % symmetric
-same_group(X,Y,S) :- 
-	same_group(X,Z,S), 
-	same_group(Z,Y,S).     % transitive
-
-smaller(X,S) :- 
-	same_group(X,Y,S), X < Y. 
-	
-minimum(X,S) :- 
-	same_group(X,_,S), not smaller(X,S). 
-	
-s_abstract(X,G,S) :- 
-	same_group(X,G,S), 
-	minimum(G,S). 
- 
-%actor(G,G) :- 
-% 	minimum(G,_).
-actor(G,G) :- 
- 	abstract(_,G). 	
+viz_data(A,B,C,D) :- 
+	l_node(A,_), 
+	meta_data(A,B,C,D).
+viz_data(A,B,C,D) :- 
+	l_node(A,_), 
+	meta_actor(A,B,C,D).
