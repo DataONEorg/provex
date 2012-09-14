@@ -1,0 +1,8 @@
+meta_a(a,a,thisisInvocationA, classA).
+meta_a(b,b,thisisInvocationB, classB).
+meta_a(c,c,thisisInvocationC, classC).
+meta_a(d,d,thisisInvocationD, classD).
+meta_d(1,1,thisisDataArtifact1, container1).
+meta_d(2,2,thisisDataArtifact2, container2).
+meta_d(3,3,thisisDataArtifact3, container3).
+meta_d(4,4,thisisDataArtifact4, container4).

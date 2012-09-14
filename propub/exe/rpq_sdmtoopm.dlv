@@ -1,15 +1,31 @@
-l_used(X,Y,S)   :- g(X,L,Y,S), L=used.
-l_gen_by(X,Y,S)  :- g(X,L,Y,S), L=gen_by.
-l_dep(X,Y,S)   :- g(X,L,Y,S), L=used.
-l_dep(X,Y,S)  :- g(X,L,Y,S), L=gen_by.
-l_data(X,X,S)  :- g(X,L,_,S), L=gen_by.
-l_data(X,X,S)  :- g(_,L,X,S), L=used.
-l_actor(X,X,S)  :- g(_,L,X,S), L=gen_by.
-l_actor(X,X,S)  :- g(X,L,_,S), L=used.
+l_used(X,Y,S) :- 
+	g(X,L,Y,S), 
+	L=used.
+l_gen_by(X,Y,S) :- 
+	g(X,L,Y,S), 
+	L=gen_by.
+l_dep(X,Y,S) :- 
+	g(X,L,Y,S), 
+	L=used.
+l_dep(X,Y,S) :- 
+	g(X,L,Y,S),
+	L=gen_by.
+l_data(X,X,S) :- 
+	g(X,L,_,S), 
+	L=gen_by.
+l_data(X,X,S)  :- 
+	g(_,L,X,S), 
+	L=used.
+l_actor(X,X,S) :- 
+	g(_,L,X,S), 
+	L=gen_by.
+l_actor(X,X,S)  :- 
+	g(X,L,_,S), 
+	L=used.
 
-viz_data(A,B,C,D) :- 
+viz_d(A,B,C,D) :- 
 	l_data(A,_,_), 
-	meta_data(A,B,C,D).
-viz_data(A,B,C,D) :- 
+	meta_d(A,B,C,D).
+viz_a(A,B,C,D) :- 
 	l_actor(A,_,_), 
-	meta_actor(A,B,C,D).
+	meta_a(A,B,C,D).
