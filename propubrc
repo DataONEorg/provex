@@ -4,3 +4,4 @@ DOT_PATH=/usr/local/bin/dot
 SL_DLV_PATH=/Users/sean/propub/propub/exe/propub_sw.sh
 NI_DLV_PATH=/Users/sean/propub/propub/exe/propub_in.sh
 RPQ_DLV_PATH=/Users/sean/propub/propub/exe/rpq.sh
+RPQ4_DLV_PATH=/Users/scdey/mySpace/propub/propub/exe/rpq4.sh
