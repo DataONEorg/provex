@@ -349,6 +349,8 @@ public class ProPubApp extends javax.swing.JFrame {
 		JPanel rpqPanel = generateRpqPanel();
 		panel.addTab("RPQ", null, rpqPanel, "");
 
+		JSplitPane mainContent = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel, splitPane);
+
 		jPanel_MainLayout
 				.setHorizontalGroup(jPanel_MainLayout
 						.createParallelGroup(
@@ -360,16 +362,7 @@ public class ProPubApp extends javax.swing.JFrame {
 						.add(org.jdesktop.layout.GroupLayout.TRAILING,
 								jPanel_MainLayout
 										.createSequentialGroup()
-										.add(jPanel_MainLayout
-												.createParallelGroup(
-														org.jdesktop.layout.GroupLayout.LEADING)
-												.add(panel,
-														org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-														272, Short.MAX_VALUE))
-										.addPreferredGap(
-												org.jdesktop.layout.LayoutStyle.RELATED)
-//										.add(panelScrollPane,
-										.add(splitPane,
+										.add(mainContent,
 												org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
 												org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
 												org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)));
@@ -390,14 +383,7 @@ public class ProPubApp extends javax.swing.JFrame {
 										.createParallelGroup(
 												org.jdesktop.layout.GroupLayout.LEADING,
 												false)
-										.add(jPanel_MainLayout
-												.createSequentialGroup()
-												.add(panel,
-														org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
-														org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-														org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-//										.add(panelScrollPane,
-										.add(splitPane,
+										.add(mainContent,
 												org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
 												org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
 												org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))));
@@ -481,7 +467,6 @@ public class ProPubApp extends javax.swing.JFrame {
 
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridBagLayout());
-//		dialog.setBounds(132, 132, 300, 200);
 		final JTextArea textArea = new JTextArea();
 		textArea.setRows(5);
 		textArea.setColumns(20);
@@ -491,8 +476,8 @@ public class ProPubApp extends javax.swing.JFrame {
 		textAreaGbc.gridy = 1;
 
 		JScrollPane sp = new JScrollPane(textArea);
-		sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		panel.add(new JScrollPane(textArea), textAreaGbc);
+		sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		panel.add(sp, textAreaGbc);
 
 		GridBagConstraints buttonGbc = new GridBagConstraints();
 		buttonGbc.gridx = 0;
