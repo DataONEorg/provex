@@ -3,6 +3,7 @@ package propub;
 import javax.swing.AbstractAction;
 import javax.swing.JTextArea;
 import javax.swing.table.TableModel;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 
 import java.util.regex.Matcher;
@@ -27,9 +28,6 @@ import re.RGrammar;
 import re.REAdapter;
 import env.EnvInfo;
 import parser.Model;
-
-import java.awt.GridBagConstraints;
-import java.awt.FlowLayout;
 
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
@@ -58,7 +56,7 @@ public class RPQQueryButtonAction extends AbstractAction {
 		this.appInstance = appInstance;
 	}
 
-	public void setDialog(JDialog dialog) {
+	public void setDialog(JPanel dialog) {
 		this.dialogHook = dialog;
 	}
 
@@ -201,7 +199,7 @@ public class RPQQueryButtonAction extends AbstractAction {
 	private JTextArea textArea = null;
 	private String dlvPath = null;
 	private Constants constants;
-	private JDialog dialogHook = null;
+	private JPanel dialogHook = null;
 	private ProPubApp appInstance = null;
 
 	private Map<String, List<String>> predicateData;
@@ -214,16 +212,25 @@ public class RPQQueryButtonAction extends AbstractAction {
 
 	private void addTableAndPopulate(final Map<String, List<String>> predicateData) {
 		final GridBagConstraints tableGbc = new GridBagConstraints();
-		tableGbc.gridx = 1;
-		tableGbc.gridy = 2;
+		tableGbc.gridx = 0;
+		tableGbc.gridy = 3;
 
 		final GridBagConstraints buttonGbc = new GridBagConstraints();
-		buttonGbc.gridx = 1;
-		buttonGbc.gridy = 3;
+		buttonGbc.gridx = 0;
+		buttonGbc.gridy = 4;
 
 		Rpq2TableModel model = new Rpq2TableModel(predicateData);
 		//        interrogateModel(model);
 		JTable table = new JTable(model);
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+
+		// Adjust the width to the preferred size.
+		Dimension viewportDimensions = table.getPreferredScrollableViewportSize();
+		Dimension tablePreferredDimensions = table.getPreferredSize();
+
+		Dimension newSize = new Dimension();
+		newSize.setSize(tablePreferredDimensions.getWidth(), viewportDimensions.getHeight());
+		table.setPreferredScrollableViewportSize(newSize);
 		final JScrollPane tablePane = new JScrollPane(table);
 
 		JButton displayButton = new JButton("Display");
