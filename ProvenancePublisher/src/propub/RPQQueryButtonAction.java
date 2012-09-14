@@ -58,7 +58,7 @@ public class RPQQueryButtonAction extends AbstractAction {
 		this.appInstance = appInstance;
 	}
 
-	public void setDialog(JDialog dialog) {
+	public void setDialog(JPanel dialog) {
 		this.dialogHook = dialog;
 	}
 
@@ -201,7 +201,7 @@ public class RPQQueryButtonAction extends AbstractAction {
 	private JTextArea textArea = null;
 	private String dlvPath = null;
 	private Constants constants;
-	private JDialog dialogHook = null;
+	private JPanel dialogHook = null;
 	private ProPubApp appInstance = null;
 
 	private Map<String, List<String>> predicateData;

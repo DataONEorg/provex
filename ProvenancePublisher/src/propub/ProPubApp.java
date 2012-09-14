@@ -97,7 +97,6 @@ public class ProPubApp extends javax.swing.JFrame {
 		jTabbedPane_First = new javax.swing.JTabbedPane();
 		jPanel_MQ = new javax.swing.JPanel();
 		jScrollPane_QT = new javax.swing.JScrollPane();
-		buttonRPQ = new javax.swing.JButton();
 		jTree_QT = GlobalContext.getInstance().buildTree();
 		addListener(jTree_QT);
 
@@ -107,13 +106,6 @@ public class ProPubApp extends javax.swing.JFrame {
 				null, new javax.swing.border.SoftBevelBorder(
 						javax.swing.border.BevelBorder.RAISED)));
 
-
-		initButtonGraphic(buttonRPQ, "RPQ Query", "general", "Export", "Click to run a regular path query (RPQ)");
-		buttonRPQ.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				jButton_RPQActionPerformed(evt);
-			}
-		});
 
 		initButtonGraphic(jButton_New, "New", "general", "New", "newtext");
 		//jButton_New.setText("New");
@@ -232,9 +224,6 @@ public class ProPubApp extends javax.swing.JFrame {
 						.add(jButton_NI)
 						.addPreferredGap(
 								org.jdesktop.layout.LayoutStyle.RELATED)
-						.add(buttonRPQ)
-						.addPreferredGap(
-								org.jdesktop.layout.LayoutStyle.RELATED)
 						.add(jButton_Set)
 						.addPreferredGap(
 								org.jdesktop.layout.LayoutStyle.RELATED, 178,
@@ -273,7 +262,6 @@ public class ProPubApp extends javax.swing.JFrame {
 												.add(jButton_First)
 												.add(jButton_SL)
 												.add(jButton_NI)
-												.add(buttonRPQ)
 												.add(jButton_Set))
 										.addContainerGap()));
 
@@ -354,6 +342,13 @@ public class ProPubApp extends javax.swing.JFrame {
 		org.jdesktop.layout.GroupLayout jPanel_MainLayout = new org.jdesktop.layout.GroupLayout(
 				jPanel_Main);
 		jPanel_Main.setLayout(jPanel_MainLayout);
+
+		JTabbedPane panel = new JTabbedPane();
+		panel.addTab("User requests", null, jPanel_UR, "");
+		panel.addTab("Queries", null, jTabbedPane_First, "");
+		JPanel rpqPanel = generateRpqPanel();
+		panel.addTab("RPQ", null, rpqPanel, "");
+
 		jPanel_MainLayout
 				.setHorizontalGroup(jPanel_MainLayout
 						.createParallelGroup(
@@ -368,14 +363,9 @@ public class ProPubApp extends javax.swing.JFrame {
 										.add(jPanel_MainLayout
 												.createParallelGroup(
 														org.jdesktop.layout.GroupLayout.LEADING)
-												.add(jTabbedPane_First,
+												.add(panel,
 														org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-														272, Short.MAX_VALUE)
-												.add(org.jdesktop.layout.GroupLayout.TRAILING,
-														jPanel_UR,
-														org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-														org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-														Short.MAX_VALUE))
+														272, Short.MAX_VALUE))
 										.addPreferredGap(
 												org.jdesktop.layout.LayoutStyle.RELATED)
 //										.add(panelScrollPane,
@@ -402,14 +392,10 @@ public class ProPubApp extends javax.swing.JFrame {
 												false)
 										.add(jPanel_MainLayout
 												.createSequentialGroup()
-												.add(jPanel_UR,
+												.add(panel,
 														org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
 														org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-														org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(
-														org.jdesktop.layout.LayoutStyle.RELATED)
-												.add(jTabbedPane_First, 0, 0,
-														Short.MAX_VALUE))
+														org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
 //										.add(panelScrollPane,
 										.add(splitPane,
 												org.jdesktop.layout.GroupLayout.PREFERRED_SIZE,
@@ -491,62 +477,52 @@ public class ProPubApp extends javax.swing.JFrame {
 		// TODO add your handling code here:
 	}
 
-	private void jButton_RPQActionPerformed(ActionEvent evt) {
+	private JPanel generateRpqPanel() {
 
-		final JDialog dialog = new JDialog(this, "Regular Path Query", Dialog.ModalityType.APPLICATION_MODAL);
-		dialog.setLayout(new GridBagLayout());
+		JPanel panel = new JPanel();
+		panel.setLayout(new GridBagLayout());
 //		dialog.setBounds(132, 132, 300, 200);
 		final JTextArea textArea = new JTextArea();
 		textArea.setRows(5);
-		textArea.setColumns(80);
+		textArea.setColumns(20);
 
 		GridBagConstraints textAreaGbc = new GridBagConstraints();
-		textAreaGbc.gridx = 1;
-		textAreaGbc.gridy = 0;
+		textAreaGbc.gridx = 0;
+		textAreaGbc.gridy = 1;
 
-		dialog.add(new JScrollPane(textArea), textAreaGbc);
+		JScrollPane sp = new JScrollPane(textArea);
+		sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		panel.add(new JScrollPane(textArea), textAreaGbc);
 
 		GridBagConstraints buttonGbc = new GridBagConstraints();
-		buttonGbc.gridx = 1;
-		buttonGbc.gridy = 1;
+		buttonGbc.gridx = 0;
+		buttonGbc.gridy = 2;
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout());
 
 		JButton queryButton = new JButton("Query");
-		JButton closeButton = new JButton("Close");
 		final String dlvPath = constants.RPQ_DLV_PATH;
 
 		RPQQueryButtonAction queryButtonAction = new RPQQueryButtonAction();
 		queryButtonAction.setDlvPath(dlvPath);
 		queryButtonAction.setTextArea(textArea);
 		queryButtonAction.setCallback(this);
-		queryButtonAction.setDialog(dialog);
+		queryButtonAction.setDialog(panel);
 		queryButton.setAction(queryButtonAction);
 
-		closeButton.setAction(new AbstractAction() {
-			public void actionPerformed(ActionEvent actionEvent) {
-				dialog.setVisible(false);
-			}
-		});
-
 		queryButton.setText("Query");
-		closeButton.setText("Close");
 
 		buttonPanel.add(queryButton);
-		buttonPanel.add(closeButton);
 
-		dialog.add(buttonPanel, buttonGbc);
+		panel.add(buttonPanel, buttonGbc);
 
 		GridBagConstraints labelGbc = new GridBagConstraints();
 		labelGbc.gridx = 0;
 		labelGbc.gridy = 0;
-		dialog.add(new JLabel("Enter query:"), labelGbc);
+		panel.add(new JLabel("Enter query:"), labelGbc);
 
-		dialog.pack();
-
-		dialog.setVisible(true);
-
+		return panel;
 	}
 
 	private void jButton_LastActionPerformed(java.awt.event.ActionEvent evt) {
@@ -949,7 +925,6 @@ public class ProPubApp extends javax.swing.JFrame {
 	private javax.swing.JButton jButton_SL;
 	private javax.swing.JButton jButton_Save;
 	private javax.swing.JButton jButton_Set;
-	private JButton buttonRPQ;
 	private javax.swing.JLabel jLabel_Graph;
 	private javax.swing.JPanel jPanel_Graph;
 	private javax.swing.JPanel jPanel_MQ;
