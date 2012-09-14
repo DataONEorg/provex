@@ -30,10 +30,10 @@ public class RunContext {
 	// This constructor is for a context with an input file, but no user
 	// requests. Consider renaming this to a public static method so the name
 	// can provide some context.
-	public RunContext(File pgFile) {
-        this(pgFile, blankFile());
-	}
-
+	//public RunContext(File pgFile) {
+    //    this(pgFile, blankFile(), constants.SL_DLV_PATH);
+	//}
+   
     private static int instanceNum = 1;
 
 	public void setIconType(IconType type) {
@@ -47,14 +47,14 @@ public class RunContext {
 	private final int myInstanceNum;
 	private IconType iconType = null;
 
-    public RunContext(File pgFile, File urFile) {
+    public RunContext(File pgFile, File urFile, String dlvPath) {
         this.myInstanceNum = instanceNum++;
         FileDriver fd = new FileDriver();
         Constants constants = new Constants();
         EnvInfo ei = new EnvInfo();
         ei.setSetupInfo(constants);
         DLVDriver dlv = new DLVDriver();
-        dlv.exeDLV(new String[] {constants.SL_DLV_PATH, pgFile.getAbsolutePath(), urFile.getAbsolutePath()});
+        dlv.exeDLV(new String[] {dlvPath, pgFile.getAbsolutePath(), urFile.getAbsolutePath()});
 
         String modelString = fd.readFile(constants.PROPUB_EXE + constants.ENV_SEPARATOR + "out.txt").toString();
 
@@ -67,7 +67,26 @@ public class RunContext {
         //display image
 //		displayImage(model.getIntrmediateModel(model.getFinalStateNo()));
     }
-
+    
+    public static RunContext forCustomization(File pgFile, File urFile) {
+    	Constants constants = new Constants();
+    	EnvInfo envInfo = new EnvInfo();
+    	envInfo.setSetupInfo(constants);
+    	return new RunContext(pgFile, urFile, constants.SL_DLV_PATH);
+    }
+    
+    public static RunContext forCustomization(File pgFile) {
+    	return RunContext.forCustomization(pgFile, blankFile());
+    }
+    
+    public static RunContext forRPQ(File pgFile) {
+    	Constants constants = new Constants();
+    	EnvInfo envInfo = new EnvInfo();
+    	envInfo.setSetupInfo(constants);
+    	return new RunContext(pgFile, blankFile(), constants.RPQ4_DLV_PATH);
+    }    	
+    
+    
     @Override
     public String toString() {
         return "rcInst" + myInstanceNum;
@@ -111,11 +130,11 @@ public class RunContext {
 
 	public RunContext withNewUserRequestFile(File userRequestFile, int state) {
         if (fileLoadContext) {
-            return new RunContext(pgFile, userRequestFile);
+            return RunContext.forCustomization(pgFile, userRequestFile);
         }
         else {
             File pgFile = processModelOutput();
-            return new RunContext(pgFile, userRequestFile);
+            return RunContext.forCustomization(pgFile, userRequestFile);
         }
     }
 

@@ -11,6 +11,9 @@ import env.EnvInfo;
 import file.FileDriver;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.*;
 
 public class Rpq2TableModel extends AbstractTableModel {
@@ -127,7 +130,7 @@ public class Rpq2TableModel extends AbstractTableModel {
 				int tIndex = desiredRpqEdge.indexOf(",", sIndex+1);
 				sb.append("g(") 
 				  .append(desiredRpqEdge.substring(tIndex+1))
-				  .append(").")
+				  .append(",0).")
 				  .append("\n");
 				
 				//TODO: to be taken to the correct classes
@@ -138,34 +141,32 @@ public class Rpq2TableModel extends AbstractTableModel {
 				//5. call DLVTODOT and the print dot
 				
 			}
+			sb.append("final(0).");
 			
-			FileDriver fd = new FileDriver();
-			fd.writeFile(new StringBuffer(sb), 
-						"/Users/scdey/mySpace/propub/propub/exe/rpq4_sel.dlv");
-			DLVDriver dd = new DLVDriver();
-			dd.exeDLV(new String[]{
-					"/Users/scdey/mySpace/propub/propub/exe/rpq4_sel.sh"});
+			File f = null;
+			Writer w = null;
+			try {
+				f = File.createTempFile("tempfile", ".txt");
+				w = new FileWriter(f);
+				w.write(sb.toString());
+			}
+			catch(IOException ex) {
+				ex.printStackTrace();
+			}
+			finally {
+				if (w != null) {
+					try {
+						w.close();
+					}
+					catch(IOException ex) {
+						ex.printStackTrace();
+					}
+				}
+			}
 			
-			DLVToDot rdt = new DLVToDot();
-			rdt.readRPQFile(
-					"/Users/scdey/mySpace/propub/propub/exe/rpq_sel_out.dlv",     //model
-					"/Users/scdey/mySpace/propub/propub/exe/rpq_sel_out_tmp.dlv"  //DLV Facts
-					);
-			rdt.prepareDOTFile(
-					"/Users/scdey/mySpace/propub/propub/dot/rpq_sel_dot.txt"
-					);
-			
-			Constants c = new Constants();
-			EnvInfo ei = new EnvInfo();
-			ei.setSetupInfo(c);
-			
-			DOTDriver dot = new DOTDriver(c);
-			dot.write(
-					dot.getGraph(
-							new File("/Users/scdey/mySpace/propub/propub/dot/rpq_sel_dot.txt")
-							), 
-							"/Users/scdey/mySpace/propub/propub/dot/rpq_sel_dot.gif"
-					);
+			RunContext rc = RunContext.forRPQ(f);	
+			ProPubApp pp = ProPubApp.getInstance();
+			pp.displayImage(rc.getModel().getIntrmediateModel(0));
 			
 			return sb.toString();
 		}

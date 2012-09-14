@@ -1,3 +1,8 @@
-used(X,Y)   :- rpq4(_,_,_,X,L,Y), L="used".
-genBy(X,Y)  :- rpq4(_,_,_,X,L,Y), L="genBy".
-
+l_used(X,Y,S)   :- g(X,L,Y,S), L=used.
+l_gen_by(X,Y,S)  :- g(X,L,Y,S), L=gen_by.
+l_dep(X,Y,S)   :- g(X,L,Y,S), L=used.
+l_dep(X,Y,S)  :- g(X,L,Y,S), L=gen_by.
+l_data(X,X,S)  :- g(X,L,_,S), L=gen_by.
+l_data(X,X,S)  :- g(_,L,X,S), L=used.
+l_actor(X,X,S)  :- g(_,L,X,S), L=gen_by.
+l_actor(X,X,S)  :- g(X,L,_,S), L=used.

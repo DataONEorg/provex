@@ -6,6 +6,9 @@ import types.PayloadTreeNode;
 import javax.swing.*;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.*;
+
+import env.EnvInfo;
+
 import java.awt.*;
 import java.io.File;
 import java.net.URL;
@@ -23,14 +26,15 @@ public class GlobalContext {
 		return this.addTopLevel(loadFile);
 	}
 
-	private RunContext addTopLevel(File file) {
-		RunContext rc = new RunContext(file);
+	private RunContext addTopLevel(File file) {		
+    	RunContext rc = RunContext.forCustomization(file);
         rc.setFileLoadContext(true);
 		rc.setIconType(IconType.FILE_LOAD);
 		topLevelItems.add(rc);
         return rc;
 	}
 
+	
 	public void addChild(RunContext rcParent, RunContext rcChild) {
 		if (!treeData.containsKey(rcParent)) {
 			treeData.put(rcParent, new ArrayList<RunContext>());

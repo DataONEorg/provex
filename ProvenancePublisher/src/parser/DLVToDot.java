@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -24,9 +25,10 @@ public class DLVToDot {
 	Hashtable <String, String> dataIDs = new Hashtable<String, String>();
 	Hashtable <String, String> partOfEdge = new Hashtable<String, String>();
 
-	public void readRPQFile(String inFile, String tmpFile) {
+	public ArrayList<String> readRPQFile(String inFile) {
 		
 		StringBuffer sb = new StringBuffer();
+		ArrayList<String> al = new ArrayList<String>();
 		
 		//Convert Model into DLV facts
 		try {
@@ -44,38 +46,23 @@ public class DLVToDot {
 			e.printStackTrace();
 		}
 		
-		//Writes that into a tmp file
-		try{
-			BufferedWriter outfile = new BufferedWriter(new FileWriter(tmpFile));
-			outfile.append(sb);
-			outfile.close();
-		} catch(IOException e){
-			System.out.println("Warning: unable to create output file.");
-			System.exit(1);
-		}
-		//Constructs the ArrarLists for DOT
-		readInRPQFile(tmpFile);
-	}
-
-	public void readInRPQFile(String fileName) {
+		StringReader sr = new StringReader(sb.toString());
+		BufferedReader bufRead = new BufferedReader(sr);
+		String line;   
 		try {
-			FileReader     input   = new FileReader(fileName);
-			BufferedReader bufRead = new BufferedReader(input);
-			String line;   
 			line = bufRead.readLine();
 			while (line != null){
-				//processLine(line);
-				processLine(line);
+				al.add(line);
 				line = bufRead.readLine();
 			}
-			bufRead.close();
-		} catch (Exception e){
-			e.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
 		}
+		
+		return al;
 	}
 	
-	
-		
+			
 	public void readInFile(String pgFileName, String ppFileName) {
 		
 		readInFile(pgFileName);

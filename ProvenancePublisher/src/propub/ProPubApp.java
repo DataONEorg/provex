@@ -29,7 +29,7 @@ import java.net.URL;
 
 import javax.imageio.ImageIO;
 
-import com.sun.org.apache.xerces.internal.util.DOMUtil;
+//import com.sun.org.apache.xerces.internal.util.DOMUtil;
 import parser.Model;
 
 import db.DLVDriver;
@@ -818,7 +818,7 @@ public class ProPubApp extends javax.swing.JFrame {
 		System.out.println("Currstate set to " + currState + " of " + currentDisplayedModel.getFinalStateNo());
     }
 
-	private void displayImage(ArrayList<String> model) {
+	public void displayImage(ArrayList<String> model) {
 		FileDriver fd = new FileDriver();
 		StringBuffer sb = new StringBuffer();
 		for (String s : model) {
