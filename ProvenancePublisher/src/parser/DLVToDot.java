@@ -24,6 +24,58 @@ public class DLVToDot {
 	Hashtable <String, String> dataIDs = new Hashtable<String, String>();
 	Hashtable <String, String> partOfEdge = new Hashtable<String, String>();
 
+	public void readRPQFile(String inFile, String tmpFile) {
+		
+		StringBuffer sb = new StringBuffer();
+		
+		//Convert Model into DLV facts
+		try {
+			FileReader     input   = new FileReader(inFile);
+			BufferedReader bufRead = new BufferedReader(input);
+			String line;   
+			line = bufRead.readLine();
+			while (line != null){
+				//processLine(line);
+				sb.append(line.replace("), ",").\n").replace("{", "").replace(")}", ")."));
+				line = bufRead.readLine();
+			}
+			bufRead.close();
+		} catch (Exception e){
+			e.printStackTrace();
+		}
+		
+		//Writes that into a tmp file
+		try{
+			BufferedWriter outfile = new BufferedWriter(new FileWriter(tmpFile));
+			outfile.append(sb);
+			outfile.close();
+		} catch(IOException e){
+			System.out.println("Warning: unable to create output file.");
+			System.exit(1);
+		}
+		//Constructs the ArrarLists for DOT
+		readInRPQFile(tmpFile);
+	}
+
+	public void readInRPQFile(String fileName) {
+		try {
+			FileReader     input   = new FileReader(fileName);
+			BufferedReader bufRead = new BufferedReader(input);
+			String line;   
+			line = bufRead.readLine();
+			while (line != null){
+				//processLine(line);
+				processLine(line);
+				line = bufRead.readLine();
+			}
+			bufRead.close();
+		} catch (Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	
+		
 	public void readInFile(String pgFileName, String ppFileName) {
 		
 		readInFile(pgFileName);
@@ -90,11 +142,11 @@ public class DLVToDot {
 		String first = line.split(",")[0].split("\\(")[1];
 		String second = line.split(",")[1].split("\\)")[0];
 		
-		if (line.contains("used")){ //Used
+		if (line.contains("used(")){ //Used
 			actorIDs.put(first, "");
 			dataIDs.put(second, "");
 			edges.add("\"" + second + "\"->\"" + first + "\"");
-		} else if (line.contains("gen_by")){ //GenBy
+		} else if (line.contains("gen_by(")){ //GenBy
 			actorIDs.put(second, "");
 			//there could be two types of gen_by--> gen_by(D,I) or
 			//gen_by(I,I). this if is to make sure that actors
