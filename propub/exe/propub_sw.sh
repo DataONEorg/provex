@@ -1,7 +1,7 @@
 #!/bin/bash
 
-cd /Users/sean/ProPubProj/propub/exe
+cd /Users/scdey/mySpace/propub/propub/exe
 
-dlv -silent propub_swallow.dlv $1 $2 > out.txt
+./dlv -silent propub_swallow.dlv metadata.dlv $1 $2 > out.txt
 
 exit
