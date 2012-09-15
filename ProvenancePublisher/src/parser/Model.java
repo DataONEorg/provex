@@ -71,6 +71,12 @@ public class Model {
 			if (splitModel[i].contains("actor")) {
 				intrState.add(splitModel[i]);
 			}
+			if (splitModel[i].contains("vis_a")) {
+				intrState.add(splitModel[i]);
+			}
+			if (splitModel[i].contains("vis_d")) {
+				intrState.add(splitModel[i]);
+			}
 		}
 		return intrState;	
 	}

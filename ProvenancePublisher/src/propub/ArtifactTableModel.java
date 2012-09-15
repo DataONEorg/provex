@@ -1,6 +1,7 @@
 package propub;
 
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,7 +15,7 @@ import java.util.Map;
  * Time: 11:55 AM
  */
 
-public class ArtifactTableModel extends AbstractTableModel {
+public class ArtifactTableModel extends DefaultTableModel {
 	public int getRowCount() {
 		if (orderedData == null) {
 			return 0;
@@ -48,8 +49,12 @@ public class ArtifactTableModel extends AbstractTableModel {
 		}
 
 		fieldNames = Arrays.asList("type", "id", "url", "description", "category");
+		
+		this.fireTableStructureChanged();
 	}
 
 	private List<List<String>> orderedData = null;
 	private List<String> fieldNames = null;
+	
+	
 }
