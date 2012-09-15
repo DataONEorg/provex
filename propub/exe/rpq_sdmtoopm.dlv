@@ -23,9 +23,9 @@ l_actor(X,X,S)  :-
 	g(X,L,_,S), 
 	L=used.
 
-viz_d(A,B,C,D) :- 
+vis_d(A,B,C,D) :- 
 	l_data(A,_,_), 
 	meta_d(A,B,C,D).
-viz_a(A,B,C,D) :- 
+vis_a(A,B,C,D) :- 
 	l_actor(A,_,_), 
 	meta_a(A,B,C,D).
