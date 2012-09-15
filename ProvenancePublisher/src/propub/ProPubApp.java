@@ -17,9 +17,9 @@ import java.io.Writer;
 import java.io.IOException;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.*;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.swing.*;
@@ -49,9 +49,6 @@ import re.RGrammar;
 import types.IconType;
 import types.URContext;
 import types.PayloadTreeNode;
-
-import java.util.List;
-import java.util.Random;
 
 /**
  *
@@ -340,8 +337,8 @@ public class ProPubApp extends javax.swing.JFrame {
 
 		jTabbedPane_First.addTab("My Queries", jPanel_MQ);
 
-		JTable artifactTable = new JTable(new ArtifactTableModel());
-		JPanel detailDisplay = new JPanel();
+		artifactTable = new JTable(new ArtifactTableModel());
+		detailDisplay = new JPanel();
 
 		JSplitPane tabularSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, artifactTable, detailDisplay);
 		JScrollPane panelScrollPane = new JScrollPane(jPanel_Graph);
@@ -819,15 +816,6 @@ public class ProPubApp extends javax.swing.JFrame {
     }
 
 	public void displayImage(ArrayList<String> model) {
-		FileDriver fd = new FileDriver();
-		StringBuffer sb = new StringBuffer();
-		for (String s : model) {
-			sb.append("% " + s + "\n");
-		}
-
-		System.out.println("model----");
-		System.out.println(model);
-
 		DOTDriver dot = new DOTDriver(constants);
 		String imgFile = dot.prepareImgage(model);
 		try {
@@ -837,6 +825,37 @@ public class ProPubApp extends javax.swing.JFrame {
 			System.out.println("Errors..");
 			e.printStackTrace();
 		}
+
+		Map<String, List<Metadatum>> allMetadata = new HashMap<String, List<Metadatum>>();
+		Set<String> predicatePrefixes = new HashSet<String>(Arrays.asList("vis_a(", "vis_d("));
+
+		for (String prefix : predicatePrefixes) {
+			allMetadata.put(prefix, new ArrayList<Metadatum>());
+		}
+
+		for (String modelElement : model) {
+			for (String prefix : predicatePrefixes) {
+				if (!modelElement.startsWith(prefix)) {
+					continue;
+				}
+
+				// slice off predicate name
+				modelElement = modelElement.substring(prefix.length());
+				// slice off period and closing parenthesis
+				modelElement = modelElement.substring(0, modelElement.length() - 2);
+				String[] parts = modelElement.split(",");
+				Metadatum datum = new Metadatum();
+				// id, url, description, category
+				datum.addKV("id", parts[0]);
+				datum.addKV("url", parts[1]);
+				datum.addKV("description", parts[2]);
+				datum.addKV("category", parts[3]);
+				allMetadata.get(prefix).add(datum);
+				System.out.println("Adding " + prefix.substring(4, prefix.length() - 1) + " fact");
+			}
+		}
+
+		((ArtifactTableModel) artifactTable.getModel()).setMetadata(allMetadata);
 	}
 
 	private String getFileName(int sessionId, int id, int stateNo, String dir, String file, String extn) {
@@ -929,6 +948,9 @@ public class ProPubApp extends javax.swing.JFrame {
 	private javax.swing.JTabbedPane jTabbedPane_First;
 	private javax.swing.JTextArea jTextArea_UR;
 	private javax.swing.JTree jTree_QT;
+
+	private JTable artifactTable;
+	private JPanel detailDisplay;
 
     private RunContext currentRunContext = null;
     private Model currentDisplayedModel = null;
