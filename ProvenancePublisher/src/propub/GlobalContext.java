@@ -94,10 +94,14 @@ public class GlobalContext {
 		public Component getTreeCellRendererComponent(JTree jTree, Object o, boolean b, boolean b1, boolean b2, int i, boolean b3) {
 			JLabel label = (JLabel) super.getTreeCellRendererComponent(jTree, o, b, b1, b2, i, b3);
 			try {
+				RunContext currentRunContext = GlobalContext.getInstance().getCurrentRunContext();
 				PayloadTreeNode ptn = (PayloadTreeNode) o;
 				RunContext runContext = (RunContext) ptn.getPayload();
 				String urlString = null;
-				if (runContext.getIconType() == IconType.SWALLOW) {
+				if (currentRunContext.equals(runContext)) {
+					urlString = "toolbarButtonGraphics/general/Stop24.gif";
+				}
+				else if (runContext.getIconType() == IconType.SWALLOW) {
 					urlString = "toolbarButtonGraphics/general/Remove24.gif";
 				}
 				else if (runContext.getIconType() == IconType.INVENT) {
@@ -125,8 +129,6 @@ public class GlobalContext {
 	}
 
     public JTree buildTree() {
-        System.out.println("buildTree()");
-        System.out.println("topLevelItems: " + topLevelItems);
         JTree tree = new JTree();
 
 		tree.setCellRenderer(new MyTreeCellRenderer());
