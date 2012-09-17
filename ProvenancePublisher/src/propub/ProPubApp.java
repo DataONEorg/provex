@@ -9,6 +9,8 @@ package propub;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -38,6 +40,7 @@ import dot.DOTDriver;
 import env.EnvInfo;
 import file.FileDriver;
 
+import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import javax.swing.tree.TreePath;
@@ -338,9 +341,10 @@ public class ProPubApp extends javax.swing.JFrame {
 		jTabbedPane_First.addTab("My Queries", jPanel_MQ);
 
 		artifactTable = new JTable(new ArtifactTableModel());
+		artifactTable.addMouseListener(new ArtifactTableDoubleClickListener());
 		detailDisplay = new JPanel();
 
-		JSplitPane tabularSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, artifactTable, detailDisplay);
+		JSplitPane tabularSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(artifactTable), detailDisplay);
 		JScrollPane panelScrollPane = new JScrollPane(jPanel_Graph);
 		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, panelScrollPane, tabularSplitPane);
 

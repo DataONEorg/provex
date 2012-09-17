@@ -34,6 +34,12 @@ public class ArtifactTableModel extends DefaultTableModel {
 		}
 	}
 
+	List<String> COLUMN_NAMES = Arrays.asList("Type", "ID", "URL", "Description", "Category");
+	@Override
+	public String getColumnName(int i) {
+		return COLUMN_NAMES.get(i);
+	}
+
 	public Object getValueAt(int r, int c) {
 		return orderedData.get(r).get(c);
 	}
