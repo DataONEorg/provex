@@ -615,9 +615,7 @@ public class ProPubApp extends javax.swing.JFrame {
 			jTextArea_UR.setText("");
 
 			// Could whisper sweet nothings to an update method, or take a sledgehammer to it.
-			jTree_QT = GlobalContext.getInstance().buildTree();
-			addListener(jTree_QT);
-			jScrollPane_QT.setViewportView(jTree_QT);
+            resetTree();
 		}
 	}
 
@@ -640,42 +638,8 @@ public class ProPubApp extends javax.swing.JFrame {
         currentDisplayedModel = model;
         displayLatestStageImage();
 
-        jTree_QT = GlobalContext.getInstance().buildTree();
-        addListener(jTree_QT);
-        jScrollPane_QT.setViewportView(jTree_QT);
+        resetTree();
 
-
-        // My code is over.
-        if (1 == 1) {
-            return;
-        }
-		id++;
-		currState = 0;
-		process(sessionId,id,stateNo, null);
-
-		Integer key = new Integer(id);
-		//ht_ele.add(key);
-		//System.out.println("Added " + id + ", so now ht_ele has: " + ht_ele);
-		// add key as a child to base_id
-		if (!htQueryTree.containsKey(base_id)) {
-			htQueryTree.put(base_id, new ArrayList<Integer>());
-		}
-		htQueryTree.get(base_id).add(key);
-		//htQueryTree.put(new Integer(base_id), ht_ele);
-		String userRequests = jTextArea_UR.getText();
-		String modelData = model.getModel();
-		URContext context = new URContext(userRequests, modelData);
-		queryTreeContexts.put(key, context);
-		// htQueryTree is a map that maps from Item ID -> ArrayList of child IDs.
-		// We need a companion map that maps from Item ID to URContext, which
-		// for the moment will just encapsulate User Requests.
-		//
-		//System.out.println("Added " + base_id + ":" + ht_ele + " to: " + htQueryTree);
-
-		System.out.println("Right before ProPubApp call");
-		jTree_QT = bt.getTree(htQueryTree, queryTreeContexts);
-		addListener(jTree_QT);
-		jScrollPane_QT.setViewportView(jTree_QT);
 	}
 
     private File writeSafe(String string, String suffix) {
@@ -748,10 +712,16 @@ public class ProPubApp extends javax.swing.JFrame {
 //		addListener(jTree_QT);
 //		jScrollPane_QT.setViewportView(jTree_QT);
 
+        resetTree();
+	}
+
+
+    public void resetTree() {
         jTree_QT = GlobalContext.getInstance().buildTree();
         addListener(jTree_QT);
         jScrollPane_QT.setViewportView(jTree_QT);
-	}
+
+    }
 
 
 
