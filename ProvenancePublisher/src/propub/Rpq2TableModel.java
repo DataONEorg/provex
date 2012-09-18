@@ -2,13 +2,7 @@ package propub;
 
 import javax.swing.table.AbstractTableModel;
 
-import parser.DLVToDot;
-
-import db.DLVDriver;
-import dot.DOTDriver;
-import env.EnvInfo;
-
-import file.FileDriver;
+import types.IconType;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -164,7 +158,10 @@ public class Rpq2TableModel extends AbstractTableModel {
 				}
 			}
 			
-			RunContext rc = RunContext.forRPQ(f);	
+			RunContext rc = RunContext.forRPQ(f);
+            rc.setIconType(IconType.RPQ);
+            GlobalContext.getInstance().addChildOfCurrentContext(rc);
+            ProPubApp.getInstance().resetTree();
 			ProPubApp pp = ProPubApp.getInstance();
 			pp.displayImage(rc.getModel().getIntrmediateModel(0));
 			
