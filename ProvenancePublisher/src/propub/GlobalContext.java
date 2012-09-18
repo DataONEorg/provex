@@ -156,9 +156,11 @@ public class GlobalContext {
 
         int i = 0;
         for (RunContext rc : topLevelItems) {
-            PayloadTreeNode ptn = new PayloadTreeNode("Query " + i++, rc);
+            int thisNode = i;
+            i++;
+            PayloadTreeNode ptn = new PayloadTreeNode("Query " + thisNode, rc);
             nodeCache.put(rc, ptn);
-            positionCache.put(rc, Arrays.asList(i++));
+            positionCache.put(rc, Arrays.asList(thisNode));
             System.out.println("Inserting " + rc + " at root index: " + rootNode.getChildCount());
             model.insertNodeInto(ptn, rootNode, rootNode.getChildCount());
         }
@@ -178,7 +180,6 @@ public class GlobalContext {
                 System.out.println("Got " + children.size() + " children: " + children);
                 int j = 0;
                 for (RunContext child : children) {
-                    System.out.println("processing child: " + child);
                     List<Integer> parentPosition = positionCache.get(rc);
                     List<Integer> childPosition = new ArrayList<Integer>(parentPosition);
                     childPosition.add(j++);
