@@ -43,7 +43,7 @@ public class GlobalContext {
 	}
 
     public void addChildOfCurrentContext(RunContext runContext) {
-        System.out.println("Adding child of current context: child UR is: " + runContext.getUserRequestFile().getAbsolutePath());
+        System.out.println("Adding child of current context: " + runContext.getInstanceId());
         addChild(getCurrentRunContext(), runContext);
     }
 
@@ -110,6 +110,9 @@ public class GlobalContext {
 				else if (runContext.getIconType() == IconType.FILE_LOAD) {
 					urlString = "toolbarButtonGraphics/general/Properties24.gif";
 				}
+                else if (runContext.getIconType() == IconType.RPQ) {
+                    urlString = "toolbarButtonGraphics/general/Find24.gif";
+                }
 				else {
 					urlString = "toolbarButtonGraphics/general/Help24.gif";
 				}
