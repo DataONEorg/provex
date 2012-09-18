@@ -421,6 +421,7 @@ public class ProPubApp extends javax.swing.JFrame {
 								org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
 								Short.MAX_VALUE)));
 
+		setPreferredSize(new Dimension(640, 480));
 		pack();
 	}// </editor-fold>
 
