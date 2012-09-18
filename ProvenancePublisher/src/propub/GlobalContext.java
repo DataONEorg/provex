@@ -43,7 +43,7 @@ public class GlobalContext {
 	}
 
     public void addChildOfCurrentContext(RunContext runContext) {
-        System.out.println("Adding child of current context: child UR is: " + runContext.getUserRequestFile().getAbsolutePath());
+        System.out.println("Adding child of current context: " + runContext.getInstanceId());
         addChild(getCurrentRunContext(), runContext);
     }
 
@@ -94,10 +94,14 @@ public class GlobalContext {
 		public Component getTreeCellRendererComponent(JTree jTree, Object o, boolean b, boolean b1, boolean b2, int i, boolean b3) {
 			JLabel label = (JLabel) super.getTreeCellRendererComponent(jTree, o, b, b1, b2, i, b3);
 			try {
+				RunContext currentRunContext = GlobalContext.getInstance().getCurrentRunContext();
 				PayloadTreeNode ptn = (PayloadTreeNode) o;
 				RunContext runContext = (RunContext) ptn.getPayload();
 				String urlString = null;
-				if (runContext.getIconType() == IconType.SWALLOW) {
+				if (currentRunContext.equals(runContext)) {
+					urlString = "toolbarButtonGraphics/general/Stop24.gif";
+				}
+				else if (runContext.getIconType() == IconType.SWALLOW) {
 					urlString = "toolbarButtonGraphics/general/Remove24.gif";
 				}
 				else if (runContext.getIconType() == IconType.INVENT) {
@@ -106,6 +110,9 @@ public class GlobalContext {
 				else if (runContext.getIconType() == IconType.FILE_LOAD) {
 					urlString = "toolbarButtonGraphics/general/Properties24.gif";
 				}
+                else if (runContext.getIconType() == IconType.RPQ) {
+                    urlString = "toolbarButtonGraphics/general/Find24.gif";
+                }
 				else {
 					urlString = "toolbarButtonGraphics/general/Help24.gif";
 				}
@@ -125,8 +132,6 @@ public class GlobalContext {
 	}
 
     public JTree buildTree() {
-        System.out.println("buildTree()");
-        System.out.println("topLevelItems: " + topLevelItems);
         JTree tree = new JTree();
 
 		tree.setCellRenderer(new MyTreeCellRenderer());
@@ -151,9 +156,11 @@ public class GlobalContext {
 
         int i = 0;
         for (RunContext rc : topLevelItems) {
-            PayloadTreeNode ptn = new PayloadTreeNode("Query " + i++, rc);
+            int thisNode = i;
+            i++;
+            PayloadTreeNode ptn = new PayloadTreeNode("Query " + thisNode, rc);
             nodeCache.put(rc, ptn);
-            positionCache.put(rc, Arrays.asList(i++));
+            positionCache.put(rc, Arrays.asList(thisNode));
             System.out.println("Inserting " + rc + " at root index: " + rootNode.getChildCount());
             model.insertNodeInto(ptn, rootNode, rootNode.getChildCount());
         }
@@ -173,7 +180,6 @@ public class GlobalContext {
                 System.out.println("Got " + children.size() + " children: " + children);
                 int j = 0;
                 for (RunContext child : children) {
-                    System.out.println("processing child: " + child);
                     List<Integer> parentPosition = positionCache.get(rc);
                     List<Integer> childPosition = new ArrayList<Integer>(parentPosition);
                     childPosition.add(j++);

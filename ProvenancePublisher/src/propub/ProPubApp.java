@@ -9,6 +9,8 @@ package propub;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -38,6 +40,7 @@ import dot.DOTDriver;
 import env.EnvInfo;
 import file.FileDriver;
 
+import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import javax.swing.tree.TreePath;
@@ -209,7 +212,7 @@ public class ProPubApp extends javax.swing.JFrame {
 			}
 		});
 
-		
+
 		org.jdesktop.layout.GroupLayout jPanel_MenuLayout = new org.jdesktop.layout.GroupLayout(
 				jPanel_Menu);
 		jPanel_Menu.setLayout(jPanel_MenuLayout);
@@ -338,9 +341,10 @@ public class ProPubApp extends javax.swing.JFrame {
 		jTabbedPane_First.addTab("My Queries", jPanel_MQ);
 
 		artifactTable = new JTable(new ArtifactTableModel());
+		artifactTable.addMouseListener(new ArtifactTableDoubleClickListener());
 		detailDisplay = new JPanel();
 
-		JSplitPane tabularSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, artifactTable, detailDisplay);
+		JSplitPane tabularSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(artifactTable), detailDisplay);
 		JScrollPane panelScrollPane = new JScrollPane(jPanel_Graph);
 		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, panelScrollPane, tabularSplitPane);
 
@@ -611,9 +615,7 @@ public class ProPubApp extends javax.swing.JFrame {
 			jTextArea_UR.setText("");
 
 			// Could whisper sweet nothings to an update method, or take a sledgehammer to it.
-			jTree_QT = GlobalContext.getInstance().buildTree();
-			addListener(jTree_QT);
-			jScrollPane_QT.setViewportView(jTree_QT);
+            resetTree();
 		}
 	}
 
@@ -636,42 +638,8 @@ public class ProPubApp extends javax.swing.JFrame {
         currentDisplayedModel = model;
         displayLatestStageImage();
 
-        jTree_QT = GlobalContext.getInstance().buildTree();
-        addListener(jTree_QT);
-        jScrollPane_QT.setViewportView(jTree_QT);
+        resetTree();
 
-
-        // My code is over.
-        if (1 == 1) {
-            return;
-        }
-		id++;
-		currState = 0;
-		process(sessionId,id,stateNo, null);
-
-		Integer key = new Integer(id);
-		//ht_ele.add(key);
-		//System.out.println("Added " + id + ", so now ht_ele has: " + ht_ele);
-		// add key as a child to base_id
-		if (!htQueryTree.containsKey(base_id)) {
-			htQueryTree.put(base_id, new ArrayList<Integer>());
-		}
-		htQueryTree.get(base_id).add(key);
-		//htQueryTree.put(new Integer(base_id), ht_ele);
-		String userRequests = jTextArea_UR.getText();
-		String modelData = model.getModel();
-		URContext context = new URContext(userRequests, modelData);
-		queryTreeContexts.put(key, context);
-		// htQueryTree is a map that maps from Item ID -> ArrayList of child IDs.
-		// We need a companion map that maps from Item ID to URContext, which
-		// for the moment will just encapsulate User Requests.
-		//
-		//System.out.println("Added " + base_id + ":" + ht_ele + " to: " + htQueryTree);
-
-		System.out.println("Right before ProPubApp call");
-		jTree_QT = bt.getTree(htQueryTree, queryTreeContexts);
-		addListener(jTree_QT);
-		jScrollPane_QT.setViewportView(jTree_QT);
 	}
 
     private File writeSafe(String string, String suffix) {
@@ -693,7 +661,13 @@ public class ProPubApp extends javax.swing.JFrame {
 		ei.setSetupInfo(constants);
 		if ("sean".equals(System.getProperty("user.name"))) {
 			System.out.println("Welcome, Sean");
-			File loadFile = new File("/Users/sean/propub/propub/data/pg.dlv");
+			File loadFile;
+			if (new File("/Users").exists()) {
+				loadFile = new File("/Users/sean/propub/propub/data/pg.dlv");
+			}
+			else {
+				loadFile = new File("/home/sean/propub/propub/data/pg.dlv");
+			}
 			RunContext runContext = GlobalContext.getInstance().initialLoad(loadFile);
 			GlobalContext.getInstance().setCurrentContext(runContext);
 			Model model = runContext.getModel();
@@ -738,10 +712,16 @@ public class ProPubApp extends javax.swing.JFrame {
 //		addListener(jTree_QT);
 //		jScrollPane_QT.setViewportView(jTree_QT);
 
+        resetTree();
+	}
+
+
+    public void resetTree() {
         jTree_QT = GlobalContext.getInstance().buildTree();
         addListener(jTree_QT);
         jScrollPane_QT.setViewportView(jTree_QT);
-	}
+
+    }
 
 
 
