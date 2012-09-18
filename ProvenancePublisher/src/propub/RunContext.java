@@ -227,6 +227,7 @@ public class RunContext {
         }
 
         // Use the maximum stage recorded, for now. Preferably, this should be configurable.
+        System.out.println("dataByState.keySet(): " + dataByState.keySet());
         int max1 = Collections.max(dataByState.keySet());
         int max2 = Collections.max(actorByState.keySet());
         int max3 = Collections.max(genByByState.keySet());
