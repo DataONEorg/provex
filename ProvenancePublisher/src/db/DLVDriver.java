@@ -19,12 +19,6 @@ public class DLVDriver implements DBDriver {
 
 		try {
 			Runtime rt = Runtime.getRuntime();
-			/*String[] args = {
-					"cmd.exe",
-					"/c",
-					constants.PROPUB_EXE + constants.ENV_SEPARATOR
-							+ "exe_dlv.bat" };
-			Process p = rt.exec(args);*/
 			System.out.println("DLV command: " + Arrays.toString(dlvPath));
 			Process p = rt.exec(dlvPath);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -32,6 +26,8 @@ public class DLVDriver implements DBDriver {
             errorGobbler.start();
 			p.waitFor();
 
+			// NOTE: Be careful. If the binary of DLV somehow changes the
+			// charset it uses to output, this would stop working.
             String errorString = baos.toString("UTF-8");
 
             if (!"".equals(errorString)) {
