@@ -212,7 +212,7 @@ public class ProPubApp extends javax.swing.JFrame {
 			}
 		});
 
-		
+
 		org.jdesktop.layout.GroupLayout jPanel_MenuLayout = new org.jdesktop.layout.GroupLayout(
 				jPanel_Menu);
 		jPanel_Menu.setLayout(jPanel_MenuLayout);
@@ -697,7 +697,13 @@ public class ProPubApp extends javax.swing.JFrame {
 		ei.setSetupInfo(constants);
 		if ("sean".equals(System.getProperty("user.name"))) {
 			System.out.println("Welcome, Sean");
-			File loadFile = new File("/Users/sean/propub/propub/data/pg.dlv");
+			File loadFile;
+			if (new File("/Users").exists()) {
+				loadFile = new File("/Users/sean/propub/propub/data/pg.dlv");
+			}
+			else {
+				loadFile = new File("/home/sean/propub/propub/data/pg.dlv");
+			}
 			RunContext runContext = GlobalContext.getInstance().initialLoad(loadFile);
 			GlobalContext.getInstance().setCurrentContext(runContext);
 			Model model = runContext.getModel();
