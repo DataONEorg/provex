@@ -69,7 +69,32 @@ l_dep(X,Y,S) :-
 	all_lineage, 
 	e(X,Y,S).
 
-
+l_used(X,Y,S) :-
+	l_dep(X,Y,S),
+	l_node(Y,T1),
+	T1="d",
+	l_node(X,T2),
+	T2="i".
+l_gen_by(X,Y,S) :-
+	l_dep(X,Y,S),
+	l_node(Y,T),
+	T="i".
+l_data(X,X,S) :-
+	l_dep(X,_,S),
+	l_node(X,T),
+	T="d".
+l_data(X,X,S) :-
+	l_dep(_,X,S),
+	l_node(X,T),
+	T="d".
+l_actor(X,X,S) :-
+	l_dep(X,_,S),
+	l_node(X,T),
+	T="i".
+l_actor(X,X,S) :-
+	l_dep(_,X,S),
+	l_node(X,T),
+	T="i".
 %%%%%%%%%%%%%%%%% Frame Rules %%%%%%%%%%%%%%%
 
 delete_dep(X,Y,S) :- 
