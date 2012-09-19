@@ -572,7 +572,6 @@ public class ProPubApp extends javax.swing.JFrame {
 		labelGbc2.weighty = 20;
 
 		placeholder = new JLabel("");
-		placeholder.setBorder(BorderFactory.createLineBorder(Color.blue));
 
 		panel.add(placeholder, labelGbc2);
 
