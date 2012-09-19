@@ -29,6 +29,7 @@ import re.REAdapter;
 import env.EnvInfo;
 import parser.Model;
 
+import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
 import javax.swing.JButton;
@@ -211,27 +212,57 @@ public class RPQQueryButtonAction extends AbstractAction {
 	///////////////////////////////////////////////////////////////////////////////
 
 	private void addTableAndPopulate(final Map<String, List<String>> predicateData) {
+
+		// Do I have to explicitly remove the blank label first?
+
 		final GridBagConstraints tableGbc = new GridBagConstraints();
 		tableGbc.gridx = 0;
 		tableGbc.gridy = 3;
+		tableGbc.anchor = GridBagConstraints.PAGE_START;
+		//tableGbc.fill = GridBagConstraints.VERTICAL;
+		tableGbc.weightx = 1;
+		tableGbc.weighty = 1;
 
 		final GridBagConstraints buttonGbc = new GridBagConstraints();
 		buttonGbc.gridx = 0;
 		buttonGbc.gridy = 4;
+		buttonGbc.anchor = GridBagConstraints.PAGE_START;
+		buttonGbc.fill = GridBagConstraints.VERTICAL;
+		buttonGbc.weightx = 1;
+		buttonGbc.weighty = 1;
+
+		final GridBagConstraints blankLabelGbc = new GridBagConstraints();
+		blankLabelGbc.gridx = 0;
+		blankLabelGbc.gridy = 5;
+		blankLabelGbc.anchor = GridBagConstraints.PAGE_START;
+		blankLabelGbc.fill = GridBagConstraints.VERTICAL;
+		blankLabelGbc.weightx = 1;
+		blankLabelGbc.weighty = 5;
 
 		Rpq2TableModel model = new Rpq2TableModel(predicateData);
 		//        interrogateModel(model);
-		JTable table = new JTable(model);
+		MyJTable table = new MyJTable(model);
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
 		// Adjust the width to the preferred size.
 		Dimension viewportDimensions = table.getPreferredScrollableViewportSize();
 		Dimension tablePreferredDimensions = table.getPreferredSize();
 
-		Dimension newSize = new Dimension();
-		newSize.setSize(tablePreferredDimensions.getWidth(), viewportDimensions.getHeight());
-		table.setPreferredScrollableViewportSize(newSize);
+		//Dimension newSize = new Dimension();
+		//double height;
+		//int desiredHeight = 100;
+		//if (viewportDimensions.getHeight() > desiredHeight) {
+			//height = desiredHeight;
+		//}
+		//else {
+			//height = viewportDimensions.getHeight();
+		//}
+		//newSize.setSize(tablePreferredDimensions.getWidth(), height);
+		//System.out.println("Setting size to: " + newSize);
+		
 		final JScrollPane tablePane = new JScrollPane(table);
+		//table.setPreferredScrollableViewportSize(newSize);
+		//System.out.println("Preferred size is: " + table.getPreferredScrollableViewportSize());
 
 		JButton displayButton = new JButton("Display");
 		final JPanel buttonPanel = new JPanel();
@@ -244,8 +275,10 @@ public class RPQQueryButtonAction extends AbstractAction {
 		SwingUtilities.invokeLater(new Runnable() {
 		    @Override
 		    public void run() {
+			appInstance.removePlaceholder();
 			dialogHook.add(tablePane, tableGbc);
 			dialogHook.add(buttonPanel, buttonGbc);
+			dialogHook.add(new JLabel(""), blankLabelGbc);
 			dialogHook.validate();
 			dialogHook.repaint();
 			dialogHook.setSize(dialogHook.getPreferredSize());

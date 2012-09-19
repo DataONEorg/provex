@@ -104,7 +104,9 @@ public class ProPubApp extends javax.swing.JFrame {
 		jLabel_Graph = new javax.swing.JLabel();
 		jTabbedPane_First = new javax.swing.JTabbedPane();
 		jPanel_MQ = new javax.swing.JPanel();
+		jPanel_RPQ = new javax.swing.JPanel();
 		jScrollPane_QT = new javax.swing.JScrollPane();
+		jScrollPane_RPQ = new javax.swing.JScrollPane();
 		jTree_QT = GlobalContext.getInstance().buildTree();
 		addListener(jTree_QT);
 
@@ -340,6 +342,35 @@ public class ProPubApp extends javax.swing.JFrame {
 
 		jTabbedPane_First.addTab("My Queries", jPanel_MQ);
 
+
+
+
+
+
+		org.jdesktop.layout.GroupLayout jPanel_RPQLayout = new org.jdesktop.layout.GroupLayout(
+				jPanel_RPQ);
+		jPanel_RPQ.setLayout(jPanel_RPQLayout);
+		jPanel_RPQLayout.setHorizontalGroup(jPanel_RPQLayout.createParallelGroup(
+				org.jdesktop.layout.GroupLayout.LEADING).add(
+				jPanel_RPQLayout
+						.createSequentialGroup()
+						.addContainerGap()
+						.add(jScrollPane_RPQ,
+								org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
+								243, Short.MAX_VALUE).addContainerGap()));
+		jPanel_RPQLayout.setVerticalGroup(jPanel_RPQLayout.createParallelGroup(
+				org.jdesktop.layout.GroupLayout.LEADING).add(
+				jPanel_RPQLayout
+						.createSequentialGroup()
+						.addContainerGap()
+						.add(jScrollPane_RPQ,
+								org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
+								362, Short.MAX_VALUE).addContainerGap()));
+
+
+
+
+
 		artifactTable = new JTable(new ArtifactTableModel());
 		artifactTable.addMouseListener(new ArtifactTableDoubleClickListener());
 		detailDisplay = new JPanel();
@@ -355,8 +386,10 @@ public class ProPubApp extends javax.swing.JFrame {
 		JTabbedPane panel = new JTabbedPane();
 		panel.addTab("User requests", null, jPanel_UR, "");
 		panel.addTab("Queries", null, jTabbedPane_First, "");
-		JPanel rpqPanel = generateRpqPanel();
-		panel.addTab("RPQ", null, rpqPanel, "");
+		rpqPanel = generateRpqPanel();
+		//jScrollPane_RPQ.setViewportView(rpqPanel);
+		//panel.addTab("RPQ", jPanel_RPQ);
+		panel.addTab("RPQ", rpqPanel);
 
 		JSplitPane mainContent = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel, splitPane);
 
@@ -484,6 +517,10 @@ public class ProPubApp extends javax.swing.JFrame {
 		GridBagConstraints textAreaGbc = new GridBagConstraints();
 		textAreaGbc.gridx = 0;
 		textAreaGbc.gridy = 1;
+		textAreaGbc.anchor = GridBagConstraints.PAGE_START;
+		textAreaGbc.fill = GridBagConstraints.VERTICAL;
+		textAreaGbc.weightx = 1;
+		textAreaGbc.weighty = 1;
 
 		JScrollPane sp = new JScrollPane(textArea);
 		sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -492,6 +529,10 @@ public class ProPubApp extends javax.swing.JFrame {
 		GridBagConstraints buttonGbc = new GridBagConstraints();
 		buttonGbc.gridx = 0;
 		buttonGbc.gridy = 2;
+		buttonGbc.anchor = GridBagConstraints.PAGE_START;
+		buttonGbc.fill = GridBagConstraints.VERTICAL;
+		buttonGbc.weightx = 1;
+		buttonGbc.weighty = 1;
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout());
@@ -510,15 +551,45 @@ public class ProPubApp extends javax.swing.JFrame {
 
 		buttonPanel.add(queryButton);
 
-		panel.add(buttonPanel, buttonGbc);
+		panel.add(queryButton, buttonGbc);
 
 		GridBagConstraints labelGbc = new GridBagConstraints();
 		labelGbc.gridx = 0;
 		labelGbc.gridy = 0;
+		labelGbc.anchor = GridBagConstraints.PAGE_START;
+		labelGbc.fill = GridBagConstraints.VERTICAL;
+		labelGbc.weightx = 1;
+		labelGbc.weighty = 1;
+
 		panel.add(new JLabel("Enter query:"), labelGbc);
+
+		GridBagConstraints labelGbc2 = new GridBagConstraints();
+		labelGbc2.gridx = 0;
+		labelGbc2.gridy = 3;
+		labelGbc2.anchor = GridBagConstraints.PAGE_START;
+		labelGbc2.fill = GridBagConstraints.VERTICAL;
+		labelGbc2.weightx = 1;
+		labelGbc2.weighty = 20;
+
+		placeholder = new JLabel("");
+		placeholder.setBorder(BorderFactory.createLineBorder(Color.blue));
+
+		panel.add(placeholder, labelGbc2);
+
 
 		return panel;
 	}
+
+	public void removePlaceholder() {
+		if (rpqPanel == null || placeholder == null) {
+			return;
+		}
+
+		rpqPanel.remove(placeholder);
+	}
+
+	private JPanel rpqPanel = null;
+	private JLabel placeholder = null;
 
 	private void jButton_LastActionPerformed(java.awt.event.ActionEvent evt) {
         Model model = currentDisplayedModel;
@@ -730,64 +801,6 @@ public class ProPubApp extends javax.swing.JFrame {
 		// TODO add your handling code here:
 	}
 
-	private void process(int sessionId, int id, int stateNo, String file) {
-        System.out.println("Call to process, find out where this is from and kill it.");
-        if (1 == 1) {
-            System.exit(-1);
-        }
-		//copy pg
-		System.out.println("-----------------------------------------------------");
-		FileDriver fd = new FileDriver();
-		if (file != null) {
-			String inPGFile  = file;
-			String exePGFile = getFileName(constants.PROPUB_EXE, "pg", "dlv");
-			String outPGFile = getFileName(sessionId,id,stateNo, constants.PROPUB_OUT, "pg", "dlv");
-			System.out.println("'" + inPGFile + "' -> '" + outPGFile + "' (branch 1)");
-			fd.copyFile(inPGFile, outPGFile);
-			System.out.println("'" + inPGFile + "' -> '" + exePGFile + "' (branch 1)");
-			fd.copyFile(inPGFile, exePGFile);
-		} else {
-			String outPGFile  = getFileName(sessionId,id-1,stateNo, constants.PROPUB_OUT, "pg", "dlv");
-			String exePGFile = getFileName(constants.PROPUB_EXE, "pg", "dlv");
-			System.out.println("******* '" + outPGFile + "' -> '" + exePGFile + "' (branch 2)");
-			fd.copyFile(outPGFile, exePGFile);
-		}
-
-		//read ur and copy
-		String exeURFile  = getFileName(constants.PROPUB_EXE, "ur", "dlv");
-		String outURFile  = getFileName(sessionId,id,stateNo, constants.PROPUB_OUT, "ur", "dlv");
-        String assembledRequests = null;  // SEAN: Just a placeholder to get this dead code to compile.
-		if (assembledRequests == null) {
-			System.out.println("No assembled requests");
-			fd.writeFile(new StringBuffer(jTextArea_UR.getText()), exeURFile);
-			System.out.println("UR data -> '" + exeURFile + "' (branch 3)");
-			fd.writeFile(new StringBuffer(jTextArea_UR.getText()), outURFile);
-			System.out.println("UR data -> '" + outURFile + "' (branch 4)");
-		}
-		else {
-			System.out.println("Some assembled requests");
-			fd.writeFile(new StringBuffer(assembledRequests + "\n" + jTextArea_UR.getText()), exeURFile);
-			System.out.println("UR data... -> '" + exeURFile + "' (branch 5)");
-			fd.writeFile(new StringBuffer(assembledRequests + "\n" + jTextArea_UR.getText()), outURFile);
-			System.out.println("UR data... -> '" + outURFile + "' (branch 6)");
-		}
-
-		System.out.println("-----------------------------------------------------");
-		//call dlv
-		DLVDriver dlv = new DLVDriver();
-		dlv.exeDLV(new String[] {constants.SL_DLV_PATH}); // Constructed an
-		// array so this will compile, but it still won't work.
-
-        // SEAN: At the moment, this is dead code anyway due to the return
-        // above. Just commented out to allow compilation.
-//		//Set up the model
-//		model = new Model(constants);
-//
-//		//display image
-//		displayImage(model.getIntrmediateModel(model.getFinalStateNo()));
-		//set query
-	}
-
     private void displayLatestStageImage() {
         Model model = currentDisplayedModel;
         int latestStage = model.getFinalStateNo();
@@ -921,10 +934,12 @@ public class ProPubApp extends javax.swing.JFrame {
 	private javax.swing.JLabel jLabel_Graph;
 	private javax.swing.JPanel jPanel_Graph;
 	private javax.swing.JPanel jPanel_MQ;
+	private javax.swing.JPanel jPanel_RPQ;
 	private javax.swing.JPanel jPanel_Main;
 	private javax.swing.JPanel jPanel_Menu;
 	private javax.swing.JPanel jPanel_UR;
 	private javax.swing.JScrollPane jScrollPane_QT;
+	private javax.swing.JScrollPane jScrollPane_RPQ;
 	private javax.swing.JScrollPane jScrollPane_UR;
 	private javax.swing.JTabbedPane jTabbedPane_First;
 	private javax.swing.JTextArea jTextArea_UR;
