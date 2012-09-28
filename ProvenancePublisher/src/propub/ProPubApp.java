@@ -375,9 +375,10 @@ public class ProPubApp extends javax.swing.JFrame {
 		artifactTable.addMouseListener(new ArtifactTableDoubleClickListener());
 		detailDisplay = new JPanel();
 
-		JSplitPane tabularSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(artifactTable), detailDisplay);
+		artifactTable.setPreferredScrollableViewportSize(new Dimension(450, 200));
+		JScrollPane artifactTableScrollPane = new JScrollPane(artifactTable);
 		JScrollPane panelScrollPane = new JScrollPane(jPanel_Graph);
-		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, panelScrollPane, tabularSplitPane);
+		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, panelScrollPane, artifactTableScrollPane);
 
 		org.jdesktop.layout.GroupLayout jPanel_MainLayout = new org.jdesktop.layout.GroupLayout(
 				jPanel_Main);
