@@ -545,7 +545,7 @@ public class ProPubApp extends javax.swing.JFrame {
 
 		buttonPanel.add(queryButton);
 
-		panel.add(queryButton, buttonGbc);
+		panel.add(buttonPanel, buttonGbc);
 
 		GridBagConstraints labelGbc = new GridBagConstraints();
 		labelGbc.gridx = 0;
