@@ -65,7 +65,7 @@ public class Rpq2TableModel extends AbstractTableModel {
 
         @Override
         public String getColumnName(int i) {
-            if (i == 0) return "Checkbox";
+            if (i == 0) return "\u2714";
             if (i == 1) return "Node 1";
             if (i == 2) return "Node 2";
             return "Huh?";
