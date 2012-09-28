@@ -103,11 +103,11 @@ public class ProPubApp extends javax.swing.JFrame {
 		jPanel_Graph = new javax.swing.JPanel();
 		jLabel_Graph = new javax.swing.JLabel();
 		jTabbedPane_First = new javax.swing.JTabbedPane();
-		jPanel_MQ = new javax.swing.JPanel();
 		jPanel_RPQ = new javax.swing.JPanel();
 		jScrollPane_QT = new javax.swing.JScrollPane();
 		jScrollPane_RPQ = new javax.swing.JScrollPane();
 		jTree_QT = GlobalContext.getInstance().buildTree();
+		jPanel_QT = new JPanel();
 		addListener(jTree_QT);
 
 		setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -320,32 +320,24 @@ public class ProPubApp extends javax.swing.JFrame {
 
 		jScrollPane_QT.setViewportView(jTree_QT);
 
-		org.jdesktop.layout.GroupLayout jPanel_MQLayout = new org.jdesktop.layout.GroupLayout(
-				jPanel_MQ);
-		jPanel_MQ.setLayout(jPanel_MQLayout);
-		jPanel_MQLayout.setHorizontalGroup(jPanel_MQLayout.createParallelGroup(
-				org.jdesktop.layout.GroupLayout.LEADING).add(
-				jPanel_MQLayout
-						.createSequentialGroup()
-						.addContainerGap()
-						.add(jScrollPane_QT,
-								org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-								243, Short.MAX_VALUE).addContainerGap()));
-		jPanel_MQLayout.setVerticalGroup(jPanel_MQLayout.createParallelGroup(
-				org.jdesktop.layout.GroupLayout.LEADING).add(
-				jPanel_MQLayout
-						.createSequentialGroup()
-						.addContainerGap()
-						.add(jScrollPane_QT,
-								org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
-								362, Short.MAX_VALUE).addContainerGap()));
+		jPanel_QT = new JPanel();
 
-		jTabbedPane_First.addTab("My Queries", jPanel_MQ);
+		org.jdesktop.layout.GroupLayout jPanel_QTLayout = new org.jdesktop.layout.GroupLayout(
+				jPanel_QT);
+		jPanel_QT.setLayout(jPanel_QTLayout);
+		jPanel_QTLayout.setHorizontalGroup(jPanel_QTLayout.createParallelGroup(
+				org.jdesktop.layout.GroupLayout.LEADING).add(jScrollPane_QT,
+				org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 262,
+				Short.MAX_VALUE));
+		jPanel_QTLayout.setVerticalGroup(jPanel_QTLayout.createParallelGroup(
+				org.jdesktop.layout.GroupLayout.LEADING).add(jScrollPane_QT,
+				org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 177,
+				Short.MAX_VALUE));
 
-
-
-
-
+		jPanel_QT.setBorder(javax.swing.BorderFactory.createTitledBorder(
+				javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1),
+				"My Queries", javax.swing.border.TitledBorder.CENTER,
+				javax.swing.border.TitledBorder.DEFAULT_POSITION));
 
 		org.jdesktop.layout.GroupLayout jPanel_RPQLayout = new org.jdesktop.layout.GroupLayout(
 				jPanel_RPQ);
@@ -373,7 +365,6 @@ public class ProPubApp extends javax.swing.JFrame {
 
 		artifactTable = new JTable(new ArtifactTableModel());
 		artifactTable.addMouseListener(new ArtifactTableDoubleClickListener());
-		detailDisplay = new JPanel();
 
 		artifactTable.setPreferredScrollableViewportSize(new Dimension(450, 200));
 		JScrollPane artifactTableScrollPane = new JScrollPane(artifactTable);
@@ -386,7 +377,7 @@ public class ProPubApp extends javax.swing.JFrame {
 
 		JTabbedPane panel = new JTabbedPane();
 		panel.addTab("User requests", null, jPanel_UR, "");
-		panel.addTab("Queries", null, jTabbedPane_First, "");
+		panel.addTab("Queries", null, jPanel_QT, "");
 		rpqPanel = generateRpqPanel();
 		//jScrollPane_RPQ.setViewportView(rpqPanel);
 		//panel.addTab("RPQ", jPanel_RPQ);
@@ -455,7 +446,9 @@ public class ProPubApp extends javax.swing.JFrame {
 								org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
 								Short.MAX_VALUE)));
 
-		setPreferredSize(new Dimension(640, 480));
+		setPreferredSize(new Dimension(1100, 950));
+		// NOTE: This value was arrived at experimentally. I'm not sure how
+		// GroupLayout decides how large to make the content pane.
 		pack();
 	}// </editor-fold>
 
@@ -933,7 +926,6 @@ public class ProPubApp extends javax.swing.JFrame {
 	private javax.swing.JButton jButton_Set;
 	private javax.swing.JLabel jLabel_Graph;
 	private javax.swing.JPanel jPanel_Graph;
-	private javax.swing.JPanel jPanel_MQ;
 	private javax.swing.JPanel jPanel_RPQ;
 	private javax.swing.JPanel jPanel_Main;
 	private javax.swing.JPanel jPanel_Menu;
@@ -943,10 +935,10 @@ public class ProPubApp extends javax.swing.JFrame {
 	private javax.swing.JScrollPane jScrollPane_UR;
 	private javax.swing.JTabbedPane jTabbedPane_First;
 	private javax.swing.JTextArea jTextArea_UR;
+	private JPanel jPanel_QT;
 	private javax.swing.JTree jTree_QT;
 
 	private JTable artifactTable;
-	private JPanel detailDisplay;
 
     private RunContext currentRunContext = null;
     private Model currentDisplayedModel = null;
