@@ -1,7 +1,6 @@
 package propub;
 
-import javax.swing.AbstractAction;
-import javax.swing.JTextArea;
+import javax.swing.*;
 import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -28,14 +27,6 @@ import re.RGrammar;
 import re.REAdapter;
 import env.EnvInfo;
 import parser.Model;
-
-import javax.swing.JLabel;
-import javax.swing.JTable;
-import javax.swing.JScrollPane;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JDialog;
-import javax.swing.SwingUtilities;
 
 public class RPQQueryButtonAction extends AbstractAction {
 
@@ -259,10 +250,11 @@ public class RPQQueryButtonAction extends AbstractAction {
 		//}
 		//newSize.setSize(tablePreferredDimensions.getWidth(), height);
 		//System.out.println("Setting size to: " + newSize);
-		
+
 		final JScrollPane tablePane = new JScrollPane(table);
-		//table.setPreferredScrollableViewportSize(newSize);
-		//System.out.println("Preferred size is: " + table.getPreferredScrollableViewportSize());
+		final JPanel tablePanel = new JPanel();
+		tablePanel.setLayout(new BorderLayout());
+		tablePanel.add(tablePane, BorderLayout.CENTER);
 
 		JButton displayButton = new JButton("Display");
 		final JPanel buttonPanel = new JPanel();
