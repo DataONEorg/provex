@@ -275,69 +275,117 @@ public class ProPubApp extends javax.swing.JFrame {
 												.add(jButton_Set))
 										.addContainerGap()));
 
-		jPanel_UR.setBorder(javax.swing.BorderFactory.createTitledBorder(
-				javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1),
-				"User Requests", javax.swing.border.TitledBorder.CENTER,
-				javax.swing.border.TitledBorder.DEFAULT_POSITION));
+		//jPanel_UR.setBorder(javax.swing.BorderFactory.createTitledBorder(
+				//javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1),
+				//"User Requests", javax.swing.border.TitledBorder.CENTER,
+				//javax.swing.border.TitledBorder.DEFAULT_POSITION));
 
 		jTextArea_UR.setColumns(20);
 		jTextArea_UR.setRows(5);
 		jScrollPane_UR.setViewportView(jTextArea_UR);
 
-		org.jdesktop.layout.GroupLayout jPanel_URLayout = new org.jdesktop.layout.GroupLayout(
-				jPanel_UR);
-		jPanel_UR.setLayout(jPanel_URLayout);
-		jPanel_URLayout.setHorizontalGroup(jPanel_URLayout.createParallelGroup(
-				org.jdesktop.layout.GroupLayout.LEADING).add(jScrollPane_UR,
-				org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 262,
-				Short.MAX_VALUE));
-		jPanel_URLayout.setVerticalGroup(jPanel_URLayout.createParallelGroup(
-				org.jdesktop.layout.GroupLayout.LEADING).add(jScrollPane_UR,
-				org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 177,
-				Short.MAX_VALUE));
+		GridBagConstraints labelConstraints = new GridBagConstraints();
+		labelConstraints.gridx = 0;
+		labelConstraints.gridy = 0;
+		labelConstraints.weightx = 1;
+		labelConstraints.weighty = 1;
 
-		jPanel_Graph.setBorder(new javax.swing.border.SoftBevelBorder(
-				javax.swing.border.BevelBorder.RAISED));
+		GridBagConstraints scrollPaneConstraints = new GridBagConstraints();
+		scrollPaneConstraints.gridx = 0;
+		scrollPaneConstraints.gridy = 1;
+		scrollPaneConstraints.weightx = 1;
+		scrollPaneConstraints.weighty = 1;
+
+		GridBagConstraints blankConstraints = new GridBagConstraints();
+		blankConstraints.gridx = 0;
+		blankConstraints.gridy = 2;
+		blankConstraints.fill = GridBagConstraints.VERTICAL;
+		blankConstraints.weightx = 1;
+		blankConstraints.weighty = 20;
+
+		JPanel notStupidPanel = new JPanel();
+		notStupidPanel.setLayout(new GridBagLayout());
+		notStupidPanel.add(new JLabel("User Requests"), labelConstraints);
+		notStupidPanel.add(jScrollPane_UR, scrollPaneConstraints);
+		notStupidPanel.add(new JLabel(""), blankConstraints);
+
+		//jPanel_Graph.setBorder(new javax.swing.border.SoftBevelBorder(
+				//javax.swing.border.BevelBorder.RAISED));
 
 		jLabel_Graph.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
 		jLabel_Graph.setFocusable(false);
 		jLabel_Graph
 				.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
 
-		org.jdesktop.layout.GroupLayout jPanel_GraphLayout = new org.jdesktop.layout.GroupLayout(
-				jPanel_Graph);
-		jPanel_Graph.setLayout(jPanel_GraphLayout);
-		jPanel_GraphLayout.setHorizontalGroup(jPanel_GraphLayout
-				.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-				.add(jLabel_Graph,
-						org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 772,
-						Short.MAX_VALUE));
-		jPanel_GraphLayout.setVerticalGroup(jPanel_GraphLayout
-				.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-				.add(jLabel_Graph,
-						org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 622,
-						Short.MAX_VALUE));
+		//org.jdesktop.layout.GroupLayout jPanel_GraphLayout = new org.jdesktop.layout.GroupLayout(
+				//jPanel_Graph);
+		//jPanel_Graph.setLayout(jPanel_GraphLayout);
+		//jPanel_GraphLayout.setHorizontalGroup(jPanel_GraphLayout
+				//.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+				//.add(jLabel_Graph,
+						//org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 772,
+						//Short.MAX_VALUE));
+		//jPanel_GraphLayout.setVerticalGroup(jPanel_GraphLayout
+				//.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+				//.add(jLabel_Graph,
+						//org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 622,
+						//Short.MAX_VALUE));
+		jPanel_Graph.setLayout(new GridBagLayout());
+		GridBagConstraints graphPanelConstraints = new GridBagConstraints();
+		graphPanelConstraints.gridx = 0;
+		graphPanelConstraints.gridy = 0;
+		graphPanelConstraints.weightx = 1;
+		graphPanelConstraints.weighty = 1;
+		graphPanelConstraints.fill = GridBagConstraints.BOTH;
+		jPanel_Graph.add(jLabel_Graph, graphPanelConstraints);
 
 		jScrollPane_QT.setViewportView(jTree_QT);
 
-		jPanel_QT = new JPanel();
+		JPanel queryTreePanel = new JPanel();
+		queryTreePanel.setLayout(new GridBagLayout());
+		
+		GridBagConstraints treeLabelConstraints = new GridBagConstraints();
+		treeLabelConstraints.gridx = 0;
+		treeLabelConstraints.gridy = 0;
+		treeLabelConstraints.weightx = 1;
+		treeLabelConstraints.weighty = 1;
 
-		org.jdesktop.layout.GroupLayout jPanel_QTLayout = new org.jdesktop.layout.GroupLayout(
-				jPanel_QT);
-		jPanel_QT.setLayout(jPanel_QTLayout);
-		jPanel_QTLayout.setHorizontalGroup(jPanel_QTLayout.createParallelGroup(
-				org.jdesktop.layout.GroupLayout.LEADING).add(jScrollPane_QT,
-				org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 262,
-				Short.MAX_VALUE));
-		jPanel_QTLayout.setVerticalGroup(jPanel_QTLayout.createParallelGroup(
-				org.jdesktop.layout.GroupLayout.LEADING).add(jScrollPane_QT,
-				org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 177,
-				Short.MAX_VALUE));
+		GridBagConstraints treeConstraints = new GridBagConstraints();
+		treeConstraints.gridx = 0;
+		treeConstraints.gridy = 1;
+		treeConstraints.fill = GridBagConstraints.HORIZONTAL;
+		treeConstraints.weightx = 1;
+		treeConstraints.weighty = 1;
 
-		jPanel_QT.setBorder(javax.swing.BorderFactory.createTitledBorder(
-				javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1),
-				"My Queries", javax.swing.border.TitledBorder.CENTER,
-				javax.swing.border.TitledBorder.DEFAULT_POSITION));
+		GridBagConstraints queryBlankConstraints = new GridBagConstraints();
+		queryBlankConstraints.gridx = 0;
+		queryBlankConstraints.gridy = 2;
+		queryBlankConstraints.fill = GridBagConstraints.VERTICAL;
+		queryBlankConstraints.weightx = 1;
+		queryBlankConstraints.weighty = 20;
+
+		queryTreePanel.add(new JLabel("My Queries"), treeLabelConstraints);
+		queryTreePanel.add(jScrollPane_QT, treeConstraints);
+		queryTreePanel.add(new JLabel(""), queryBlankConstraints);
+
+		//jPanel_QT = new JPanel();
+
+		//org.jdesktop.layout.GroupLayout jPanel_QTLayout = new org.jdesktop.layout.GroupLayout(
+				//jPanel_QT);
+		//jPanel_QT.setLayout(jPanel_QTLayout);
+		//jPanel_QTLayout.setHorizontalGroup(jPanel_QTLayout.createParallelGroup(
+				//org.jdesktop.layout.GroupLayout.LEADING).add(jScrollPane_QT,
+				//org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 262,
+				//Short.MAX_VALUE));
+		//jPanel_QTLayout.setVerticalGroup(jPanel_QTLayout.createParallelGroup(
+				//org.jdesktop.layout.GroupLayout.LEADING).add(jScrollPane_QT,
+				//org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 177,
+				//Short.MAX_VALUE));
+
+		//jPanel_QT.setBorder(javax.swing.BorderFactory.createTitledBorder(
+				//javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1),
+				//"My Queries", javax.swing.border.TitledBorder.CENTER,
+				//javax.swing.border.TitledBorder.DEFAULT_POSITION));
 
 		org.jdesktop.layout.GroupLayout jPanel_RPQLayout = new org.jdesktop.layout.GroupLayout(
 				jPanel_RPQ);
@@ -376,8 +424,8 @@ public class ProPubApp extends javax.swing.JFrame {
 		jPanel_Main.setLayout(jPanel_MainLayout);
 
 		JTabbedPane panel = new JTabbedPane();
-		panel.addTab("User requests", null, jPanel_UR, "");
-		panel.addTab("Queries", null, jPanel_QT, "");
+		panel.addTab("User requests", notStupidPanel);
+		panel.addTab("Queries", null, queryTreePanel, "");
 		rpqPanel = generateRpqPanel();
 		//jScrollPane_RPQ.setViewportView(rpqPanel);
 		//panel.addTab("RPQ", jPanel_RPQ);
@@ -446,7 +494,7 @@ public class ProPubApp extends javax.swing.JFrame {
 								org.jdesktop.layout.GroupLayout.DEFAULT_SIZE,
 								Short.MAX_VALUE)));
 
-		setPreferredSize(new Dimension(1100, 950));
+		setPreferredSize(new Dimension(750, 575));
 		// NOTE: This value was arrived at experimentally. I'm not sure how
 		// GroupLayout decides how large to make the content pane.
 		pack();
@@ -728,7 +776,7 @@ public class ProPubApp extends javax.swing.JFrame {
 			System.out.println("Welcome, Sean");
 			File loadFile;
 			if (new File("/Users").exists()) {
-				loadFile = new File("/Users/sean/propub/propub/data/pg.dlv");
+				loadFile = new File("/Users/sean/propub/propub/data/pg_fpc.dlv");
 			}
 			else {
 				loadFile = new File("/home/sean/propub/propub/data/pg.dlv");
