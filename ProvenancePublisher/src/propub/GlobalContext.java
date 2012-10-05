@@ -138,7 +138,10 @@ public class GlobalContext {
 
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
         DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode) model.getRoot();
-        rootNode.setUserObject("Root!");
+        rootNode.setUserObject("");
+		//tree.expandRow(0);
+		//tree.setRootVisible(false);
+		//tree.setShowsRootHandles(true);
 
         // Freeze root children myself and remove from model because the handy-
         // dandy MutableTreeNode.removeAllChildren() doesn't actually update
@@ -202,81 +205,6 @@ public class GlobalContext {
         expandAll(tree);
 
         return tree;
-//        JTree tree = new JTree(new TreeModel() {
-//            @Override
-//            public Object getRoot() {
-//                if (root == null) {
-//                    root = new DefaultMutableTreeNode("Root");
-//                }
-//                return root;
-//            }
-//
-//            TreeNode root = null
-//            int index = 0;
-//
-//            @Override
-//            public Object getChild(Object o, int i) {
-//                if (o == root) {
-//                    if (!nodeCache.containsKey(o)) {
-//                        nodeCache.put(o, new HashMap<Integer, PayloadTreeNode>());
-//                    }
-//                    if (!nodeCache.get(o).containsKey(i)) {
-//                        nodeCache.get(o).put(i, new PayloadTreeNode("Node " + (++index),               )))))))))))))
-//                    }
-//                    if (!nodeCache.containsKey(o) || !nodeCache.get(o).containsKey(i)) {
-//                        nodeCache.put(i, new PayloadTreeNode("justanode", topLevelItems.get(i)));
-//                    }
-//                    return nodeCache.get(i);
-//                }
-//                else {
-//                    return null;
-//                }
-//            }
-//
-//            @Override
-//            public int getChildCount(Object o) {
-//                if (o == root) {
-//                    return topLevelItems.size();
-//                }
-//                else {
-//                    return 0;
-//                }
-//            }
-//
-//            @Override
-//            public boolean isLeaf(Object o) {
-//                return o != root;
-//            }
-//
-//            @Override
-//            public void valueForPathChanged(TreePath treePath, Object o) {
-//                //To change body of implemented methods use File | Settings | File Templates.
-//            }
-//
-//            @Override
-//            public int getIndexOfChild(Object o, Object o1) {
-//                if (o == root) {
-//                    return topLevelItems.indexOf(o1);
-//                }
-//                else {
-//                    return -1;
-//                }
-//            }
-//
-//            @Override
-//            public void addTreeModelListener(TreeModelListener treeModelListener) {
-//                listeners.add(treeModelListener);
-//            }
-//
-//            @Override
-//            public void removeTreeModelListener(TreeModelListener treeModelListener) {
-//                listeners.remove(treeModelListener);
-//            }
-//
-//            List<TreeModelListener> listeners = new ArrayList<TreeModelListener>();
-//        });
-//        ((MutableTreeNode) tree.getModel().getRoot()).insertNo;
-//        return tree;
     }
 
     private String _createName(List<Integer> position) {
