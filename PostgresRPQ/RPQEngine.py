@@ -59,8 +59,16 @@ class TreeWalker:
 
     def outputConc(self, node):
         if (self.isFour):
-            concQuery = tcQuery = '''select * from conc4ary(%s, %s, %s)'''
+            concQuery = '''INSERT INTO g
+                SELECT g1.compstart, %s, g2.compend, g1.basestart, g1.label2, g1.baseend 
+                FROM g as g1, g as g2 
+                WHERE g1.label1 = %s and g1.compend = g2.compstart and g2.label1 = %s'''
             valueTuple = (node.subexp.value, node.getChild(0).subexp.value, node.getChild(1).subexp.value)
+            self.cur.execute(concQuery, valueTuple)
+            concQuery = '''INSERT INTO g
+                SELECT g1.compstart, %s, g2.compend, g2.basestart, g2.label2, g2.baseend 
+                FROM g as g1, g as g2 
+                WHERE g1.label1 = %s and g1.compend = g2.compstart and g2.label1 = %s'''
             self.cur.execute(concQuery, valueTuple)
         else:
             concQuery = '''INSERT INTO g
@@ -145,7 +153,9 @@ class TreeWalker:
                 compend character varying(100),
                 basestart character varying(100),
                 label2 character varying(45),
-                baseend character varying(100) );''' )
+                baseend character varying(100) );
+                    ''' )
+                    # CREATE INDEX ON g (label1);
             
             insertionQuery = "INSERT INTO g select *, * from " + sys.argv[2]
 
@@ -153,7 +163,9 @@ class TreeWalker:
             self.cur.execute('''CREATE TABLE g (
                 compstart character varying(100),
                 label1 character varying(45),
-                compend character varying(100) );''' )
+                compend character varying(100) );
+                    ''' )
+                    # CREATE INDEX ON g (label1);
             
             insertionQuery = "INSERT INTO g select * from " + sys.argv[2]
             
