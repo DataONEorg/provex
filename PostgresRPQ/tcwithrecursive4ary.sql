@@ -76,7 +76,7 @@ BEGIN
 	FOR t IN SELECT * FROM temp LOOP
 		rpq4edges := t.path;
 		FOR i IN array_lower(rpq4edges, 1) .. array_upper(rpq4edges, 1) LOOP
-			FOR r IN SELECT * FROM g2 WHERE id=i LOOP
+			FOR r IN SELECT * FROM g2 WHERE id=t.path[i] LOOP
 				INSERT INTO g values (
 					t.compstart, t.label1, t.compend, r.basestart, r.label2, r.baseend); 
 			END LOOP;
