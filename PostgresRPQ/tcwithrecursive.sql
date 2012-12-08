@@ -1,7 +1,6 @@
 DROP FUNCTION IF EXISTS tcwithrecursive(text, text);
 
 DROP TABLE IF EXISTS g;
-DROP TABLE IF EXISTS temptc;
 
 CREATE FUNCTION tcwithrecursive(text, text) RETURNS
 INTEGER
@@ -12,13 +11,8 @@ DECLARE
 	tcsymbol ALIAS FOR $2;
 
 BEGIN
-	CREATE TABLE temptc(
-				compstart character varying(100),
- 				label1 character varying(45),
-  				compend character varying(100)
-	);
 
-	INSERT INTO temptc
+	INSERT INTO g
 	WITH RECURSIVE tc(compstart, label1, compend) AS (
 			SELECT g.compstart as compstart, g.label1 || tcsymbol as label1, g.compend as compend
 			FROM g
@@ -30,7 +24,6 @@ BEGIN
 		)
 	SELECT * from tc;
 
-	INSERT INTO g SELECT * FROM temptc;
 	RETURN 1;
 END;
 

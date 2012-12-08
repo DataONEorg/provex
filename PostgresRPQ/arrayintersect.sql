@@ -25,3 +25,11 @@ begin
 end;
 $FUNCTION$;
 
+CREATE AGGREGATE array_intersect_agg(int[]) (
+    sfunc = my_array_intersect,
+    stype = int[]
+);
+
+
+
+

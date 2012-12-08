@@ -80,7 +80,7 @@ class TreeWalker:
 
     def outputStar(self, node):
         if (self.isFour):
-            tcQuery = '''select * from tcseminaive4ary(%s, %s)'''
+            tcQuery = '''select * from tcwithrecursive4ary(%s, %s)'''
             self.cur.execute(tcQuery, (node.getChild(0).subexp.value, ' *'))
             selfedgeQueryleft = '''INSERT INTO g
                 select g.basestart, %s, g.basestart, g.basestart, %s, g.basestart from g where g.label1 = g.label2'''
@@ -99,7 +99,7 @@ class TreeWalker:
 
     def outputPlus(self, node):
         if (self.isFour):
-            tcQuery = '''select * from tcseminaive4ary(%s, %s)'''
+            tcQuery = '''select * from tcwithrecursive4ary(%s, %s)'''
             self.cur.execute(tcQuery, (node.getChild(0).subexp.value, ' +'))
         else:
             tcQuery = '''select * from tcwithrecursive(%s, %s)'''
