@@ -153,9 +153,9 @@ class TreeWalker:
                 compend character varying(100),
                 basestart character varying(100),
                 label2 character varying(45),
-                baseend character varying(100) );CREATE INDEX ON g (label1);
+                baseend character varying(100) );CREATE INDEX gidx ON g (label1);
                     ''' )
-                    # CREATE INDEX ON g (label1);
+                    # CREATE INDEX gidx ON g (label1);
             
             insertionQuery = "INSERT INTO g select *, * from " + sys.argv[2]
 
@@ -163,9 +163,9 @@ class TreeWalker:
             self.cur.execute('''CREATE TABLE g (
                 compstart character varying(100),
                 label1 character varying(45),
-                compend character varying(100) );CREATE INDEX ON g (label1);
+                compend character varying(100) );CREATE INDEX gidx ON g (label1);
                     ''' )
-                    # CREATE INDEX ON g (label1);
+                    # CREATE INDEX gidx ON g (label1);
             
             insertionQuery = "INSERT INTO g select * from " + sys.argv[2]
             
