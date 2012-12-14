@@ -135,7 +135,7 @@ class TreeWalker:
 
 
     def initializeQuery(self):
-        self.t0 = time.clock()
+        self.t0 = time.time()
         print("Query starting...")
         configFile = open(sys.argv[3])
         dbname = configFile.readline()
@@ -153,7 +153,7 @@ class TreeWalker:
                 compend character varying(100),
                 basestart character varying(100),
                 label2 character varying(45),
-                baseend character varying(100) );
+                baseend character varying(100) );CREATE INDEX ON g (label1);
                     ''' )
                     # CREATE INDEX ON g (label1);
             
@@ -163,7 +163,7 @@ class TreeWalker:
             self.cur.execute('''CREATE TABLE g (
                 compstart character varying(100),
                 label1 character varying(45),
-                compend character varying(100) );
+                compend character varying(100) );CREATE INDEX ON g (label1);
                     ''' )
                     # CREATE INDEX ON g (label1);
             
@@ -180,18 +180,24 @@ class TreeWalker:
             
         if (self.isFour):        
             self.cur.execute("SELECT DISTINCT * FROM g WHERE label1 = %s", workingTuple)
+            #outputQuery = '''select * from resultoutput4ary(%s)'''
+            #self.cur.execute(outputQuery, workingTuple)
         else:
             self.cur.execute("SELECT DISTINCT compstart, compend FROM g WHERE label1 = %s", workingTuple)
             
+        counter = 0
         for results in self.cur:
             resultsFile.write(str(results) + "\n")
+            counter = counter + 1
         
         resultsFile.close()
         self.cur.execute('''DROP TABLE g''')
         self.conn.close()
         self.cur.close()
-        self.t1 = time.clock()
+        self.t1 = time.time()
         print "Time to process the query: " + str(self.t1-self.t0)
+    
+        print "Number of results: " + str(counter)
 
 
 class RPQEngine:
