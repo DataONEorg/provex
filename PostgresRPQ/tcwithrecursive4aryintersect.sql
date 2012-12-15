@@ -26,7 +26,7 @@ BEGIN
 	
 	ALTER SEQUENCE g2idseq OWNED BY g2.id;
 	
-	CREATE INDEX ON g2 (id);
+	CREATE INDEX g2idx ON g2 (id);
 	
 	INSERT INTO g2(compstart, label1, compend, basestart, label2, baseend) 
 		SELECT DISTINCT compstart, label1, compend, basestart, label2, baseend FROM g WHERE label1 = edgelabel;

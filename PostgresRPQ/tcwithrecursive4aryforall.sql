@@ -27,7 +27,7 @@ BEGIN
 	
 	ALTER SEQUENCE g2idseq OWNED BY g2.id;
 	
-	CREATE INDEX ON g2 (id);
+	CREATE INDEX g2idx ON g2 (id);
 	
 	CREATE TABLE temp1(
 				compstart character varying(100),
