@@ -99,7 +99,7 @@ class TreeWalker:
 
     def outputPlus(self, node):
         if (self.isFour):
-            tcQuery = '''select * from tcwithrecursive4aryforall(%s, %s)'''
+            tcQuery = '''select * from tcwithrecursive4aryintersect(%s, %s)'''
             self.cur.execute(tcQuery, (node.getChild(0).subexp.value, ' +'))
         else:
             tcQuery = '''select * from tcwithrecursive(%s, %s)'''
