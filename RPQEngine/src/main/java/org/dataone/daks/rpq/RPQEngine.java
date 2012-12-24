@@ -35,15 +35,24 @@ public class RPQEngine {
 	
 	public static void main( String[] args ) {
 		if( args.length < 3) {
-			System.out.println( "Usage: java RPQEngine (query) (tablename) (config file) (-4 for returning paths)" );
+			System.out.println( "Usage: java RPQEngine (query) (tablename) (config file) " +
+					"[-4 for returning paths] [-JSON]" );
 			System.exit(0);
 		}
 		RPQEngine engine = new RPQEngine();
 		engine.initDAO(args[2]);
-		if ( (args.length == 4) && (args[3].equals("-4")) )
-			engine.setIsFour(true);
+		boolean useJSON = false;
+		if(args.length >= 4) {
+			if(args[3].equals("-4")) {
+				engine.setIsFour(true);
+				if( (args.length == 5) && (args[4].equals("-JSON")) )
+					useJSON = true;
+			}
+			else if(args[3].equals("-JSON"))
+				useJSON = true;
+		}
 		engine.tableName = args[1];
-		engine.executeQuery(args[0]);
+		engine.executeQuery(args[0], useJSON);
 	}
     
 	
@@ -55,7 +64,7 @@ public class RPQEngine {
 	}
 	
 	
-	public void executeQuery(String query) {
+	public void executeQuery(String query, boolean useJSON) {
 		if(this.tableName == null) {
 			System.out.println("Error: the table name has not been specified");
 			System.exit(0);
@@ -69,7 +78,7 @@ public class RPQEngine {
 		this.postorder(root, subExpHT);
 		System.out.println("Evaluating: " + subExpHT.get(root));
 		this.walkTree(root, subExpHT);
-		this.closeQuery(root, subExpHT);
+		this.closeQuery(root, subExpHT, useJSON);
 		long t1 = System.currentTimeMillis();
         System.out.println("Time to process the query: " + ((t1-t0)/1000.0) + " seconds.");
 	}
@@ -240,9 +249,12 @@ public class RPQEngine {
 	}
     
 	
-	public void closeQuery(CommonTree root, Hashtable<CommonTree, String> subExpHT) {
+	public void closeQuery(CommonTree root, Hashtable<CommonTree, String> subExpHT, boolean useJSON) {
 		String expr = subExpHT.get(root);
-		this.dao.outputResults(expr, this.isFour);
+		if(!useJSON)
+			this.dao.outputResults(expr, this.isFour, false);
+		else
+			this.dao.outputResults(expr, this.isFour, true);
 	}
 	
 	

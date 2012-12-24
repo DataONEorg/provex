@@ -3,6 +3,7 @@ package org.dataone.daks.rpq;
 import java.sql.*;
 import java.io.*;
 import java.util.StringTokenizer;
+import org.json.*;
 
 
 
@@ -139,7 +140,7 @@ public class RPQDBDAO {
 	}
 	
 	
-	public void outputResults(String expr, boolean isFour) {
+	public void outputResults(String expr, boolean isFour, boolean useJSON) {
 		System.out.println("Closing Query.");
 		String query = null;
         if(isFour)     
@@ -160,13 +161,20 @@ public class RPQDBDAO {
         			String basestart = rs.getString(4);
             		String label2 = rs.getString(5);
             		String baseend = rs.getString(6);
-            		output.println(compstart + "," + label1 + "," + compend + "," + 
+            		if(useJSON)
+            			output.println( quaternaryTupleToJSON(compstart, label1, compend,
+                				basestart, label2, baseend).toString() );
+            		else
+            			output.println(compstart + "," + label1 + "," + compend + "," + 
             				basestart + "," + label2 + "," + baseend);
         		}
         		else {
         			String compstart = rs.getString(1);
             		String compend = rs.getString(2);
-        			output.println(compstart + "," + compend);
+            		if(useJSON)
+            			output.println( binaryTupleToJSON(compstart, compend).toString() );
+            		else
+            			output.println(compstart + "," + compend);
         		}
         		counter = counter + 1;
         	}
@@ -182,6 +190,39 @@ public class RPQDBDAO {
         catch(SQLException e) {
         	e.printStackTrace();
         }
+	}
+	
+	
+	public JSONObject quaternaryTupleToJSON(String compstart, String label1, String compend,
+											String basestart, String label2, String baseend) {
+		JSONObject jsonObj = null;
+		try {
+			jsonObj = new JSONObject();
+			jsonObj.put("compstart", compstart);
+			jsonObj.put("label1", label1);
+			jsonObj.put("compend", compend);
+			jsonObj.put("basestart", basestart);
+			jsonObj.put("label2", label2);
+			jsonObj.put("baseend", baseend);
+		}
+		catch(JSONException je) {
+			je.printStackTrace();
+		}
+		return jsonObj;
+	}
+
+	
+	public JSONObject binaryTupleToJSON(String compstart, String compend) {
+		JSONObject jsonObj = null;
+		try {
+			jsonObj = new JSONObject();
+			jsonObj.put("compstart", compstart);
+			jsonObj.put("compend", compend);
+		}
+		catch(JSONException je) {
+			je.printStackTrace();
+		}
+		return jsonObj;
 	}
 	
 	
