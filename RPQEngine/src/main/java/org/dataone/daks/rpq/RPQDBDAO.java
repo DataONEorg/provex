@@ -153,6 +153,7 @@ public class RPQDBDAO {
         	output =  new PrintWriter(new FileWriter(new File("results.txt")));
         	Statement stmt = this.conn.createStatement();
         	ResultSet rs = stmt.executeQuery(query);
+        	JSONArray jsonArray = new JSONArray();
         	while (rs.next()) {
         		if(isFour) {
         			String compstart = rs.getString(1);
@@ -162,8 +163,8 @@ public class RPQDBDAO {
             		String label2 = rs.getString(5);
             		String baseend = rs.getString(6);
             		if(useJSON)
-            			output.println( quaternaryTupleToJSON(compstart, label1, compend,
-                				basestart, label2, baseend).toString() );
+            			jsonArray.put( quaternaryTupleToJSON(compstart, label1, compend,
+                				basestart, label2, baseend) );
             		else
             			output.println(compstart + "," + label1 + "," + compend + "," + 
             				basestart + "," + label2 + "," + baseend);
@@ -172,12 +173,14 @@ public class RPQDBDAO {
         			String compstart = rs.getString(1);
             		String compend = rs.getString(2);
             		if(useJSON)
-            			output.println( binaryTupleToJSON(compstart, compend).toString() );
+            			jsonArray.put( binaryTupleToJSON(compstart, compend) );
             		else
             			output.println(compstart + "," + compend);
         		}
         		counter = counter + 1;
         	}
+        	if(useJSON)
+        		output.println(jsonArray.toString());
         	rs.close();
             output.close();
             stmt.execute("DROP TABLE g");
