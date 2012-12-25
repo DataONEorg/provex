@@ -38,7 +38,9 @@ public class RPQDBDAO {
     public void initFromConfigFile(String filename) {
 		BufferedReader input = null;
 		try {
-			input =  new BufferedReader(new FileReader(new File(filename)));
+			InputStream inputStream = Thread.currentThread().getContextClassLoader().
+					getResourceAsStream(filename);
+			input =  new BufferedReader(new InputStreamReader(inputStream));
 			String dbname = input.readLine();
 			String username = input.readLine();
 			String password = input.readLine();
@@ -139,6 +141,30 @@ public class RPQDBDAO {
 		}
 	}
 	
+
+	public String getGraphJSON(String baseTable) {
+		String query = "SELECT * FROM " + baseTable;
+		String retVal = null;
+        try {
+        	Statement stmt = this.conn.createStatement();
+        	ResultSet rs = stmt.executeQuery(query);
+        	JSONArray jsonArray = new JSONArray();
+        	while (rs.next()) {
+        		String compstart = rs.getString(1);
+            	String label1 = rs.getString(2);
+            	String compend = rs.getString(3);
+            	jsonArray.put(ternaryTupleToJSON(compstart, label1, compend));
+        	}
+        	retVal = jsonArray.toString();
+        	rs.close();
+            stmt.close();
+        }
+        catch(SQLException e) {
+        	e.printStackTrace();
+        }
+        return retVal;
+	}
+	
 	
 	public void outputResults(String expr, boolean isFour, boolean useJSON) {
 		System.out.println("Closing Query.");
@@ -220,6 +246,21 @@ public class RPQDBDAO {
 		try {
 			jsonObj = new JSONObject();
 			jsonObj.put("compstart", compstart);
+			jsonObj.put("compend", compend);
+		}
+		catch(JSONException je) {
+			je.printStackTrace();
+		}
+		return jsonObj;
+	}
+	
+	
+	public JSONObject ternaryTupleToJSON(String compstart, String label1, String compend) {
+		JSONObject jsonObj = null;
+		try {
+			jsonObj = new JSONObject();
+			jsonObj.put("compstart", compstart);
+			jsonObj.put("label1", label1);
 			jsonObj.put("compend", compend);
 		}
 		catch(JSONException je) {
