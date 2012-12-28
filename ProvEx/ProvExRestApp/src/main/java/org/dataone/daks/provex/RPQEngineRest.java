@@ -24,7 +24,7 @@ public class RPQEngineRest {
     	RPQEngine engine = new RPQEngine();
     	//Usage: java RPQEngine (query) (tablename) (config file) [-4 for returning paths] [-JSON]
     	engine.main(new String[]{query, "graph", "config", "-JSON"});
-        return "The query is: " + query + "\n\nThe result is: \n\n" + readFile("results.txt");
+        return readFile("results.txt");
     }
     
     
