@@ -21,8 +21,9 @@ public class GraphDBRest {
     @Produces("text/plain")
     public String getGraphJSON() {
     	RPQDBDAO dao = RPQDBDAO.getInstance();
+    	dao.initFromConfigFile("config");
     	String graphJSON = dao.getGraphJSON("graph");
-        return "The graph is: \n" + graphJSON;
+        return graphJSON;
     }
     
     
