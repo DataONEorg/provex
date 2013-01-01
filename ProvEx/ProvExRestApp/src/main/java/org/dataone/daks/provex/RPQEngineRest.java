@@ -20,10 +20,13 @@ public class RPQEngineRest {
      */
     @GET 
     @Produces("text/plain")
-    public String runQuery(@QueryParam("q") String query) {
+    public String runQuery(@QueryParam("q") String query, @QueryParam("lineage") boolean quaternary) {
     	RPQEngine engine = new RPQEngine();
     	//Usage: java RPQEngine (query) (tablename) (config file) [-4 for returning paths] [-JSON]
-    	engine.main(new String[]{query, "graph", "config", "-JSON"});
+    	if(!quaternary)
+    		engine.main(new String[]{query, "graph", "config", "-JSON"});
+    	else
+    		engine.main(new String[]{query, "graph", "config", "-4", "-JSON"});
         return readFile("results.txt");
     }
     

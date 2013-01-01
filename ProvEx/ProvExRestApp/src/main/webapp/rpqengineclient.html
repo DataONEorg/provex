@@ -1,0 +1,293 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+      #column1-wrap {
+      	float: left;
+      	width: 100%;
+      }
+      #column1 {
+      	/* background-color: cyan; */
+      	margin-right: 900px;
+      	height: 50px;
+      }
+      #column1top {
+      	margin-right: 900px;
+      	height: 50px;
+      }
+      #column1down {
+      	margin-right: 900px;
+      	height: 300px;
+      }
+      #column2 {
+      	/* background-color: lime; */
+      	float: left;
+      	width: 900px;
+      	height: 400px;
+      	margin-left: -900px;
+      }
+      #clear {
+      	clear: both;
+      }
+      
+      #column1down .myinput {
+        width: 100%;
+        clear: both;
+    }
+    </style>
+
+	<!-- Loads and initializes the library -->
+	<script type="text/javascript" src="http://jgraph.github.com/mxgraph/javascript/src/js/mxClient.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+	<script>
+	var graph = null;
+    var layout = null; 
+    var parent = null;
+	//var graphJSONArray = [{"label1":"a","compstart":"start","compend":"a0"},{"label1":"b","compstart":"start","compend":"b0"},{"label1":"a","compstart":"a0","compend":"a1"},{"label1":"b","compstart":"a0","compend":"b1"},{"label1":"b","compstart":"b0","compend":"b1"},{"label1":"a","compstart":"b0","compend":"a1"},{"label1":"a","compstart":"a1","compend":"end"},{"label1":"b","compstart":"b1","compend":"end"}];   
+	var graphJSONArray = null;
+	var graphVerticesArray = null;
+	var graphEdgesArray = null;
+	var graphWSURL = 'http://localhost:8080/ProvExRestApp/webresources/graphdbrest';
+	var rpqWSURL = 'http://localhost:8080/ProvExRestApp/webresources/rpqenginerest';
+	var quaternary = false;
+	
+    function displayGraph(container, graphJSONArray) {
+    	// Checks if the browser is supported
+    	if (!mxClient.isBrowserSupported()) {
+    		// Displays an error message if the browser is not supported.
+    		mxUtils.error('Browser is not supported!', 200, false);
+    	}
+    	else {
+    		
+    		container.innerHTML = "";
+    		
+    		mxEvent.disableContextMenu(document.body);
+    		
+    		// Enables crisp rendering of rectangles in SVG
+    		mxRectangleShape.prototype.crisp = true;
+    				
+    		// Creates the graph inside the given container
+    		graph = new mxGraph(container);
+    		graph.graphHandler.scaleGrid = true;
+    		graph.setPanning(true);
+
+    		// Enables rubberband selection
+    		new mxRubberband(graph);
+    		
+    		var canvas = createCanvas();
+    		graph.container.appendChild(canvas);
+    		
+    		// Gets the default parent for inserting new cells. This
+    		// is normally the first child of the root (ie. layer 0).
+    		parent = graph.getDefaultParent();
+    								
+    		// Adds cells to the model in a single step
+    		graph.getModel().beginUpdate();
+    		try {
+    			
+    			graphVerticesArray = new Array();
+    			graphEdgesArray = new Array();
+    			
+    			fillGraph();
+    			
+    			layout = new mxHierarchicalLayout(graph);
+    			layout.execute(parent);
+    			
+    		}
+    		finally {
+    			// Updates the display
+    			graph.getModel().endUpdate();
+    		}
+
+    		graph.centerZoom = false;
+    		
+    		var bounds = graph.getGraphBounds();
+    		graph.view.setTranslate( (container.clientWidth/2) - (bounds.width/2), 
+    				(container.clientHeight/2) - (bounds.height/2) );
+    		
+    	}
+    }
+
+
+    function createAndDisplayGraphJSONArray(jsonStr) {
+    	graphJSONArray = $.parseJSON(jsonStr);
+    	displayGraph(document.getElementById('graphContainer'), graphJSONArray);
+    }
+    
+    
+    function loadGraph() {
+    	callRestfulWS(graphWSURL, createAndDisplayGraphJSONArray);
+    }
+
+    
+    function processRPQResult(jsonStr) {
+    	var binColor = '#91D89F';
+    	var quatColor = '#A67B97';
+    	resultJSONArray = $.parseJSON(jsonStr);
+    	graph.getModel().beginUpdate();
+        try {
+    		for(var i = 0; i < resultJSONArray.length; i++) {
+    			tuple = resultJSONArray[i];
+    			var compstartVtx = graphVerticesArray[tuple.compstart];
+    			var compendVtx = graphVerticesArray[tuple.compend];
+    			if(!quaternary) {
+    				graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, binColor, [compstartVtx]);
+    				graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, binColor, [compendVtx]);
+    			}
+    			else {
+    				var basestartVtx = graphVerticesArray[tuple.basestart];
+        			var baseendVtx = graphVerticesArray[tuple.baseend];
+        			graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, quatColor, [basestartVtx]);
+    				graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, quatColor, [baseendVtx]);
+    				var edge = graphEdgesArray[tuple.basestart + "_" + tuple.baseend];
+    				graph.setCellStyles(mxConstants.STYLE_STROKECOLOR, quatColor, [edge]);
+    				graph.setCellStyles(mxConstants.STYLE_STROKEWIDTH, 4, [edge]);
+    			}
+    		}
+		}
+        finally {
+			// Updates the display
+			graph.getModel().endUpdate();
+		}
+    }
+    
+    
+    function createButtons() {
+    		
+    	$("#column1").append(mxUtils.button('reload', function() {
+    				loadGraph();
+				}));
+    	
+    	$("#column1").append(mxUtils.button('+', function() {
+    				graph.zoomIn();
+    			}));
+    			
+    	$("#column1").append(mxUtils.button('-', function() {
+    				graph.zoomOut();
+    			}));
+    		
+    	$("#column1").append(mxUtils.button('layout', function() {
+    				layout.execute(parent);
+    			}));
+    	
+    	$("#rpqsubmitBtn").click(function() {
+   					quaternary = $("#lineageCbx").is(':checked');
+   					var query = $("#queryTxt").val();
+   					callRPQEngineRestfulWS(rpqWSURL, processRPQResult, query, quaternary);
+    				//alert("Submit query: " + query);
+    			});
+    }
+    
+    
+    function fillGraph() {
+    	var vertex = null;
+    	var edge = null;
+    	var tuple = null;
+    	for(var i = 0; i < graphJSONArray.length; i++) {
+    		tuple = graphJSONArray[i];
+    		if( graphVerticesArray[tuple.compstart] == undefined ) {
+    			vertex = graph.insertVertex(parent, null, tuple.compstart, 0, 0, 80, 30);
+    			graphVerticesArray[tuple.compstart] = vertex;
+			}
+    		if( graphVerticesArray[tuple.compend] == undefined ) {
+    			vertex = graph.insertVertex(parent, null, tuple.compend, 0, 0, 80, 30);
+    			graphVerticesArray[tuple.compend] = vertex;
+			}
+		}
+    	for(var i = 0; i < graphJSONArray.length; i++) {
+    		tuple = graphJSONArray[i];
+    		edge = graph.insertEdge(parent, null, tuple.label1, graphVerticesArray[tuple.compstart], 
+    				graphVerticesArray[tuple.compend]);
+    		graphEdgesArray[tuple.compstart + "_" + tuple.compend] = edge;
+		}
+    }
+    
+    
+    function createCanvas() {
+    	var cvas = document.createElement('canvas');
+		cvas.style.position = 'absolute';
+		cvas.style.top = '0px';
+		cvas.style.left = '0px';
+		cvas.style.zIndex = -1;
+		return cvas;
+    }
+    
+    
+    function callRestfulWS(wsURL, callback) {
+        jQuery.support.cors = true;
+        $.ajax({
+                type: "GET",
+                url: wsURL,
+                data: "{}",
+                contentType: "application/text; charset=utf-8",
+                dataType: "text",
+                success: function (data) {
+                	callback(data);
+                },
+                error: function (msg, url, line) {
+                    alert('error trapped in error: function(msg, url, line)');
+                    alert('msg = ' + msg + ', url = ' + url + ', line = ' + line);
+                }
+        });
+
+    }
+    
+    
+    function callRPQEngineRestfulWS(wsURL, callback, query, quaternary) {
+        jQuery.support.cors = true;
+        var param = {q: query, lineage:quaternary};
+        $.ajax({
+                type: "GET",
+                url: wsURL,
+                data: param,
+                contentType: "application/text; charset=utf-8",
+                dataType: "text",
+                success: function (data) {
+                	callback(data);
+                },
+                error: function (msg, url, line) {
+                    alert('error trapped in error: function(msg, url, line)');
+                    alert('msg = ' + msg + ', url = ' + url + ', line = ' + line);
+                }
+        });
+
+    }
+    
+    
+	$(document).ready(function(){
+		createButtons();
+		loadGraph();
+     });
+   </script>
+	<link type="text/css" charset="ISO-8859-1" href="src/css/common.css" rel="stylesheet">
+  </head>
+  <body oncontextmenu="return false;">
+    
+    <div id="column1-wrap">
+    	<div id="column1top">Zoom</div>
+    	<div id="column1"></div>
+    	<div id="column1down">
+    		<label>Query</label><br />
+ 			<input type="text" name="query" id="queryTxt" class="rpqinput"><br />
+ 			<input type="checkbox" name="lineage" id="lineageCbx" value="lineage">Get lineage<br>
+ 			<input type="button" name="rpqsubmit" id="rpqsubmitBtn" value="Submit" />
+    	</div>
+	</div>
+	<div id="column2">
+		<div id="graphContainer"></div>
+	</div>
+	<div id="clear"></div>
+    
+<script>
+      
+
+
+    </script>
+  </body>
+</html>
+
+
