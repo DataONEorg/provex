@@ -23,7 +23,6 @@ public class GraphDBRest {
     	RPQDBDAO dao = RPQDBDAO.getInstance();
     	dao.initFromConfigFile("config");
     	String graphJSON = dao.getGraphJSON("graph");
-    	System.out.println("called getGraphJSON");
         return graphJSON;
     }
     
