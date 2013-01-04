@@ -82,9 +82,9 @@ public class RPQDBDAO {
 				if(line.trim().length() == 0)
 					continue;
 				tokenizer = new StringTokenizer(line, ",");
-				String startnode = tokenizer.nextToken();
-				String label = tokenizer.nextToken();
-				String endnode = tokenizer.nextToken();
+				String startnode = tokenizer.nextToken().trim();
+				String label = tokenizer.nextToken().trim();
+				String endnode = tokenizer.nextToken().trim();
 				prepStmt.setString(1, startnode);
 				prepStmt.setString(2, label);
 				prepStmt.setString(3, endnode);
