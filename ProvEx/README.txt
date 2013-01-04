@@ -34,3 +34,15 @@ http://blogs.msdn.com/b/brunoterkaly/archive/2011/11/17/how-to-consume-restful-s
 
 
 
+To add a local jar dependency:
+
+C:\Users\Victor\workspaceprovex\propub\ProvEx\ProvExRestApp>mvn install:install-file  -DlocalReposit
+oryPath=lib   -DcreateChecksum=true -Dpackaging=jar -Dfile=RPQEngine-1.0-SNAPSHOT.jar  -DgroupId=org
+.dataone.daks -DartifactId=RPQEngine -Dversion=1.0-SNAPSHOT
+
+
+
+
+
+
+
