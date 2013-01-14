@@ -20,7 +20,7 @@ public class EdgeProcedure {
 	public void saveTrace(ArrayList<Edge> edge, String traceId) {
 		for (Edge e : edge) {
 			try {
-				edgeDao.insert(e);			
+				edgeDao.insert(e);	
 				// Check whether we need add new node or not.
 				if (e.getEdgeType() == "genBy") {
 					// Function: addNewNode(DataId, ActorId)

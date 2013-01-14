@@ -9,9 +9,12 @@ import org.dataone.daks.provexdb.DAOException.NoConnectionException;
 
 public class DatabaseConnector implements Serializable {
 	protected static final String driver = "org.postgresql.Driver";
-	protected static final String user = "provex";
-	protected static final String psw = "abc123";
-	protected static final String url = "jdbc:postgresql://127.0.0.1:5432/test";
+	//protected static final String user = "provex";
+	//protected static final String psw = "abc123";
+	//protected static final String url = "jdbc:postgresql://127.0.0.1:5432/test";
+	protected static final String user = "postgres";
+	protected static final String psw = "postgres";
+	protected static final String url = "jdbc:postgresql://localhost:5432/provex";
 	private static Connection conn;
 
 	public static Connection getConnection() {

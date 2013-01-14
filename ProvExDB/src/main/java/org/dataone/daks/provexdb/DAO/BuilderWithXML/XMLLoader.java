@@ -3,6 +3,7 @@ package org.dataone.daks.provexdb.DAO.BuilderWithXML;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.io.SAXReader;
+import java.net.URL;
 
 public class XMLLoader {
 	
@@ -20,6 +21,11 @@ public class XMLLoader {
 	         e.printStackTrace();
 	      }
 	      return document;
+	   }
+	 
+	 public static Document getDocumentByURL( URL url )
+	   {
+	      return getDocument(url.getPath());
 	   }
 
 }

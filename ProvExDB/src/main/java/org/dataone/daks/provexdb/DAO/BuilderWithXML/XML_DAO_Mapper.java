@@ -3,9 +3,12 @@ package org.dataone.daks.provexdb.DAO.BuilderWithXML;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
+import java.net.URL;
+
 public class XML_DAO_Mapper {
-	private static String filePath = "d://evaWorkflow1OPM.xml";
-	private static Document doc = XMLLoader.getDocument(filePath);
+	private static String filePath = "evaWorkflow1OPM.xml";
+	private static Document doc = XMLLoader.getDocumentByURL(
+			Thread.currentThread().getContextClassLoader().getResource(filePath) );
 	private static Element opmGraphRoot = doc.getRootElement();
 	
 	

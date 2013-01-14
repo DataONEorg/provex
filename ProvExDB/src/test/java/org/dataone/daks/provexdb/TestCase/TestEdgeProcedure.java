@@ -22,6 +22,7 @@ public class TestEdgeProcedure extends TestCase{
 			e1.setStartNodeId("foo"+i);
 			e1.setEndNodeId("foo"+i);
 			e1.setEdgeLabel("foo"+i);
+			e1.setEdgeType("foo"+i);
 			edges.add(e1);
 		}
 		
@@ -39,6 +40,7 @@ public class TestEdgeProcedure extends TestCase{
 			e1.setStartNodeId("foo"+i);
 			e1.setEndNodeId("foo"+i);
 			e1.setEdgeLabel("foo"+i);
+			e1.setEdgeType("foo"+i);
 			expected.add(e1);
 		}
 		
