@@ -1,0 +1,40 @@
+Bug Report:
+1. dp_prepare_lineage.sql
+"
+SELECT DISTINCT pc_req, stage, traceid, startnodeid, endnodeid, edgelabel
+             FROM edge 
+"
+
+Actually there are no columns like pc_req, stage in the edge table, I think it is correct to change it to provenance _stage here?
+
+
+2. schema_def.sql
+
+"
+CREATE TABLE proevnance_stage (
+   traceId               VARCHAR(32)       NOT NULL,
+   reqId                 VARCHAR(32)       NOT NULL,
+   stageId              VARCHAR(32)       NOT NULL,
+   startNodeId        VARCHAR(32)       NOT NULL,   
+   endNodeId         VARCHAR(32)       NOT NULL,
+   edgeLabel         VARCHAR(32)       NOT NULL
+);
+"
+
+There is a typo here, the table name should be provenance_stage
+
+3. dp_prov_cust.sql
+
+BEGIN
+
+   -- Execute the lineage user requests
+   PERFORM dp_prepare_lineage(pc_trace,pc_req);
+
+    WHILE (vn_count !=0)
+    LOOP
+        
+        PERFORM dp_apply_ur(pc_trace,pc_req,vc_stageId);
+		
+		
+		
+When we call dp_apply_ur(pc_trace,pc_req,vc_stageId), the vc_stageId is defined as NUMERIC but in the function dp_apply_ur and schema, stageId is varchar
