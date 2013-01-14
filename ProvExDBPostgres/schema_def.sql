@@ -65,7 +65,8 @@ CREATE TABLE edge (
    traceId               VARCHAR(32)       NOT NULL,
    startNodeId        VARCHAR(32)       NOT NULL,   
    endNodeId         VARCHAR(32)       NOT NULL,
-   edgeLabel         VARCHAR(32)       NOT NULL
+   edgeLabel         VARCHAR(32)       NOT NULL,
+   edgeType         VARCHAR(32)
 );
 
 CREATE TABLE provenance_stage (
