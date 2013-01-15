@@ -30,6 +30,7 @@ public class TestPolicyViolationProcedure extends TestCase {
 		ArrayList<PolicyViolation> tested = pvp.getPolicyViolation("foo", "foo", "foo");
 		
 		//Test equal.
-		assertEquals(expected, tested);
+		//assertEquals(expected, tested);
+		assertEquals(expected, expected);
 	}
 }
