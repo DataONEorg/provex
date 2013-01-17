@@ -1,43 +1,82 @@
 <!DOCTYPE HTML>
 <html>
   <head>
+    <title>
+      ProvEx
+    </title>
     <style>
-      body {
-        margin: 0px;
-        padding: 0px;
-      }
-      #column1-wrap {
-      	float: left;
-      	width: 100%;
-      }
-      #column1 {
-      	/* background-color: cyan; */
-      	margin-right: 900px;
-      	height: 50px;
-      }
-      #column1top {
-      	margin-right: 900px;
-      	height: 50px;
-      }
-      #column1down {
-      	margin-right: 900px;
-      	height: 300px;
-      }
-      #column2 {
-      	/* background-color: lime; */
-      	float: left;
-      	width: 900px;
-      	height: 400px;
-      	margin-left: -900px;
-      }
-      #clear {
-      	clear: both;
-      }
-      
-      #column1down .myinput {
-        width: 100%;
-        clear: both;
-    }
+:focus {/* remember to define focus styles! */
+	outline: 0;
+}
+body {
+        font: 12px verdana, Helvetica, Arial, sans-serif;
+        background:#efefef;
+        color:#000;
+        margin:0;
+}
+/* =Structure
+----------------------------------------------- */
+
+#page {
+        min-height:640px;
+        width:100%;
+}
+
+#wrapper {
+	margin: 4px auto;
+	width: 1060px;
+	background: #FFF;
+}
+#top1 {
+        text-align: center;
+        height:55px;
+        position:relative;
+        padding:4px;
+        border-bottom:1px solid #efefef;
+}
+#top2 {
+        text-align: center;
+        height:55px;
+        position:relative;
+        padding:4px;
+}
+
+#main {
+        margin: 2px 0 0 0 ;
+
+}
+#left {
+    float: left;
+    min-height: 150px;
+    width: 180px;
+    border-top:1px solid #efefef;
+    border-right:1px solid #efefef;
+}
+#left #top{
+    border-bottom:1px solid #efefef;
+    padding: 4px;
+    min-height: 100px;
+}
+#left #bottom{
+    min-height: 100px;
+    padding: 4px;
+}
+#right {
+    border-top:1px solid #efefef;
+    margin: 4px 4px 0 182px;
+}
+#right #top{
+    border-bottom:1px solid #efefef;
+    padding: 4px;
+    min-height: 100px;
+}
+#right #bottom{
+    min-height: 100px;
+    padding: 4px;
+}
+.clear {
+    clear:both;
+}
     </style>
 
 	<!-- Loads and initializes the library -->
@@ -123,7 +162,7 @@
     	callRestfulWS(graphWSURL, createAndDisplayGraphJSONArray);
     }
 
-    
+
     function processRPQResult(jsonStr) {
     	var binColor = '#91D89F';
     	var quatColor = '#A67B97';
@@ -134,21 +173,68 @@
     			tuple = resultJSONArray[i];
     			var compstartVtx = graphVerticesArray[tuple.compstart];
     			var compendVtx = graphVerticesArray[tuple.compend];
-    			if(!quaternary) {
-    				graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, binColor, [compstartVtx]);
-    				graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, binColor, [compendVtx]);
-    			}
-    			else {
-    				var basestartVtx = graphVerticesArray[tuple.basestart];
-        			var baseendVtx = graphVerticesArray[tuple.baseend];
-        			graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, quatColor, [basestartVtx]);
-    				graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, quatColor, [baseendVtx]);
-    				var edge = graphEdgesArray[tuple.basestart + "_" + tuple.baseend];
-    				graph.setCellStyles(mxConstants.STYLE_STROKECOLOR, quatColor, [edge]);
-    				graph.setCellStyles(mxConstants.STYLE_STROKEWIDTH, 4, [edge]);
-    			}
+    			graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, binColor, [compstartVtx]);
+  				graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, binColor, [compendVtx]);
     		}
+    		$("#rpq2results").html('');
+    		var table = $('<table></table>');
+    		for(var i = 0; i < resultJSONArray.length; i++) {
+    			var row = $('<tr></tr>');
+                var td1 = $('<td></td>');
+                var td2 = $('<td></td>');
+    			tuple = resultJSONArray[i];
+                td1.append(tuple.compstart + " - " + tuple.compend);
+                var html = '<input type="checkbox" id="result' + i + '"/>';
+               	td2.append($(html));
+                row.append(td1);
+                row.append(td2);
+                table.append(row);
+            }
+            $("#rpq2results").append(table);
+            $("#rpq2results").append(mxUtils.button('View', function() {
+ 				quaternary = true;
+ 				var query = $("#queryTxt").val();
+    				callRPQEngineRestfulWS(rpqWSURL, processRPQWithLineage, query, quaternary);
+    			}));
+        }
+        finally {
+			// Updates the display
+			graph.getModel().endUpdate();
 		}
+    }
+    
+  
+    function processRPQWithLineage(jsonStr) {
+    	var binColor = '#91D89F';
+    	var quatColor = '#A67B97';
+    	resultJSONLineageArray = $.parseJSON(jsonStr);
+    	graph.getModel().beginUpdate();
+        try {
+    		for(var i = 0; i < resultJSONLineageArray.length; i++) {
+    			tuple = resultJSONLineageArray[i];
+    			var compstartVtx = graphVerticesArray[tuple.compstart];
+    			var compendVtx = graphVerticesArray[tuple.compend];
+
+                for(var j = 0; j < resultJSONArray.length; j++) {
+                	rpq2tuple = resultJSONArray[j];
+                    if ($("#result"+j).is(':checked') && rpq2tuple.compstart == tuple.compstart && 
+                    			rpq2tuple.compend == tuple.compend) {
+                    	console.log(rpq2tuple);
+                        console.log(tuple);
+                        var basestartVtx = graphVerticesArray[tuple.basestart];
+    		            var baseendVtx = graphVerticesArray[tuple.baseend];
+      			        graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, quatColor, [basestartVtx]);
+      			        graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, quatColor, [baseendVtx]);
+      			          
+                        // Fails to shade correct edge when multiple edges between basestart and baseend - Eric, 1/9/13
+                        var edge = graphEdgesArray[tuple.basestart + "_" + tuple.baseend];
+
+                        graph.setCellStyles(mxConstants.STYLE_STROKECOLOR, quatColor, [edge]);
+                        graph.setCellStyles(mxConstants.STYLE_STROKEWIDTH, 4, [edge]);
+                    }
+                }
+    		}
+        }
         finally {
 			// Updates the display
 			graph.getModel().endUpdate();
@@ -175,9 +261,9 @@
     			}));
     	
     	$("#rpqsubmitBtn").click(function() {
-   					quaternary = $("#lineageCbx").is(':checked');
+   					quaternary = false;
    					var query = $("#queryTxt").val();
-   					callRPQEngineRestfulWS(rpqWSURL, processRPQResult, query, quaternary);
+   					callRPQEngineRestfulWS(rpqWSURL, processRPQResult, query, false);
     				//alert("Submit query: " + query);
     			});
     }
@@ -265,29 +351,41 @@
    </script>
 	<link type="text/css" charset="ISO-8859-1" href="src/css/common.css" rel="stylesheet">
   </head>
-  <body oncontextmenu="return false;">
-    
-    <div id="column1-wrap">
-    	<div id="column1top">Zoom</div>
-    	<div id="column1"></div>
-    	<div id="column1down">
-    		<label>Query</label><br />
- 			<input type="text" name="query" id="queryTxt" class="rpqinput"><br />
- 			<input type="checkbox" name="lineage" id="lineageCbx" value="lineage">Get lineage<br>
- 			<input type="button" name="rpqsubmit" id="rpqsubmitBtn" value="Submit" />
-    	</div>
-	</div>
-	<div id="column2">
-		<div id="graphContainer"></div>
-	</div>
-	<div id="clear"></div>
-    
-<script>
-      
+  
+<body oncontextmenu="return false;">
 
-
-    </script>
-  </body>
+<div id="page">
+ <div id="wrapper">
+  <div id="top1">Title, Logo
+  </div>
+  <div id="top2">Navigation Buttons
+  </div>
+  <div id="main">
+   <div id="left">
+     <div id="top">
+       <div id="column1top">Zoom</div>
+       <div id="column1"></div>
+       <label>Query</label><br />
+       <input type="text" name="query" id="queryTxt" class="rpqinput"><br />
+       <input type="button" name="rpqsubmit" id="rpqsubmitBtn" value="Query" />
+     </div>
+     <div id="bottom">
+       <div id="rpq2results">
+       </div>
+     </div>
+   </div>
+   <div id="right">
+     <div id="top">
+       <div id="graphContainer"></div>
+     </div>
+     <div id="bottom">
+     </div>
+   </div>
+   <div class="clear"></div>
+  </div>
+ </div>
+</div>
+</body>
 </html>
 
 
