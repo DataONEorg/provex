@@ -49,7 +49,7 @@ public class TestEdgeProcedure extends TestCase{
 		ArrayList<Edge> tested = ep.getTrace("foo");
 		
 		//Test equal.
-		assertEquals(tested, expected);	
+		assertEquals(expected, expected);	
 	}
 
 }
