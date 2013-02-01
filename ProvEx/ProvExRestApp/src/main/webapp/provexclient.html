@@ -276,7 +276,10 @@ body {
     	for(var i = 0; i < traceJSON.nodes.length; i++) {
     		tuple = traceJSON.nodes[i];
     		if( traceNodesArray[tuple.nodeId] == undefined ) {
-    			vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 80, 30);
+    			if(tuple.nodeType == "d")
+    				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 80, 30, "shape=ellipse");
+    			else
+    				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 80, 30);
     			traceNodesArray[tuple.nodeId] = vertex;
 			}
 		}
