@@ -1,0 +1,388 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>
+      ProvEx
+    </title>
+    <style>
+:focus {/* remember to define focus styles! */
+	outline: 0;
+}
+body {
+        font: 12px verdana, Helvetica, Arial, sans-serif;
+        background:#efefef;
+        color:#000;
+        margin:0;
+}
+/* =Structure
+----------------------------------------------- */
+
+#page {
+        min-height:640px;
+        width:100%;
+}
+
+#wrapper {
+	margin: 4px auto;
+	width: 1060px;
+	background: #FFF;
+}
+#top1 {
+        text-align: center;
+        height:55px;
+        position:relative;
+        padding:4px;
+        border-bottom:1px solid #efefef;
+}
+#top2 {
+        text-align: center;
+        height:55px;
+        position:relative;
+        padding:4px;
+}
+
+#main {
+        margin: 2px 0 0 0 ;
+
+}
+#left {
+    float: left;
+    min-height: 150px;
+    width: 180px;
+    border-top:1px solid #efefef;
+    border-right:1px solid #efefef;
+}
+#left #top{
+    border-bottom:1px solid #efefef;
+    padding: 4px;
+    min-height: 100px;
+}
+#left #bottom{
+    min-height: 100px;
+    padding: 4px;
+}
+#right {
+    border-top:1px solid #efefef;
+    margin: 4px 4px 0 182px;
+}
+#right #top{
+    border-bottom:1px solid #efefef;
+    padding: 4px;
+    min-height: 100px;
+}
+#right #bottom{
+    min-height: 100px;
+    padding: 4px;
+}
+.clear {
+    clear:both;
+}
+    </style>
+
+	<!-- Loads and initializes the library -->
+	<script type="text/javascript" src="http://jgraph.github.com/mxgraph/javascript/src/js/mxClient.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+	<script>
+	var graph = null;
+    var layout = null; 
+    var parent = null;
+	//var traceJSONStr = '{"edges":[{"endNodeId":"p0","edgeLabel":"u","startNodeId":"a0"},{"endNodeId":"p0","edgeLabel":"u","startNodeId":"a1"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a3"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a4"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a5"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a6"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a2"},{"endNodeId":"p2","edgeLabel":"u","startNodeId":"a8"},{"endNodeId":"p2","edgeLabel":"u","startNodeId":"a7"},{"endNodeId":"p3","edgeLabel":"u","startNodeId":"a10"},{"endNodeId":"p3","edgeLabel":"u","startNodeId":"a11"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a13"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a14"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a15"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a16"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a12"},{"endNodeId":"p5","edgeLabel":"u","startNodeId":"a18"},{"endNodeId":"p5","edgeLabel":"u","startNodeId":"a17"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a20"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p7","edgeLabel":"u","startNodeId":"a21"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a22"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a23"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a25"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a26"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a28"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a29"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a31"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a24"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a27"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a30"},{"endNodeId":"p12","edgeLabel":"u","startNodeId":"a33"},{"endNodeId":"p12","edgeLabel":"u","startNodeId":"a34"},{"endNodeId":"p13","edgeLabel":"u","startNodeId":"a32"},{"endNodeId":"p13","edgeLabel":"u","startNodeId":"a35"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a36"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a37"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a21"},{"endNodeId":"a2","edgeLabel":"g","startNodeId":"p0"},{"endNodeId":"a7","edgeLabel":"g","startNodeId":"p1"},{"endNodeId":"a9","edgeLabel":"g","startNodeId":"p2"},{"endNodeId":"a12","edgeLabel":"g","startNodeId":"p3"},{"endNodeId":"a17","edgeLabel":"g","startNodeId":"p4"},{"endNodeId":"a19","edgeLabel":"g","startNodeId":"p5"},{"endNodeId":"a21","edgeLabel":"g","startNodeId":"p6"},{"endNodeId":"a24","edgeLabel":"g","startNodeId":"p8"},{"endNodeId":"a27","edgeLabel":"g","startNodeId":"p9"},{"endNodeId":"a30","edgeLabel":"g","startNodeId":"p10"},{"endNodeId":"a32","edgeLabel":"g","startNodeId":"p11"},{"endNodeId":"a35","edgeLabel":"g","startNodeId":"p12"}],"nodes":[{"nodeId":"a17","nodeType":"d"},{"nodeId":"p7","nodeType":"i"},{"nodeId":"a3","nodeType":"d"},{"nodeId":"p0","nodeType":"i"},{"nodeId":"p11","nodeType":"i"},{"nodeId":"a35","nodeType":"d"},{"nodeId":"a24","nodeType":"d"},{"nodeId":"a36","nodeType":"d"},{"nodeId":"a9","nodeType":"d"},{"nodeId":"p14","nodeType":"i"},{"nodeId":"a16","nodeType":"d"},{"nodeId":"a10","nodeType":"d"},{"nodeId":"a14","nodeType":"d"},{"nodeId":"a23","nodeType":"d"},{"nodeId":"a22","nodeType":"d"},{"nodeId":"a8","nodeType":"d"},{"nodeId":"a25","nodeType":"d"},{"nodeId":"a37","nodeType":"d"},{"nodeId":"p3","nodeType":"i"},{"nodeId":"a27","nodeType":"d"},{"nodeId":"p10","nodeType":"i"},{"nodeId":"a21","nodeType":"d"},{"nodeId":"p8","nodeType":"i"},{"nodeId":"a34","nodeType":"d"},{"nodeId":"a7","nodeType":"d"},{"nodeId":"a20","nodeType":"d"},{"nodeId":"a1","nodeType":"d"},{"nodeId":"a2","nodeType":"d"},{"nodeId":"a11","nodeType":"d"},{"nodeId":"a29","nodeType":"d"},{"nodeId":"p2","nodeType":"i"},{"nodeId":"a33","nodeType":"d"},{"nodeId":"a18","nodeType":"d"},{"nodeId":"a26","nodeType":"d"},{"nodeId":"p12","nodeType":"i"},{"nodeId":"p9","nodeType":"i"},{"nodeId":"a13","nodeType":"d"},{"nodeId":"a28","nodeType":"d"},{"nodeId":"a30","nodeType":"d"},{"nodeId":"a4","nodeType":"d"},{"nodeId":"p4","nodeType":"i"},{"nodeId":"a31","nodeType":"d"},{"nodeId":"a19","nodeType":"d"},{"nodeId":"p1","nodeType":"i"},{"nodeId":"a15","nodeType":"d"},{"nodeId":"a6","nodeType":"d"},{"nodeId":"a12","nodeType":"d"},{"nodeId":"a0","nodeType":"d"},{"nodeId":"p6","nodeType":"i"},{"nodeId":"a5","nodeType":"d"},{"nodeId":"a32","nodeType":"d"},{"nodeId":"p5","nodeType":"i"},{"nodeId":"p13","nodeType":"i"}]}' ;      
+	var traceJSON = null;
+	var traceNodesArray = null;
+	var traceEdgesArray = null;
+	var traceWSURL = 'http://localhost:8080/ProvExRestApp/webresources/tracedbrest';
+	//var rpqWSURL = 'http://localhost:8080/ProvExRestApp/webresources/rpqenginerest';
+	var quaternary = false;
+	
+    function displayTrace(container, traceJSON) {
+    	// Checks if the browser is supported
+    	if (!mxClient.isBrowserSupported()) {
+    		// Displays an error message if the browser is not supported.
+    		mxUtils.error('Browser is not supported!', 200, false);
+    	}
+    	else {
+    		
+    		container.innerHTML = "";
+    		
+    		mxEvent.disableContextMenu(document.body);
+    		
+    		// Enables crisp rendering of rectangles in SVG
+    		mxRectangleShape.prototype.crisp = true;
+    				
+    		// Creates the graph inside the given container
+    		graph = new mxGraph(container);
+    		graph.graphHandler.scaleGrid = true;
+    		graph.setPanning(true);
+
+    		// Enables rubberband selection
+    		new mxRubberband(graph);
+    		
+    		var canvas = createCanvas();
+    		graph.container.appendChild(canvas);
+    		
+    		// Gets the default parent for inserting new cells. This
+    		// is normally the first child of the root (ie. layer 0).
+    		parent = graph.getDefaultParent();
+    								
+    		// Adds cells to the model in a single step
+    		graph.getModel().beginUpdate();
+    		try {
+    			
+    			traceNodesArray = new Array();
+    			traceEdgesArray = new Array();
+    			
+    			fillTrace();
+    			
+    			layout = new mxHierarchicalLayout(graph);
+    			layout.execute(parent);
+    			
+    		}
+    		finally {
+    			// Updates the display
+    			graph.getModel().endUpdate();
+    		}
+
+    		graph.centerZoom = false;
+    		
+    		var bounds = graph.getGraphBounds();
+    		graph.view.setTranslate( (container.clientWidth/2) - (bounds.width/2), 
+    				(container.clientHeight/2) - (bounds.height/2) );
+    		
+    	}
+    }
+
+
+    function createAndDisplayTraceJSON(jsonStr) {
+    	traceJSON = $.parseJSON(jsonStr);
+    	displayTrace(document.getElementById('traceContainer'), traceJSON);
+    }
+    
+    
+    function loadTrace() {
+    	callRestfulWS(traceWSURL, createAndDisplayTraceJSON);
+    }
+
+
+    function processRPQResult(jsonStr) {
+    	var binColor = '#91D89F';
+    	var quatColor = '#A67B97';
+    	resultJSONArray = $.parseJSON(jsonStr);
+    	graph.getModel().beginUpdate();
+        try {
+    		for(var i = 0; i < resultJSONArray.length; i++) {
+    			tuple = resultJSONArray[i];
+    			var compstartVtx = graphVerticesArray[tuple.compstart];
+    			var compendVtx = graphVerticesArray[tuple.compend];
+    			graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, binColor, [compstartVtx]);
+  				graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, binColor, [compendVtx]);
+    		}
+    		$("#rpq2results").html('');
+    		var table = $('<table></table>');
+    		for(var i = 0; i < resultJSONArray.length; i++) {
+    			var row = $('<tr></tr>');
+                var td1 = $('<td></td>');
+                var td2 = $('<td></td>');
+    			tuple = resultJSONArray[i];
+                td1.append(tuple.compstart + " - " + tuple.compend);
+                var html = '<input type="checkbox" id="result' + i + '"/>';
+               	td2.append($(html));
+                row.append(td1);
+                row.append(td2);
+                table.append(row);
+            }
+            $("#rpq2results").append(table);
+            $("#rpq2results").append(mxUtils.button('View', function() {
+ 				quaternary = true;
+ 				var query = $("#queryTxt").val();
+    				callRPQEngineRestfulWS(rpqWSURL, processRPQWithLineage, query, quaternary);
+    			}));
+        }
+        finally {
+			// Updates the display
+			graph.getModel().endUpdate();
+		}
+    }
+    
+  
+    function processRPQWithLineage(jsonStr) {
+    	var binColor = '#91D89F';
+    	var quatColor = '#A67B97';
+    	resultJSONLineageArray = $.parseJSON(jsonStr);
+    	graph.getModel().beginUpdate();
+        try {
+    		for(var i = 0; i < resultJSONLineageArray.length; i++) {
+    			tuple = resultJSONLineageArray[i];
+    			var compstartVtx = graphVerticesArray[tuple.compstart];
+    			var compendVtx = graphVerticesArray[tuple.compend];
+
+                for(var j = 0; j < resultJSONArray.length; j++) {
+                	rpq2tuple = resultJSONArray[j];
+                    if ($("#result"+j).is(':checked') && rpq2tuple.compstart == tuple.compstart && 
+                    			rpq2tuple.compend == tuple.compend) {
+                    	console.log(rpq2tuple);
+                        console.log(tuple);
+                        var basestartVtx = graphVerticesArray[tuple.basestart];
+    		            var baseendVtx = graphVerticesArray[tuple.baseend];
+      			        graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, quatColor, [basestartVtx]);
+      			        graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, quatColor, [baseendVtx]);
+      			          
+                        // Fails to shade correct edge when multiple edges between basestart and baseend - Eric, 1/9/13
+                        var edge = graphEdgesArray[tuple.basestart + "_" + tuple.baseend];
+
+                        graph.setCellStyles(mxConstants.STYLE_STROKECOLOR, quatColor, [edge]);
+                        graph.setCellStyles(mxConstants.STYLE_STROKEWIDTH, 4, [edge]);
+                    }
+                }
+    		}
+        }
+        finally {
+			// Updates the display
+			graph.getModel().endUpdate();
+		}
+    }
+    
+    
+    function createButtons() {
+    		
+    	$("#column1").append(mxUtils.button('reload', function() {
+    				loadGraph();
+				}));
+    	
+    	$("#column1").append(mxUtils.button('+', function() {
+    				graph.zoomIn();
+    			}));
+    			
+    	$("#column1").append(mxUtils.button('-', function() {
+    				graph.zoomOut();
+    			}));
+    		
+    	$("#column1").append(mxUtils.button('layout', function() {
+    				layout.execute(parent);
+    			}));
+    	
+    	$("#rpqsubmitBtn").click(function() {
+   					quaternary = false;
+   					var query = $("#queryTxt").val();
+   					callRPQEngineRestfulWS(rpqWSURL, processRPQResult, query, false);
+    				//alert("Submit query: " + query);
+    			});
+    }
+    
+    
+    function fillTrace() {
+    	var vertex = null;
+    	var edge = null;
+    	var tuple = null;
+    	for(var i = 0; i < traceJSON.nodes.length; i++) {
+    		tuple = traceJSON.nodes[i];
+    		if( traceNodesArray[tuple.nodeId] == undefined ) {
+    			vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 80, 30);
+    			traceNodesArray[tuple.nodeId] = vertex;
+			}
+		}
+    	for(var i = 0; i < traceJSON.edges.length; i++) {
+    		tuple = traceJSON.edges[i];
+    		edge = graph.insertEdge(parent, null, tuple.edgeLabel, traceNodesArray[tuple.startNodeId], 
+    				traceNodesArray[tuple.endNodeId]);
+    		traceEdgesArray[tuple.startNodeId + "_" + tuple.endNodeId] = edge;
+		}
+    }
+    
+    
+    function createCanvas() {
+    	var cvas = document.createElement('canvas');
+		cvas.style.position = 'absolute';
+		cvas.style.top = '0px';
+		cvas.style.left = '0px';
+		cvas.style.zIndex = -1;
+		return cvas;
+    }
+    
+    
+    function callRestfulWS(wsURL, callback) {
+    	jQuery.support.cors = true;
+        $.ajax({
+                type: "GET",
+                url: wsURL,
+                data: "{}",
+                contentType: "application/text; charset=utf-8",
+                dataType: "text",
+                success: function (data) {
+                	callback(data);
+                },
+                error: function (msg, url, line) {
+                	alert('error trapped in error: function(msg, url, line)');
+                    alert('msg = ' + msg + ', url = ' + url + ', line = ' + line);
+                }
+        });
+
+    }
+    
+    
+    function callRPQEngineRestfulWS(wsURL, callback, query, quaternary) {
+        jQuery.support.cors = true;
+        var param = {q: query, lineage:quaternary};
+        $.ajax({
+                type: "GET",
+                url: wsURL,
+                data: param,
+                contentType: "application/text; charset=utf-8",
+                dataType: "text",
+                success: function (data) {
+                	callback(data);
+                },
+                error: function (msg, url, line) {
+                    alert('error trapped in error: function(msg, url, line)');
+                    alert('msg = ' + msg + ', url = ' + url + ', line = ' + line);
+                }
+        });
+
+    }
+    
+    
+	$(document).ready(function(){
+		createButtons();
+		loadTrace();
+		//createAndDisplayTraceJSON(traceJSONStr);
+     });
+   </script>
+	<link type="text/css" charset="ISO-8859-1" href="src/css/common.css" rel="stylesheet">
+  </head>
+  
+<body oncontextmenu="return false;">
+
+<div id="page">
+ <div id="wrapper">
+  <div id="top1">Title, Logo
+  </div>
+  <div id="top2">Navigation Buttons
+  </div>
+  <div id="main">
+   <div id="left">
+     <div id="top">
+       <div id="column1top">Zoom</div>
+       <div id="column1"></div>
+       <label>Query</label><br />
+       <input type="text" name="query" id="queryTxt" class="rpqinput"><br />
+       <input type="button" name="rpqsubmit" id="rpqsubmitBtn" value="Query" />
+     </div>
+     <div id="bottom">
+       <div id="rpq2results">
+       </div>
+     </div>
+   </div>
+   <div id="right">
+     <div id="top">
+       <div id="traceContainer"></div>
+     </div>
+     <div id="bottom">
+     </div>
+   </div>
+   <div class="clear"></div>
+  </div>
+ </div>
+</div>
+</body>
+</html>
+
+

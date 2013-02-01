@@ -38,10 +38,10 @@ public class EdgeBuilder {
 		
 		//For node whose nodeType is 'genBy', the start node is actor and the end node is data.
 		List<Node> genByNodes = edgeRoot.elements("wasGeneratedBy");
-		for (Node node : usedNodes) {
-			Element used = (Element) node;
-			Element data = used.element("effect");
-			Element actor = used.element("cause");
+		for (Node node : genByNodes) {
+			Element genBy = (Element) node;
+			Element data = genBy.element("effect");
+			Element actor = genBy.element("cause");
 			
 			
 			Edge edge = new Edge();
