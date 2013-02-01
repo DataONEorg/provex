@@ -79,6 +79,22 @@ public class ProvExDBJDBCDAO {
 		return jsonObj.toString();
 	}
 	
+	
+	public String getProvenanceStageJSON(String stageId) {
+		JSONObject jsonObj = null;
+		try {
+			jsonObj = new JSONObject();
+			JSONArray nodesArray = this.getNodesJSON();
+			JSONArray edgesArray = this.getProvenanceStageEdgesJSON(stageId);
+			jsonObj.put("nodes", nodesArray);
+			jsonObj.put("edges", edgesArray);
+		}
+		catch(JSONException je) {
+			je.printStackTrace();
+		}
+		return jsonObj.toString();
+	}
+	
 
 	public JSONArray getEdgesJSON() {
 		String query = "SELECT * FROM edge";
@@ -90,6 +106,58 @@ public class ProvExDBJDBCDAO {
         		String startNodeId = rs.getString(2);
             	String endNodeId = rs.getString(3);
             	String edgeLabel = rs.getString(4);
+            	jsonArray.put(createEdgeJSON(startNodeId, endNodeId, edgeLabel));
+        	}
+        	rs.close();
+            stmt.close();
+        }
+        catch(SQLException e) {
+        	e.printStackTrace();
+        }
+        return jsonArray;
+	}
+	
+	
+	public boolean executePrepareLineage() {
+		String query = "SELECT dp_prepare_lineage();";
+		boolean retVal = false;
+        try {
+        	Statement stmt = this.conn.createStatement();
+        	retVal = stmt.execute(query);
+            stmt.close();
+        }
+        catch(SQLException e) {
+        	e.printStackTrace();
+        }
+        return retVal;
+	}
+	
+	
+	public boolean executeApplyURHide() {
+		String query = "SELECT dp_apply_ur_hide();";
+		boolean retVal = false;
+        try {
+        	Statement stmt = this.conn.createStatement();
+        	retVal = stmt.execute(query);
+            stmt.close();
+        }
+        catch(SQLException e) {
+        	e.printStackTrace();
+        }
+        return retVal;
+	}
+	
+	
+	public JSONArray getProvenanceStageEdgesJSON(String stageId) {
+		String query = "SELECT * FROM provenance_stage WHERE stageId='" + stageId + "'";
+		JSONArray jsonArray = new JSONArray();
+        try {
+        	Statement stmt = this.conn.createStatement();
+        	ResultSet rs = stmt.executeQuery(query);
+        	while (rs.next()) {
+        		String startNodeId = rs.getString(4);
+            	String endNodeId = rs.getString(5);
+            	String edgeLabel = rs.getString(6);
             	jsonArray.put(createEdgeJSON(startNodeId, endNodeId, edgeLabel));
         	}
         	rs.close();
@@ -149,6 +217,37 @@ public class ProvExDBJDBCDAO {
 			je.printStackTrace();
 		}
 		return jsonObj;
+	}
+	
+	
+	public int insertURMaster(String traceId, String reqId, String evalType ) {
+		String update = "INSERT INTO user_request_master VALUES ('" + traceId + "','" + reqId + "','" + evalType + "');";
+		int retVal = -1;
+        try {
+        	Statement stmt = this.conn.createStatement();
+        	retVal = stmt.executeUpdate(update);
+            stmt.close();
+        }
+        catch(SQLException e) {
+        	e.printStackTrace();
+        }
+        return retVal;
+	}
+	
+	
+	public int insertURDetail(String reqId, String stageId, String reqType, String nodeId, String targetNodeId ) {
+		String update = "INSERT INTO user_request_master VALUES ('" + reqId + "','" + stageId + "','" + reqType + 
+				 "','" + nodeId + "','" + targetNodeId + "');";
+		int retVal = -1;
+        try {
+        	Statement stmt = this.conn.createStatement();
+        	retVal = stmt.executeUpdate(update);
+            stmt.close();
+        }
+        catch(SQLException e) {
+        	e.printStackTrace();
+        }
+        return retVal;
 	}
 	
 	

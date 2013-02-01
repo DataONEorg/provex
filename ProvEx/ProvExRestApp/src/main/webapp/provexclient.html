@@ -91,6 +91,7 @@ body {
 	var traceNodesArray = null;
 	var traceEdgesArray = null;
 	var traceWSURL = 'http://localhost:8080/ProvExRestApp/webresources/tracedbrest';
+	var provStageWSURL = 'http://localhost:8080/ProvExRestApp/webresources/provstagedbrest';
 	//var rpqWSURL = 'http://localhost:8080/ProvExRestApp/webresources/rpqenginerest';
 	var quaternary = false;
 	
@@ -260,12 +261,20 @@ body {
     				layout.execute(parent);
     			}));
     	
+    	/*
     	$("#rpqsubmitBtn").click(function() {
    					quaternary = false;
    					var query = $("#queryTxt").val();
    					callRPQEngineRestfulWS(rpqWSURL, processRPQResult, query, false);
     				//alert("Submit query: " + query);
     			});
+    	*/
+    	
+    	$("#rpqsubmitBtn").click(function() {
+				var stageId = $("#queryTxt").val();
+				callProvStageRestfulWS(provStageWSURL, createAndDisplayTraceJSON, stageId);
+			//alert("Submit query: " + query);
+		});
     }
     
     
@@ -343,6 +352,27 @@ body {
     }
     
     
+    function callProvStageRestfulWS(wsURL, callback, stageId) {
+        jQuery.support.cors = true;
+        var paramURL = wsURL + '/' + stageId;
+        $.ajax({
+                type: "GET",
+                url: paramURL,
+                //data: "{}",
+                contentType: "application/text; charset=utf-8",
+                dataType: "text",
+                success: function (data) {
+                	callback(data);
+                },
+                error: function (msg, url, line) {
+                    alert('error trapped in error: function(msg, url, line)');
+                    alert('msg = ' + msg + ', url = ' + url + ', line = ' + line);
+                }
+        });
+
+    }
+    
+    
 	$(document).ready(function(){
 		createButtons();
 		loadTrace();
@@ -365,7 +395,7 @@ body {
      <div id="top">
        <div id="column1top">Zoom</div>
        <div id="column1"></div>
-       <label>Query</label><br />
+       <label>Stage ID</label><br />
        <input type="text" name="query" id="queryTxt" class="rpqinput"><br />
        <input type="button" name="rpqsubmit" id="rpqsubmitBtn" value="Query" />
      </div>
