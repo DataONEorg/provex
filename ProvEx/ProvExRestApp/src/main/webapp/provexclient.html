@@ -92,6 +92,7 @@ body {
 	var traceEdgesArray = null;
 	var traceWSURL = 'http://localhost:8080/ProvExRestApp/webresources/tracedbrest';
 	var provStageWSURL = 'http://localhost:8080/ProvExRestApp/webresources/provstagedbrest';
+	var processHideReqWSURL = 'http://localhost:8080/ProvExRestApp/webresources/processhiderequestrest';
 	//var rpqWSURL = 'http://localhost:8080/ProvExRestApp/webresources/rpqenginerest';
 	var quaternary = false;
 	
@@ -156,6 +157,7 @@ body {
     function createAndDisplayTraceJSON(jsonStr) {
     	traceJSON = $.parseJSON(jsonStr);
     	displayTrace(document.getElementById('traceContainer'), traceJSON);
+    	buildCheckBoxes();
     }
     
     
@@ -204,6 +206,25 @@ body {
 		}
     }
     
+    
+    function buildCheckBoxes() {
+    	$("#rpq2results").html('');
+    	var table = $('<table></table>');
+    	for(var i = 0; i < traceJSON.nodes.length; i++) {
+    		var row = $('<tr></tr>');
+            var td1 = $('<td></td>');
+            var td2 = $('<td></td>');
+    		tuple = traceJSON.nodes[i];
+            td1.append(tuple.nodeId);
+            var html = '<input type="checkbox" id="checkBox' + tuple.nodeId + '"/>';
+            td2.append($(html));
+            row.append(td1);
+            row.append(td2);
+            table.append(row);
+        }
+        $("#rpq2results").append(table);
+    }
+    
   
     function processRPQWithLineage(jsonStr) {
     	var binColor = '#91D89F';
@@ -243,6 +264,31 @@ body {
     }
     
     
+	function createUserRequest() {
+		var req = new Object();
+		var urMaster = new Object();
+		var urDetailArray = new Array();
+		urMaster.traceId = '1';
+		urMaster.reqId = '1';
+		urMaster.evalType = 'h';
+		req.user_request_master = urMaster;
+		for(var i = 0; i < traceJSON.nodes.length; i++) {
+			if ($("#checkBox" + traceJSON.nodes[i].nodeId).is(':checked')) {
+				var urDetail = new Object();
+				urDetail.reqId = '1';
+				urDetail.stageId = '1';
+				urDetail.reqType = 'hide';
+				urDetail.nodeId = traceJSON.nodes[i].nodeId;
+				urDetail.targetNodeId = '';
+				urDetailArray.push(urDetail);
+			}
+        }
+		req.user_request_detail = urDetailArray;
+		//alert('request: ' + JSON.stringify(req));
+		return JSON.stringify(req);
+	}
+    
+    
     function createButtons() {
     		
     	$("#column1").append(mxUtils.button('reload', function() {
@@ -273,8 +319,22 @@ body {
     	$("#rpqsubmitBtn").click(function() {
 				var stageId = $("#queryTxt").val();
 				callProvStageRestfulWS(provStageWSURL, createAndDisplayTraceJSON, stageId);
-			//alert("Submit query: " + query);
+				//alert("Submit query: " + query);
+			});
+    	
+    	
+    	$("#addBtn").click(function() {
+    	    	var cells = graph.getSelectionCells();
+    	    	for (var i = 0; i < cells.length; i++) {
+    	    		$('#checkBox' + cells[i].value).attr('checked', true); 
+    	    	}
+			});
+    	
+    	$("#execBtn").click(function() {
+	    	var request = createUserRequest();
+	    	callProcessHideReqRestfulWS(processHideReqWSURL, createAndDisplayTraceJSON, request);
 		});
+	    
     }
     
     
@@ -373,6 +433,27 @@ body {
     }
     
     
+    function callProcessHideReqRestfulWS(wsURL, callback, req) {
+        jQuery.support.cors = true;
+        var param = {request: req};
+        $.ajax({
+                type: "GET",
+                url: wsURL,
+                data: param,
+                contentType: "application/text; charset=utf-8",
+                dataType: "text",
+                success: function (data) {
+                	callback(data);
+                },
+                error: function (msg, url, line) {
+                    alert('error trapped in error: function(msg, url, line)');
+                    alert('msg = ' + msg + ', url = ' + url + ', line = ' + line);
+                }
+        });
+
+    }
+    
+    
 	$(document).ready(function(){
 		createButtons();
 		loadTrace();
@@ -398,6 +479,8 @@ body {
        <label>Stage ID</label><br />
        <input type="text" name="query" id="queryTxt" class="rpqinput"><br />
        <input type="button" name="rpqsubmit" id="rpqsubmitBtn" value="Query" />
+       <input type="button" name="addsubmit" id="addBtn" value="Add" />
+       <input type="button" name="execsubmit" id="execBtn" value="Execute" />
      </div>
      <div id="bottom">
        <div id="rpq2results">
