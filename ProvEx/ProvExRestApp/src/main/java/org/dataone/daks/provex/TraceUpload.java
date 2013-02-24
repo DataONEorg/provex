@@ -14,7 +14,7 @@ import javax.ws.rs.core.Response;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
-import org.dataone.daks.provexdb.DAO.BuilderWithXML.*;
+import org.dataone.daks.provexdb.DAO.PROVXMLBuilder.*;
 
 @Path("/traceupload")
 public class TraceUpload {

@@ -31,10 +31,13 @@ public class XMLDAOMapperDynamic {
 		Element provRoot = doc.getRootElement();
 		this.provBuilder = new PROVBuilder();
 		this.provBuilder.processDocument(provRoot);
+		this.mapActors();
+		this.mapData();
+		this.mapEdges();
 	}
 	
 	
-	public void mapActors(Element processesElement) {
+	public void mapActors() {
 		ArrayList<Actor> actors = this.provBuilder.getActors();
 		ActorDao actorDao = DaoFactory.createActorDao(DatabaseConnector.getConnection());
 		for(Actor actor: actors) {
@@ -51,7 +54,7 @@ public class XMLDAOMapperDynamic {
 		}
 	}
 	
-	public void mapData(Element artifactsElement) {
+	public void mapData() {
 		ArrayList<Data> dataObjs = this.provBuilder.getData();
 		DataDao dataDao = DaoFactory.createDataDao(DatabaseConnector.getConnection());
 		for(Data data: dataObjs) {
@@ -68,7 +71,7 @@ public class XMLDAOMapperDynamic {
 		}
 	}
 	
-	public void mapEdges(Element dependenciesElement) {
+	public void mapEdges() {
 		ArrayList<Edge> edges = this.provBuilder.getEdges();
 		EdgeDao edgeDao = DaoFactory.createEdgeDao(DatabaseConnector.getConnection());
 		for(Edge edge: edges) {
