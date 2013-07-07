@@ -26,6 +26,7 @@ public class ProvXML2JSON {
 		this.provBuilder.processDocument(provRoot);
 		this.provBuilder.createJSONFile("out.json");
 		this.provBuilder.createDOTFile("out.dot");
+		this.provBuilder.createRESTCypherFile("test.txt");
 	}
 	
 	

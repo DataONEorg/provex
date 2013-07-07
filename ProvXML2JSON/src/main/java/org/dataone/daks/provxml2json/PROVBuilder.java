@@ -186,6 +186,98 @@ public class PROVBuilder {
 	}
 	
 	
+	protected void createRESTCypherFile(String filename) {
+		/*
+		 [ 
+		 	{
+     			"method" : "POST",
+     			"to" : "/cypher",
+     			"body" : {
+       			"query" : "CREATE n={props}",
+       			"params" : {"props": {"name":"node_name"}}
+     			},
+     			"id" : 0
+   			}, ...
+   			{
+     			"method" : "POST",
+     			"to" : "/cypher",
+     			"body" : {
+       			"query" : "START n=node:node_auto_index(name={name1}), m=node:node_auto_index(name={name2}) CREATE n-[r:USEDGENBY{Label:{label}}]-m",
+       			"params" : {"name1":"name1_val", "name2":"name2_val","label":"Used"}
+     			},
+     			"id" : k
+   			}, ...
+		] 
+		 */
+		try {
+			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
+			StringBuilder sb = new StringBuilder();
+			String nl = System.getProperty("line.separator");
+			sb.append("[");
+			int reqId = 0;
+			// Iterate over the data items and actors
+			for( Data data: this.dataObjs ) {
+			    sb.append(nl + "\t" + "{" + nl + "\t\t" + "\"method\"" + " : " + "\"POST\"" + ",");
+			    sb.append(nl + "\t\t" + "\"to\"" + " : " + "\"/cypher\"" + ",");
+			    sb.append(nl + "\t\t" + "\"body\"" + " : " + "{");
+			    sb.append(nl + "\t\t" + "\"query\"" + " : " + "\"CREATE n={props}\"" + ",");
+			    sb.append(nl + "\t\t" + "\"params\"" + " : " + "{" + "\"props\"" + ": {");
+			    sb.append("\"name\"" + ":" + "\"" + data.id + "\"" + "}}");
+			    sb.append(nl + "\t\t" + "},");
+			    sb.append(nl + "\t\t" + "\"id\"" + " : " + reqId);
+			    sb.append(nl + "\t" + "}");
+			    sb.append(",");
+			    reqId++;
+			}
+			for( Actor actor: this.actors ) {
+				sb.append(nl + "\t" + "{" + nl + "\t\t" + "\"method\"" + " : " + "\"POST\"" + ",");
+			    sb.append(nl + "\t\t" + "\"to\"" + " : " + "\"/cypher\"" + ",");
+			    sb.append(nl + "\t\t" + "\"body\"" + " : " + "{");
+			    sb.append(nl + "\t\t" + "\"query\"" + " : " + "\"CREATE n={props}\"" + ",");
+			    sb.append(nl + "\t\t" + "\"params\"" + " : " + "{" + "\"props\"" + ": {");
+			    sb.append("\"name\"" + ":" + "\"" + actor.id + "\"" + "}}");
+			    sb.append(nl + "\t\t" + "},");
+			    sb.append(nl + "\t\t" + "\"id\"" + " : " + reqId);
+			    sb.append(nl + "\t" + "}");
+			    sb.append(",");
+			    reqId++;
+			}
+			String reqLabel = null;
+			// Create the edges for the 'used' and 'wasGeneratedBy' relations
+			for ( Edge edge: this.edges ) {
+				if( edge.label.equals("used") )
+					reqLabel = "used";
+				else if( edge.label.equals("genBy") )
+					reqLabel = "wasGeneratedBy";
+				sb.append(nl + "\t" + "{" + nl + "\t\t" + "\"method\"" + " : " + "\"POST\"" + ",");
+			    sb.append(nl + "\t\t" + "\"to\"" + " : " + "\"/cypher\"" + ",");
+			    sb.append(nl + "\t\t" + "\"body\"" + " : " + "{");
+			    
+			    sb.append(nl + "\t\t" + "\"query\"" + " : " + "\"START n=node:node_auto_index(name={name1})");
+			    sb.append(", m=node:node_auto_index(name={name2}) " );
+			    sb.append("CREATE n-[r:USEDGENBY{label:{l}}]->m\"" + ",");
+			    sb.append(nl + "\t\t" + "\"params\"" + " : " + "{" + "\"name1\"" + ":");
+			    sb.append("\"" + edge.startId + "\"" + ", ");
+			    sb.append("\"name2\"" + ":");
+			    sb.append("\"" + edge.endId + "\"" + ", ");
+			    sb.append("\"l\"" + ":" + "\"" + reqLabel + "\"" + "}");
+			    sb.append(nl + "\t\t" + "},");
+			    sb.append(nl + "\t\t" + "\"id\"" + " : " + reqId);
+			    sb.append(nl + "\t" + "}");
+			    sb.append(",");
+			    reqId++;
+			}
+			sb.deleteCharAt(sb.length()-1);
+			sb.append(nl + "]" + nl);
+	        out.println(sb.toString());
+			out.close();
+	    }
+		catch (IOException e) {
+			e.printStackTrace();
+	    }
+	}
+	
+	
 	private void createActorsList() {
 		this.actors = new ArrayList<Actor>();
 		for (String key : this.activities.keySet()) {
