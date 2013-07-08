@@ -188,6 +188,7 @@ public class PROVBuilder {
 	
 	protected void createRESTCypherFile(String filename) {
 		/*
+		 POST to http://localhost:7474/db/data/batch
 		 [ 
 		 	{
      			"method" : "POST",
@@ -202,8 +203,8 @@ public class PROVBuilder {
      			"method" : "POST",
      			"to" : "/cypher",
      			"body" : {
-       			"query" : "START n=node:node_auto_index(name={name1}), m=node:node_auto_index(name={name2}) CREATE n-[r:USEDGENBY{Label:{label}}]-m",
-       			"params" : {"name1":"name1_val", "name2":"name2_val","label":"Used"}
+       			"query" : "START n=node:node_auto_index(name={name1}), m=node:node_auto_index(name={name2}) CREATE n-[r:USED/WASGENBY]-m",
+       			"params" : {"name1":"name1_val", "name2":"name2_val"}
      			},
      			"id" : k
    			}, ...
@@ -246,21 +247,23 @@ public class PROVBuilder {
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
 			for ( Edge edge: this.edges ) {
 				if( edge.label.equals("used") )
-					reqLabel = "used";
+					reqLabel = "USED";
 				else if( edge.label.equals("genBy") )
-					reqLabel = "wasGeneratedBy";
+					reqLabel = "WASGENBY";
 				sb.append(nl + "\t" + "{" + nl + "\t\t" + "\"method\"" + " : " + "\"POST\"" + ",");
 			    sb.append(nl + "\t\t" + "\"to\"" + " : " + "\"/cypher\"" + ",");
 			    sb.append(nl + "\t\t" + "\"body\"" + " : " + "{");
 			    
 			    sb.append(nl + "\t\t" + "\"query\"" + " : " + "\"START n=node:node_auto_index(name={name1})");
 			    sb.append(", m=node:node_auto_index(name={name2}) " );
-			    sb.append("CREATE n-[r:USEDGENBY{label:{l}}]->m\"" + ",");
+			    //sb.append("CREATE n-[r:USEDGENBY{label:{l}}]->m\"" + ",");
+			    sb.append("CREATE n-[r:" + reqLabel + "]->m\"" + ",");
 			    sb.append(nl + "\t\t" + "\"params\"" + " : " + "{" + "\"name1\"" + ":");
 			    sb.append("\"" + edge.startId + "\"" + ", ");
 			    sb.append("\"name2\"" + ":");
-			    sb.append("\"" + edge.endId + "\"" + ", ");
-			    sb.append("\"l\"" + ":" + "\"" + reqLabel + "\"" + "}");
+			    //sb.append("\"" + edge.endId + "\"" + ", ");
+			    //sb.append("\"l\"" + ":" + "\"" + reqLabel + "\"" + "}");
+			    sb.append("\"" + edge.endId + "\"" + "}");
 			    sb.append(nl + "\t\t" + "},");
 			    sb.append(nl + "\t\t" + "\"id\"" + " : " + reqId);
 			    sb.append(nl + "\t" + "}");
@@ -270,6 +273,40 @@ public class PROVBuilder {
 			sb.deleteCharAt(sb.length()-1);
 			sb.append(nl + "]" + nl);
 	        out.println(sb.toString());
+			out.close();
+	    }
+		catch (IOException e) {
+			e.printStackTrace();
+	    }
+	}
+	
+	
+	protected void createTextCypherFile(String filename) {
+		/*
+       		CREATE n={name:"name_val"}
+       		...
+       		START n=node:node_auto_index(name='name1'), m=node:node_auto_index(name='name2') CREATE n-[r:USED/WASGENBY]-m
+       		...
+		*/
+		try {
+			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
+			// Iterate over the data items and actors
+			for( Data data: this.dataObjs )
+			    out.println("CREATE n={name:\"" + data.id + "\"}" );
+			for( Actor actor: this.actors )
+				out.println("CREATE n={name:\"" + actor.id + "\"}" );
+			String reqLabel = null;
+			// Create the edges for the 'used' and 'wasGeneratedBy' relations
+			for ( Edge edge: this.edges ) {
+				if( edge.label.equals("used") )
+					reqLabel = "USED";
+				else if( edge.label.equals("genBy") )
+					reqLabel = "WASGENBY";
+			    out.print("START n=node:node_auto_index(name='" + edge.startId + "'), ");
+			    out.print("m=node:node_auto_index(name='" + edge.endId + "') ");
+			    out.println("CREATE n-[r:" + reqLabel + "]->m");
+			}
+	        out.println();
 			out.close();
 	    }
 		catch (IOException e) {
