@@ -2,14 +2,17 @@ package org.dataone.daks.pbase;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 
 import org.neo4j.cypher.*;
 import org.neo4j.graphdb.*;
-import org.neo4j.graphdb.traversal.*;
-import org.neo4j.helpers.collection.IteratorUtil;
+import org.neo4j.graphdb.factory.GraphDatabaseBuilder;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.kernel.*;
 import org.neo4j.kernel.impl.util.StringLogger;
 
@@ -18,6 +21,9 @@ public class ReachabilityBenchmark {
 	
 	private GraphDatabaseService graphDB;
 	private BufferedWriter bw;
+	private List<String> nodeNamesList;
+	private int[] fromPosList;
+	private int[] toPosList;
 	
 	
 	ReachabilityBenchmark(){
@@ -31,11 +37,26 @@ public class ReachabilityBenchmark {
 	}
 	
 	
+	public ReachabilityBenchmark(String dbFile) {
+		this();
+		GraphDatabaseFactory factory = new GraphDatabaseFactory();
+		GraphDatabaseBuilder builder = factory.newEmbeddedDatabaseBuilder(dbFile);
+		builder.setConfig(GraphDatabaseSettings.read_only, "true");
+		GraphDatabaseService graphDB = builder.newGraphDatabase();
+		this.graphDB = graphDB;
+	}
+	
+	
 	public void reachabilityBenchmark(int numQueries) {
 		
 		long startTime;
 		long endTime;
 
+		System.out.println("Creating test cases");
+		this.nodeNamesList = this.createNodeNameList();
+		this.createTestCases(2);
+		this.printTestCases();
+		
 		System.out.println("Initial test with cold caches");
 		
 		startTime = System.currentTimeMillis();
@@ -49,7 +70,7 @@ public class ReachabilityBenchmark {
 		long tmp = 0;
 		int resCnt = 0;
 		
-		for (int i = 0 ; i < 10; i++) {
+		for (int i = 0 ; i < 5; i++) {
 			startTime = System.currentTimeMillis();
 			resCnt = this.reachabilityCypher(numQueries);
 			endTime = System.currentTimeMillis();
@@ -71,29 +92,111 @@ public class ReachabilityBenchmark {
 	}
 	
 	
+	/*
 	private int reachabilityCypher(int numQueries) {
 		int qCnt = 0;
 		int resCnt = 0;
 		ExecutionEngine engine = new ExecutionEngine(graphDB, StringLogger.SYSTEM);
-		for ( Node author:graphDB.getAllNodes() ) {
-			if (!author.hasProperty("name"))continue;
-			if (++qCnt>numQueries)break;
+		for ( int i = 0; i < numQueries; i++ ) {
 			
+			//String query = "START n=node:node_auto_index(name='e34') " +
+			//			   "MATCH n-[*]->m " +
+			//			   "WHERE m.name='e36' " +
+			//			   "RETURN distinct m; "; 
+			String query = "START n=node:node_auto_index(name={name1}) " +
+					   "MATCH n-[*]->m " +
+					   "WHERE m.name={name2} " +
+					   "RETURN distinct m; "; 
+			//query = "START m=node(*) WHERE HAS(m.name) RETURN distinct m;";
 			Map<String, Object> params = new HashMap<String, Object>();
-			params.put( "node", author );
-			//ExecutionResult result = engine.execute( "start n=node({node}) return n.name", params );
-			
-			//String query = "START author=node({node}) MATCH author-[:"+DBRelationshipTypes.WRITTEN_BY.name()+"]-()-[:"+DBRelationshipTypes.WRITTEN_BY.name()+"]- coAuthor RETURN coAuthor";  
-			String query = null;
-			ExecutionResult result = engine.execute( query, params);
-			scala.collection.Iterator<Node> it = result.columnAs("coAuthor");
-			while (it.hasNext()){
-				Node coAuthor = it.next();
+			params.put( "name1", "e34" );
+			params.put( "name2", "e36" );
+			ExecutionResult result = engine.execute(query, params);
+			//ExecutionResult result = engine.execute(query);
+			scala.collection.Iterator<Node> it = result.columnAs("m");
+			while (it.hasNext()) {
+				Node reachable = it.next();
+				System.out.println(reachable.getId());
+				//for (String propertyKey : reachable.getPropertyKeys()) {
+		        //    System.out.println("\t" + propertyKey + " : " +
+		        //       reachable.getProperty(propertyKey));
+		        //}
 				resCnt++;
 			}
 		}
+		System.out.println("resCnt: " + resCnt);
 		return resCnt;
-	}	
+	}
+	*/
+	
+	
+	private int reachabilityCypher(int numQueries) {
+		int qCnt = 0;
+		int resCnt = 0;
+		ExecutionEngine engine = new ExecutionEngine(graphDB, StringLogger.SYSTEM);
+		for(int i = 0; i < this.fromPosList.length; i++) {
+			String query = "START n=node:node_auto_index(name={name1}) " +
+					"MATCH n-[*]->m " +
+					"WHERE m.name={name2} " +
+					"RETURN distinct m; "; 
+			Map<String, Object> params = new HashMap<String, Object>();
+			params.put( "name1", this.nodeNamesList.get(this.fromPosList[i]) );
+			params.put( "name2", this.nodeNamesList.get(this.toPosList[i]) );
+			for(int j = 0; j < numQueries; j++) {
+				ExecutionResult result = engine.execute(query, params);
+				scala.collection.Iterator<Node> it = result.columnAs("m");
+				while (it.hasNext()) {
+					Node reachable = it.next();
+					resCnt++;
+				}
+				System.out.println("resCnt: " + resCnt);
+				resCnt = 0;
+			}
+		}
+		return resCnt;
+	}
+	
+	
+	private List<String> createNodeNameList() {
+		ArrayList<String> list = new ArrayList<String>();
+		ExecutionEngine engine = new ExecutionEngine(graphDB, StringLogger.SYSTEM);
+		String query = "START n=node(*) WHERE HAS(n.name) RETURN distinct n;";
+		ExecutionResult result = engine.execute(query);
+		scala.collection.Iterator<Node> it = result.columnAs("n");
+		while (it.hasNext()) {
+			Node reachable = it.next();
+			String name = reachable.getProperty("name").toString();
+			list.add(name);
+		}
+		return list;
+	}
+	
+	
+	public void createTestCases(int nCases) {
+		Random randomGenerator = new Random();
+		this.fromPosList = new int[nCases];
+		this.toPosList = new int[nCases];
+		int listSize = this.nodeNamesList.size();
+		for(int i = 0; i < nCases; i++) {
+			int fromPos =  randomGenerator.nextInt(listSize);
+			int toPos =  randomGenerator.nextInt(listSize);
+			this.fromPosList[i] = fromPos;
+			this.toPosList[i] = toPos;
+		}
+	}
+	
+	
+	public void printTestCases() {
+		for(int i = 0; i < this.fromPosList.length; i++) {
+			System.out.println(this.nodeNamesList.get(this.fromPosList[i]) + " -> " + 
+					this.nodeNamesList.get(this.toPosList[i]) );
+		}
+	}
+	
+	
+	public void shutdownDB() {
+		this.graphDB.shutdown();
+	}
 	
 	
 }

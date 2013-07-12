@@ -54,7 +54,7 @@ public class BatchCypher {
 		System.out.println("Finishing batch file processing.");
 		endTime = System.currentTimeMillis();
 		System.out.println("Total time: " + (endTime-startTime)/1000.0 + " sec." );
-	}	
+	}
 	
 	
 	public void shutdownDB() {
