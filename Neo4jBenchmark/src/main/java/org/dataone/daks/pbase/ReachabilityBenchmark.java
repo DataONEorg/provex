@@ -13,7 +13,6 @@ import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseBuilder;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
-import org.neo4j.kernel.*;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 
@@ -26,12 +25,12 @@ public class ReachabilityBenchmark {
 	private int[] toPosList;
 	
 	
-	ReachabilityBenchmark(){
-		this.bw = Util.openWriteFile("benchmarkStats");
+	ReachabilityBenchmark() {
+		this.bw = Util.openWriteFile("benchmarkResults.txt");
 	}
 	
 	
-	public ReachabilityBenchmark(EmbeddedReadOnlyGraphDatabase graphDB) {
+	public ReachabilityBenchmark(GraphDatabaseService graphDB) {
 		this();
 		this.graphDB = graphDB;
 	}
@@ -47,42 +46,41 @@ public class ReachabilityBenchmark {
 	}
 	
 	
-	public void reachabilityBenchmark(int numQueries) {
+	public void reachabilityBenchmark(int benchmarkReps, int queryReps, int testCases) {
 		
 		long startTime;
 		long endTime;
 
 		System.out.println("Creating test cases");
 		this.nodeNamesList = this.createNodeNameList();
-		this.createTestCases(2);
+		this.createTestCases(testCases);
 		this.printTestCases();
 		
 		System.out.println("Initial test with cold caches");
 		
 		startTime = System.currentTimeMillis();
-		this.reachabilityCypher(numQueries);
+		this.reachabilityCypher(queryReps);
 		endTime = System.currentTimeMillis();
-		System.out.println("Cypher: " + numQueries + "\ttime: " + ( endTime - startTime ));
+		System.out.println("Evaluated queries " + queryReps + " times, total time: " + ( endTime - startTime ));
 
 		System.out.println("Second test with warm caches");
 		
 		long aggregatedCypherTime = 0;
 		long tmp = 0;
-		int resCnt = 0;
 		
-		for (int i = 0 ; i < 5; i++) {
+		for (int i = 0 ; i < benchmarkReps; i++) {
 			startTime = System.currentTimeMillis();
-			resCnt = this.reachabilityCypher(numQueries);
+			this.reachabilityCypher(queryReps);
 			endTime = System.currentTimeMillis();
 			tmp = (endTime-startTime);
 			aggregatedCypherTime += tmp;
-			System.out.println("Cypher: " + numQueries + "\ttime: " + tmp + "\t resCnt" + resCnt);
+			System.out.println("Evaluated queries " + queryReps + " times, total time: " + tmp);  
 		}
 		
-		System.out.println("Cypher queries: " + aggregatedCypherTime);
+		System.out.println("Aggregated time: " + aggregatedCypherTime + "\n");
 		
 		try {
-			bw.write(numQueries + "\t" + aggregatedCypherTime + "\n");
+			bw.write("Aggregated time: " + aggregatedCypherTime + "\n");
 			bw.flush();
 		}
 		catch (IOException e) {
@@ -130,9 +128,8 @@ public class ReachabilityBenchmark {
 	*/
 	
 	
-	private int reachabilityCypher(int numQueries) {
-		int qCnt = 0;
-		int resCnt = 0;
+	private void reachabilityCypher(int queryReps) {
+		int resultCount = 0;
 		ExecutionEngine engine = new ExecutionEngine(graphDB, StringLogger.SYSTEM);
 		for(int i = 0; i < this.fromPosList.length; i++) {
 			String query = "START n=node:node_auto_index(name={name1}) " +
@@ -142,18 +139,17 @@ public class ReachabilityBenchmark {
 			Map<String, Object> params = new HashMap<String, Object>();
 			params.put( "name1", this.nodeNamesList.get(this.fromPosList[i]) );
 			params.put( "name2", this.nodeNamesList.get(this.toPosList[i]) );
-			for(int j = 0; j < numQueries; j++) {
+			for(int j = 0; j < queryReps; j++) {
 				ExecutionResult result = engine.execute(query, params);
 				scala.collection.Iterator<Node> it = result.columnAs("m");
 				while (it.hasNext()) {
 					Node reachable = it.next();
-					resCnt++;
+					resultCount++;
 				}
-				System.out.println("resCnt: " + resCnt);
-				resCnt = 0;
+				System.out.println("query " + j + " number of results : " + resultCount);
+				resultCount = 0;
 			}
 		}
-		return resCnt;
 	}
 	
 	
