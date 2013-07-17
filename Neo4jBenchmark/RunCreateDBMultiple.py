@@ -1,7 +1,7 @@
 import os
 import time
 
-path = "C:/Users/Victor/workspaceprovex/propub/Neo4jBenchmark/taskGraphInstances"
+path = "C:/Users/Victor/workspaceprovex/propub/Neo4jBenchmark/graph10000instances"
 
 start = time.clock()
 

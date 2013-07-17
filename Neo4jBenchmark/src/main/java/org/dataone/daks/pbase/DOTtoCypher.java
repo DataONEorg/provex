@@ -7,7 +7,7 @@ import java.io.PrintWriter;
 
 public class DOTtoCypher {
 
-	
+	//DOTtoCypher <in_dotFile> <out_cypherFile>
 	public static void main(String[] args) {
 		DOTtoCypher converter = new DOTtoCypher();
 		converter.processDOTFile(args[0], args[1]);
@@ -40,7 +40,7 @@ public class DOTtoCypher {
 					//CREATE n={name:"the name"}
 					pw.println("CREATE n={name:\"" + nodeId + "\"}");
 					pw.flush();
-					System.out.println(nodeId);
+					//System.out.println(nodeId);
 				}
 				else {
 					String nodeId1 = line.substring(0, line.indexOf("->"));
@@ -50,7 +50,7 @@ public class DOTtoCypher {
 					pw.print("m=node:node_auto_index(name='" + nodeId2 + "') ");
 					pw.println("CREATE n-[r:USED]->m");
 					pw.flush();
-					System.out.println(nodeId1 + " " + nodeId2);
+					//System.out.println(nodeId1 + " " + nodeId2);
 				}
 			}
 			pw.close();

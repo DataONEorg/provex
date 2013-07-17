@@ -42,7 +42,7 @@ public class DOTtoCypherMultiple {
 						//CREATE n={name:"the name", trace_id:"the trace id"}
 						pw.println("CREATE n={name:\"" + nodeId + "\", " + "graph_id:\"" + i + "\"}" );
 						pw.flush();
-						System.out.println(nodeId);
+						//System.out.println(nodeId);
 					}
 					else {
 						String nodeId1 = line.substring(0, line.indexOf("->"));
@@ -56,7 +56,7 @@ public class DOTtoCypherMultiple {
 						pw.print("WHERE n.graph_id='" + i + "' AND m.graph_id='" + i + "' " );
 						pw.println("CREATE n-[r:USED]->m");
 						pw.flush();
-						System.out.println(nodeId1 + " " + nodeId2);
+						//System.out.println(nodeId1 + " " + nodeId2);
 					}
 				}
 				pw.close();
