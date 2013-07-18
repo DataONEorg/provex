@@ -1,0 +1,26 @@
+ 
+100 nodes
+
+CreateDatabase: 13.12 s
+
+CreateDatabaseMultiple: 78.51 s
+
+78.15 / 5 = 15.70
+
+
+1000 nodes
+
+CreateDatabase: 83.17 s
+
+CreateDatabaseMultiple: 558.00 s
+
+558.00 / 5 = 111.16
+
+
+2000 nodes
+
+CreateDatabase:  775.50 s
+
+CreateDatabaseMultiple: 6163.58 s
+
+6163.58 / 5 = 1232.716
