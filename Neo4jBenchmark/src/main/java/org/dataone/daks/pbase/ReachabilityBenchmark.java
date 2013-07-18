@@ -1,6 +1,9 @@
 package org.dataone.daks.pbase;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.PrintWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
@@ -46,15 +49,37 @@ public class ReachabilityBenchmark {
 	}
 	
 	
-	public void reachabilityBenchmark(int benchmarkReps, int queryReps, int testCases) {
+	public void runFromScratch(int benchmarkReps, int queryReps, int testCases) {
+		System.out.println("Creating test cases");
+		this.createNodeNameList();
+		this.createTestCases(testCases);
+		this.printTestCases();
+		this.reachabilityBenchmark(benchmarkReps, queryReps);
+	}
+	
+	
+	public void runFromfile(String benchmarkFile, int benchmarkReps, int queryReps) {
+		System.out.println("Reading test cases");
+		this.createNodeNameList();
+		this.readTestCasesFromFile(benchmarkFile);
+		this.printTestCases();
+		this.reachabilityBenchmark(benchmarkReps, queryReps);
+	}
+	
+	
+	public void createBenchmarkFile(String benchmarkFile, int testCases) {
+		System.out.println("Creating test cases file");
+		this.createNodeNameList();
+		this.createTestCases(testCases);
+		this.printTestCasesToFile(benchmarkFile);
+		this.readTestCasesFromFile(benchmarkFile);
+	}
+	
+	
+	public void reachabilityBenchmark(int benchmarkReps, int queryReps) {
 		
 		long startTime;
 		long endTime;
-
-		System.out.println("Creating test cases");
-		this.nodeNamesList = this.createNodeNameList();
-		this.createTestCases(testCases);
-		this.printTestCases();
 		
 		System.out.println("Initial test with cold caches");
 		
@@ -153,7 +178,7 @@ public class ReachabilityBenchmark {
 	}
 	
 	
-	private List<String> createNodeNameList() {
+	private void createNodeNameList() {
 		ArrayList<String> list = new ArrayList<String>();
 		ExecutionEngine engine = new ExecutionEngine(graphDB, StringLogger.SYSTEM);
 		String query = "START n=node(*) WHERE HAS(n.name) RETURN distinct n;";
@@ -164,7 +189,7 @@ public class ReachabilityBenchmark {
 			String name = reachable.getProperty("name").toString();
 			list.add(name);
 		}
-		return list;
+		this.nodeNamesList = list;
 	}
 	
 	
@@ -186,6 +211,70 @@ public class ReachabilityBenchmark {
 		for(int i = 0; i < this.fromPosList.length; i++) {
 			System.out.println(this.nodeNamesList.get(this.fromPosList[i]) + " -> " + 
 					this.nodeNamesList.get(this.toPosList[i]) );
+		}
+	}
+	
+	
+	public HashMap<String, Integer> createNodeNamePosHT() {
+		HashMap<String, Integer> map = new HashMap<String, Integer>();
+		for(int i = 0; i < this.nodeNamesList.size(); i++) {
+			map.put(this.nodeNamesList.get(i), i);
+		}
+		return map;
+	}
+	
+	
+	public void printTestCasesToFile(String fileName) {
+		PrintWriter pw = null;
+		try {
+			pw = new PrintWriter(new FileWriter(fileName));
+			for(int i = 0; i < this.fromPosList.length; i++) {
+				pw.println(this.nodeNamesList.get(this.fromPosList[i]) + " -> " + 
+						this.nodeNamesList.get(this.toPosList[i]) );
+				pw.flush();
+			}
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			pw.close();
+		}
+	}
+	
+	
+	public void readTestCasesFromFile(String benchmarkFile) {
+		String line = null;
+		BufferedReader br;
+		HashMap<String, Integer> map = this.createNodeNamePosHT();
+		List<Integer> fromPosArrayList = new ArrayList<Integer>();
+		List<Integer> toPosArrayList = new ArrayList<Integer>();
+		try {
+			br = Util.openReadFile(benchmarkFile);
+			while( (line = br.readLine()) != null ) {
+				line = line.trim();
+				if( line.length() == 0 )
+					continue;
+				else if( (! line.contains("->")) )
+					continue;
+				else {
+					String nodeId1 = line.substring(0, line.indexOf("->")).trim();
+					String nodeId2 = line.substring(line.indexOf("->")+2, line.length()).trim();
+					System.out.println(line + " | " + nodeId1 + " " + nodeId2);
+					fromPosArrayList.add(map.get(nodeId1));
+					toPosArrayList.add(map.get(nodeId2));
+				}
+			}
+			this.fromPosList = new int[fromPosArrayList.size()];
+			this.toPosList = new int[toPosArrayList.size()];
+			for(int i = 0; i < fromPosArrayList.size(); i++) {
+				int temp = fromPosArrayList.get(i);
+				this.fromPosList[i] = fromPosArrayList.get(i);
+				this.toPosList[i] = toPosArrayList.get(i);
+			}
+			br.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
