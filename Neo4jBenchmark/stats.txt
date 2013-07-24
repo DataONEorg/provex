@@ -1,26 +1,45 @@
  
 100 nodes
 
-CreateDatabase: 13.12 s
+CreateDatabase: 11.13 s
 
-CreateDatabaseMultiple: 78.51 s
+CreateDatabaseMultiple: 64.47 s
 
-78.15 / 5 = 15.70
+64.47 / 5 = 12.89
 
 
 1000 nodes
 
-CreateDatabase: 83.17 s
+CreateDatabase: 59.45 s
 
-CreateDatabaseMultiple: 558.00 s
+CreateDatabaseMultiple: 433.74 s
 
-558.00 / 5 = 111.16
+433.74 / 5 = 86.75
 
 
-2000 nodes
+10000 nodes
 
-CreateDatabase:  775.50 s
+CreateDatabase:   634.50 s
 
-CreateDatabaseMultiple: 6163.58 s
+CreateDatabaseMultiple: 4757.84 s
 
-6163.58 / 5 = 1232.716
+4757.84 / 5 = 951.56
+
+----------------------------------------------------------------------------------------------------
+
+10000 nodes
+
+run benchmark 4 times and queries 3 times (100 queries)
+
+ReachabilityBenchmark aggregated:  943  s
+
+943 / 4 = 235.75
+
+943 / 300 = 0.785
+
+ReachabilityBenchmarkMultiple:  s
+
+ / 4 = 
+ 
+ / 300 = 
+

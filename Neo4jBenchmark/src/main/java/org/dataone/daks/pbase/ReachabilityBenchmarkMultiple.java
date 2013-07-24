@@ -19,7 +19,7 @@ import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 
-public class ReachabilityBenchmark {
+public class ReachabilityBenchmarkMultiple {
 	
 	private GraphDatabaseService graphDB;
 	private BufferedWriter bw;
@@ -28,18 +28,18 @@ public class ReachabilityBenchmark {
 	private int[] toPosList;
 	
 	
-	ReachabilityBenchmark() {
+	ReachabilityBenchmarkMultiple() {
 		this.bw = Util.openWriteFile("benchmarkResults.txt");
 	}
 	
 	
-	public ReachabilityBenchmark(GraphDatabaseService graphDB) {
+	public ReachabilityBenchmarkMultiple(GraphDatabaseService graphDB) {
 		this();
 		this.graphDB = graphDB;
 	}
 	
 	
-	public ReachabilityBenchmark(String dbFile) {
+	public ReachabilityBenchmarkMultiple(String dbFile) {
 		this();
 		GraphDatabaseFactory factory = new GraphDatabaseFactory();
 		GraphDatabaseBuilder builder = factory.newEmbeddedDatabaseBuilder(dbFile);
@@ -49,16 +49,7 @@ public class ReachabilityBenchmark {
 	}
 	
 	
-	public void runFromScratch(int benchmarkReps, int queryReps, int testCases) {
-		System.out.println("Creating test cases");
-		this.createNodeNameList();
-		this.createTestCases(testCases);
-		this.printTestCases();
-		this.reachabilityBenchmark(benchmarkReps, queryReps);
-	}
-	
-	
-	public void runFromfile(String benchmarkFile, int benchmarkReps, int queryReps) {
+	public void runFromFile(String benchmarkFile, int benchmarkReps, int queryReps, int nInstances) {
 		System.out.println("Reading test cases");
 		this.createNodeNameList();
 		this.readTestCasesFromFile(benchmarkFile);
@@ -86,7 +77,7 @@ public class ReachabilityBenchmark {
 		startTime = System.currentTimeMillis();
 		this.reachabilityCypher(queryReps);
 		endTime = System.currentTimeMillis();
-		System.out.println("Evaluated queries " + queryReps + " times, total time: " + ( endTime - startTime ));
+		System.out.println("Evaluated queries " + queryReps + " times, total time: " + (endTime-startTime)/1000.0);
 
 		System.out.println("Second test with warm caches");
 		
@@ -99,13 +90,13 @@ public class ReachabilityBenchmark {
 			endTime = System.currentTimeMillis();
 			tmp = (endTime-startTime);
 			aggregatedCypherTime += tmp;
-			System.out.println("Evaluated queries " + queryReps + " times, total time: " + tmp);  
+			System.out.println("Evaluated queries " + queryReps + " times, total time: " + tmp/1000.0);  
 		}
 		
-		System.out.println("Aggregated time: " + aggregatedCypherTime + "\n");
+		System.out.println("Aggregated time: " + aggregatedCypherTime/1000.0 + "\n");
 		
 		try {
-			bw.write("Aggregated time: " + aggregatedCypherTime + "\n");
+			bw.write("Aggregated time: " + aggregatedCypherTime/1000.0 + "\n");
 			bw.flush();
 		}
 		catch (IOException e) {
@@ -113,45 +104,7 @@ public class ReachabilityBenchmark {
 		}
 		
 	}
-	
-	
-	/*
-	private int reachabilityCypher(int numQueries) {
-		int qCnt = 0;
-		int resCnt = 0;
-		ExecutionEngine engine = new ExecutionEngine(graphDB, StringLogger.SYSTEM);
-		for ( int i = 0; i < numQueries; i++ ) {
-			
-			//String query = "START n=node:node_auto_index(name='e34') " +
-			//			   "MATCH n-[*]->m " +
-			//			   "WHERE m.name='e36' " +
-			//			   "RETURN distinct m; "; 
-			String query = "START n=node:node_auto_index(name={name1}) " +
-					   "MATCH n-[*]->m " +
-					   "WHERE m.name={name2} " +
-					   "RETURN distinct m; "; 
-			//query = "START m=node(*) WHERE HAS(m.name) RETURN distinct m;";
-			Map<String, Object> params = new HashMap<String, Object>();
-			params.put( "name1", "e34" );
-			params.put( "name2", "e36" );
-			ExecutionResult result = engine.execute(query, params);
-			//ExecutionResult result = engine.execute(query);
-			scala.collection.Iterator<Node> it = result.columnAs("m");
-			while (it.hasNext()) {
-				Node reachable = it.next();
-				System.out.println(reachable.getId());
-				//for (String propertyKey : reachable.getPropertyKeys()) {
-		        //    System.out.println("\t" + propertyKey + " : " +
-		        //       reachable.getProperty(propertyKey));
-		        //}
-				resCnt++;
-			}
-		}
-		System.out.println("resCnt: " + resCnt);
-		return resCnt;
-	}
-	*/
-	
+
 	
 	private void reachabilityCypher(int queryReps) {
 		int resultCount = 0;
@@ -159,7 +112,7 @@ public class ReachabilityBenchmark {
 		for(int i = 0; i < this.fromPosList.length; i++) {
 			String query = "START n=node:node_auto_index(name={name1}) " +
 					"MATCH n-[*]->m " +
-					"WHERE m.name={name2} " +
+					"WHERE m.name={name2} and n.graph_id='1' and m.graph_id='1' " +
 					"RETURN distinct m; "; 
 			Map<String, Object> params = new HashMap<String, Object>();
 			params.put( "name1", this.nodeNamesList.get(this.fromPosList[i]) );
@@ -181,7 +134,7 @@ public class ReachabilityBenchmark {
 	private void createNodeNameList() {
 		ArrayList<String> list = new ArrayList<String>();
 		ExecutionEngine engine = new ExecutionEngine(graphDB, StringLogger.SYSTEM);
-		String query = "START n=node(*) WHERE HAS(n.name) RETURN distinct n;";
+		String query = "START n=node(*) WHERE HAS(n.name) and HAS(n.graph_id) and n.graph_id='1' RETURN distinct n;";
 		ExecutionResult result = engine.execute(query);
 		scala.collection.Iterator<Node> it = result.columnAs("n");
 		while (it.hasNext()) {
