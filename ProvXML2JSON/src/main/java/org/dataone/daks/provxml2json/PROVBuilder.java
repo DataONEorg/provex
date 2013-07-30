@@ -2,7 +2,12 @@ package org.dataone.daks.provxml2json;
 
 import java.io.*;
 import java.util.*;
+
 import org.dom4j.*;
+
+import com.sun.org.apache.xml.internal.utils.NameSpace;
+
+import sun.awt.image.OffScreenImage;
 
 
 public class PROVBuilder {
@@ -13,6 +18,17 @@ public class PROVBuilder {
 	private HashMap<String, String> wasAssociatedWith;
 	private HashMap<String, String> dataEntityFullName;
 	private HashMap<String, String> activityFullName;
+	private HashMap<String, String> dataType;
+	private HashMap<String, String> dataVersion;
+	private HashMap<String, String> dataDesc;
+	private HashMap<String, String> dataValue;
+	private HashMap<String, String> dataRunID;
+	private HashMap<String, String> activityType;
+	private HashMap<String, String> activityVersion;
+	private HashMap<String, String> activityDesc;
+	private HashMap<String, String> activityCache;
+	private HashMap<String, String> activityCompleted;
+	private HashMap<String, String> activityRunID;
 	
 	private ArrayList<Actor> actors;
 	private ArrayList<Data> dataObjs;
@@ -20,6 +36,7 @@ public class PROVBuilder {
 	
 	private Namespace provNS;
 	private Namespace vtNS;
+	private Namespace dcterms;
 	
 	
 	public PROVBuilder() {
@@ -29,8 +46,22 @@ public class PROVBuilder {
 		this.wasAssociatedWith = new HashMap<String, String>();
 		this.dataEntityFullName = new HashMap<String, String>();
 		this.activityFullName = new HashMap<String, String>();
+		this.dataType= new HashMap<String, String>();
+		this.dataVersion= new HashMap<String, String>();
+		this.dataDesc= new HashMap<String, String>();
+		this.dataValue= new HashMap<String, String>();
+		this.dataRunID= new HashMap<String, String>();
+		this.activityType= new HashMap<String, String>();
+		this.activityVersion= new HashMap<String, String>();
+		this.activityDesc= new HashMap<String, String>();
+		this.activityCache = new HashMap<String, String>();
+		this.activityCompleted = new HashMap<String, String>();
+		this.activityRunID = new HashMap<String, String>();
+
+		
 		this.provNS = new Namespace("prov", "http://www.w3.org/ns/prov#");
 		this.vtNS = new Namespace("vt", "http://www.vistrails.org/registry.xsd");
+		this.dcterms= new Namespace("dcterms", "http://purl.org/dc/terms/");
 	}
 	
 	
@@ -44,19 +75,34 @@ public class PROVBuilder {
 		this.createEdges(root);
 	}
 	
-	
 	// Create a dictionary for the entities
 	private void createEntitiesHT(Element root) {
 		for ( Iterator i = root.elementIterator("entity"); i.hasNext(); ) {
-            Element entityElem = (Element) i.next();
+            Element entityElem = (Element) i.next();           
             String entityId = entityElem.attributeValue("id");
             QName provTypeQName = new QName("type", this.provNS);
+            QName vtTypeQName = new QName("type", this.vtNS);
+            QName vtDescQName=new QName("desc", this.vtNS);
+            QName vtValueQName=new QName("value", this.provNS);
+            QName vtVersionQName=new QName("version", this.vtNS);
+            QName isPartof= new QName("isPartOf", this.dcterms);
+
             Element elemProvType = entityElem.element(provTypeQName);
             Element elemProvLabel = entityElem.element("label");
-            QName vtTypeQName = new QName("type", this.vtNS);
             Element elemVtType = entityElem.element(vtTypeQName);
+            Element elementVtDesc=entityElem.element(vtDescQName);
+            Element elementVtValue=entityElem.element(vtValueQName);
+            Element elementVtVersion=entityElem.element(vtVersionQName);
+            Element elementRunID= entityElem.element(isPartof);
+            if (elemVtType!=null)
+            	this.dataType.put(entityId, elemVtType.getText());    
+            
             if( elemProvType != null ) {
             	if( elemProvType.getText().equals("prov:Plan") ) {
+            	     if (elementVtDesc!=null)
+                       	this.dataDesc.put(entityId, elementVtDesc.getText());
+                     if (elementVtVersion!=null)
+                       	this.dataVersion.put(entityId, elementVtVersion.getText());
             		if( elemVtType != null ) {
             			if( elemVtType.getText().equals("vt:module") || 
             					elemVtType.getText().equals("vt:workflow")  )
@@ -65,6 +111,9 @@ public class PROVBuilder {
             	}
             	else {
             		if( elemProvType.getText().equals("vt:data") ) {
+            			if (elementVtValue!=null)
+                        	this.dataValue.put(entityId, elementVtValue.getText());
+            			
             			this.dataEntities.put(entityId, entityElem);
             			if( elemProvLabel != null )
             				this.dataEntityFullName.put(entityId, 
@@ -74,22 +123,45 @@ public class PROVBuilder {
             		}
             	}
             }
+         if (elementRunID!=null)
+         	this.dataRunID.put(entityId, elementVtVersion.getText());
         }
 	}
-	
-	
 	// Create a dictionary for the activities
 	private void createActivitiesHT(Element root) {
 		for ( Iterator i = root.elementIterator("activity"); i.hasNext(); ) {
             Element activityElem = (Element) i.next();
             String activityId = activityElem.attributeValue("id");
             QName vtTypeQName = new QName("type", this.vtNS);
+            QName vtDescQName=new QName("desc", this.vtNS);
+            QName vtCacheQName=new QName("Cache", this.vtNS);
+            QName vtCompletedQName=new QName("completed", this.vtNS);
+            QName vtVersionQName=new QName("version", this.vtNS);
+            QName isPartOf=new QName("isPartOf", this.dcterms);
+            
             Element elemVtType = activityElem.element(vtTypeQName);
+            Element elementVtDesc=activityElem.element(vtDescQName);
+            Element elementVtCache=activityElem.element(vtCacheQName);
+            Element elementVtCompleted=activityElem.element(vtCompletedQName);
+            Element elementVtVersion=activityElem.element(vtVersionQName);
+            Element elementRunID= activityElem.element(isPartOf);
+
+
+            this.activityType.put(activityId, elemVtType.getText());  
             if( ! elemVtType.getText().equals("vt:wf_exec") )
             	this.activities.put(activityId, activityElem);
+            if (elementVtDesc != null)
+            	this.activityDesc.put(activityId, elementVtDesc.getText());
+            if (elementVtCache != null)
+            	this.activityCache.put(activityId, elementVtCache.getText());
+            if (elementVtCompleted != null)
+            	this.activityCompleted.put(activityId, elementVtCompleted.getText());
+            if (elementVtVersion != null)
+            	this.activityVersion.put(activityId, elementVtVersion.getText());
+            if (elementRunID!=null)
+            	this.activityRunID.put(activityId, elementRunID.getText());
 		}
 	}
-	
 	
 	// Create a dictionary for the 'wasAssociatedWith' elements
 	private void createWasAssociatedWithHT(Element root) {
@@ -101,9 +173,7 @@ public class PROVBuilder {
 			String planRef = elemProvPlan.attributeValue("ref");
 			this.wasAssociatedWith.put(actRef, planRef);
 		}
-	}
-	
-	
+	}	
 
 	private void createActivityFullNames(Element root) {
 		for (String key : this.activities.keySet()) {
@@ -163,9 +233,9 @@ public class PROVBuilder {
 			// Iterate over the data items and actors to create entries of the form
 			// id [shape=ellipse]; on the DOT file
 			for( Data data: this.dataObjs )
-			    sb.append("\"(" + data.id + ")\"," + "\n");
+                sb.append("\"(" + data.id + "){\\\"name\\\":\\\"" + data.id + "\\\"," + "\\\"version\\\":\\\"" + data.version + "\\\"," + "\\\"type\\\":\\\"" + data.type + "\\\"," +"\\\"desc\\\":\\\"" + data.desc + "\\\"," + "\\\"value\\\":\\\"" + data.value + "\\\"," + "\\\"runID\\\":\\\"" + data.runID + "\\\"}\""+ "\n");			
 			for( Actor actor: this.actors )
-				sb.append("\"(" + actor.id + ")\"," + "\n");
+                sb.append("\"(" + actor.id + "){\\\"name\\\":\\\"" + actor.id + "\\\"," + "\\\"version\\\":\\\"" + actor.version + "\\\"," + "\\\"type\\\":\\\"" + actor.type + "\\\"," +"\\\"desc\\\":\\\"" + actor.desc + "\\\"," + "\\\"Cache\\\":\\\"" + actor.cache + "\\\"," + "\\\"Completed\\\":\\\"" + actor.completed+"\\\"," + "\\\"runID\\\":\\\"" + actor.runID + "\\\"}\""+ "\n");			
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
 			for ( Edge edge: this.edges ) {
 				if( edge.label.equals("used") )
@@ -223,7 +293,13 @@ public class PROVBuilder {
 			    sb.append(nl + "\t\t" + "\"body\"" + " : " + "{");
 			    sb.append(nl + "\t\t" + "\"query\"" + " : " + "\"CREATE n={props}\"" + ",");
 			    sb.append(nl + "\t\t" + "\"params\"" + " : " + "{" + "\"props\"" + ": {");
-			    sb.append("\"name\"" + ":" + "\"" + data.id + "\"" + "}}");
+			    sb.append("\"name\"" + ":" + "\"" + data.id + "\",");
+			    sb.append("\"version\"" + ":" + "\"" + data.version + "\",");
+			    sb.append("\"type\"" + ":" + "\"" + data.type + "\",");
+			    sb.append("\"desc\"" + ":" + "\"" + data.desc + "\",");
+			    sb.append("\"value\"" + ":" + "\"" + data.value + "\"," );
+			    sb.append("\"runID\"" + ":" + "\"" + data.runID + "\"" );
+			    sb.append ("}");
 			    sb.append(nl + "\t\t" + "},");
 			    sb.append(nl + "\t\t" + "\"id\"" + " : " + reqId);
 			    sb.append(nl + "\t" + "}");
@@ -236,7 +312,14 @@ public class PROVBuilder {
 			    sb.append(nl + "\t\t" + "\"body\"" + " : " + "{");
 			    sb.append(nl + "\t\t" + "\"query\"" + " : " + "\"CREATE n={props}\"" + ",");
 			    sb.append(nl + "\t\t" + "\"params\"" + " : " + "{" + "\"props\"" + ": {");
-			    sb.append("\"name\"" + ":" + "\"" + actor.id + "\"" + "}}");
+			    sb.append("\"name\"" + ":" + "\"" + actor.id + "\",");
+			    sb.append("\"version\"" + ":" + "\"" + actor.version + "\"," );
+			    sb.append("\"type\"" + ":" + "\"" + actor.type + "\",");
+			    sb.append("\"desc\"" + ":" + "\"" + actor.desc + "\"," );
+			    sb.append("\"Cache\"" + ":" + "\"" + actor.cache + "\"," );
+			    sb.append("\"Cache\"" + ":" + "\"" + actor.completed + "\"," );
+			    sb.append("\"Cache\"" + ":" + "\"" + actor.runID + "\"" );
+			    sb.append ("}");
 			    sb.append(nl + "\t\t" + "},");
 			    sb.append(nl + "\t\t" + "\"id\"" + " : " + reqId);
 			    sb.append(nl + "\t" + "}");
@@ -292,9 +375,9 @@ public class PROVBuilder {
 			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
 			// Iterate over the data items and actors
 			for( Data data: this.dataObjs )
-			    out.println("CREATE n={name:\"" + data.id + "\"}" );
+			    out.println("CREATE n={name:\"" + data.id + "\","+ "version:\"" + data.version + "\","+"type:\"" + data.type + "\","+"desc:\"" + data.desc + "\","+"value:\"" + data.value + "\","+ "runID:\"" + data.runID + "\""+"}" );
 			for( Actor actor: this.actors )
-				out.println("CREATE n={name:\"" + actor.id + "\"}" );
+				out.println("CREATE n={name:\"" + actor.id + "\","+ "version:\"" + actor.version + "\","+"type:\"" + actor.type + "\","+"desc:\"" + actor.desc + "\","+"Cache:\"" + actor.cache + "\","+ "completed:\"" + actor.completed + "\","+ "runID:\"" + actor.runID + "\""+"}" );
 			String reqLabel = null;
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
 			for ( Edge edge: this.edges ) {
@@ -320,7 +403,13 @@ public class PROVBuilder {
 		for (String key : this.activities.keySet()) {
 			String nodeId = this.activityFullName.get(key);
 			Actor actor = new Actor();
-			actor.id = nodeId;			
+			actor.id = nodeId;		
+			actor.version=this.activityVersion.get(key);
+			actor.type= this.activityType.get(key);
+			actor.desc=this.activityDesc.get(key);
+			actor.cache=this.activityCache.get(key);
+			actor.completed=this.activityCompleted.get(key);
+			actor.runID=this.activityRunID.get(key);
 			this.actors.add(actor);
 		}
 	}
@@ -331,7 +420,12 @@ public class PROVBuilder {
 		for (String key : this.dataEntities.keySet()) {
 			String nodeId = this.dataEntityFullName.get(key);
 			Data data = new Data();
-			data.id = nodeId;			
+			data.id = nodeId;		
+		    data.version=this.dataVersion.get(key);
+		    data.type=this.dataType.get(key);
+		    data.desc=this.dataDesc.get(key);
+		    data.value= this.dataValue.get(key);
+		    data.runID=this.dataRunID.get(key);
 			dataObjs.add(data);
 		}
 	}
