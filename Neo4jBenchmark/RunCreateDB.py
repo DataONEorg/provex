@@ -1,3 +1,5 @@
+# Use: python RunCreateDB.py <cypher file>
+
 import os
 import time
 import sys
@@ -8,7 +10,7 @@ file = sys.argv[1]
 start = time.clock()
 
 q_filename = path + "/" + file
-os.system('mvn exec:java -Dexec.mainClass="org.dataone.daks.pbase.CreateDatabase" -Dexec.args="graphdb ' + q_filename + '"')  
+os.system('mvn exec:java -Dexec.mainClass="org.dataone.daks.pbase.CreateDatabase" -Dexec.args="graphdb ' + q_filename + ' false"')  
 
 elapsed = (time.clock() - start)
 

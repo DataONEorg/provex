@@ -1,3 +1,5 @@
+# Use: python RunCreateDBMultiple.py
+
 import os
 import time
 
@@ -11,7 +13,7 @@ for file in os.listdir(path) :
     if os.path.isfile(q_filename) :
         #print file
         print q_filename
-        os.system('mvn exec:java -Dexec.mainClass="org.dataone.daks.pbase.CreateDatabase" -Dexec.args="graphdbmultiple ' + q_filename + '"')  
+        os.system('mvn exec:java -Dexec.mainClass="org.dataone.daks.pbase.CreateDatabase" -Dexec.args="graphdbmultiple ' + q_filename + ' true"')  
         #data = open(file, "rb")
         #line = data.readline()
         #print line

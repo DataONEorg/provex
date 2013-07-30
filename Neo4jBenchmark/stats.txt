@@ -19,13 +19,14 @@ CreateDatabaseMultiple: 433.74 s
 
 10000 nodes
 
-CreateDatabase:   634.50 s
+CreateDatabase:   546.076 s
 
-CreateDatabaseMultiple: 4757.84 s
+CreateDatabaseMultiple: 4757.84 s (4685.09 s -with index on graph_id-)
 
-4757.84 / 5 = 951.56
+4757.84 / 5 = 951.56 (4685.09 / 5 = 937.018)
 
 ----------------------------------------------------------------------------------------------------
+
 
 10000 nodes
 
@@ -35,11 +36,17 @@ ReachabilityBenchmark aggregated:  943  s
 
 943 / 4 = 235.75
 
-943 / 300 = 0.785
+235.75 / 300 = 0.785
 
-ReachabilityBenchmarkMultiple:  s
+ReachabilityBenchmarkMultiple aggregated: 5317.043 s ()
 
- / 4 = 
+5317.043 / 4 = 1329.26 ()
  
- / 300 = 
+1329.26 / 300 = 4.43 ()
+ 
+ 
+
+
+
+
 

@@ -86,7 +86,7 @@ public class ReachabilityBenchmark {
 		startTime = System.currentTimeMillis();
 		this.reachabilityCypher(queryReps);
 		endTime = System.currentTimeMillis();
-		System.out.println("Evaluated queries " + queryReps + " times, total time: " + ( endTime - startTime ));
+		System.out.println("Evaluated queries " + queryReps + " times, total time: " + (endTime-startTime)/1000.0);
 
 		System.out.println("Second test with warm caches");
 		
@@ -99,13 +99,13 @@ public class ReachabilityBenchmark {
 			endTime = System.currentTimeMillis();
 			tmp = (endTime-startTime);
 			aggregatedCypherTime += tmp;
-			System.out.println("Evaluated queries " + queryReps + " times, total time: " + tmp);  
+			System.out.println("Evaluated queries " + queryReps + " times, total time: " + tmp/1000.0);  
 		}
 		
-		System.out.println("Aggregated time: " + aggregatedCypherTime + "\n");
+		System.out.println("Aggregated time: " + aggregatedCypherTime/1000.0 + "\n");
 		
 		try {
-			bw.write("Aggregated time: " + aggregatedCypherTime + "\n");
+			bw.write("Aggregated time: " + aggregatedCypherTime/1000.0 + "\n");
 			bw.flush();
 		}
 		catch (IOException e) {

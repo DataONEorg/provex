@@ -17,12 +17,12 @@ public class BatchCypher {
 	}
 	
 	
-	public BatchCypher(String dbFile) {
+	public BatchCypher(String dbFile, String nodeKeysIndexable) {
 		this();
 		GraphDatabaseFactory factory = new GraphDatabaseFactory();
 		GraphDatabaseBuilder builder = factory.newEmbeddedDatabaseBuilder(dbFile);
-		builder.setConfig(GraphDatabaseSettings.node_keys_indexable, "name");
 		builder.setConfig(GraphDatabaseSettings.node_auto_indexing, "true");
+		builder.setConfig(GraphDatabaseSettings.node_keys_indexable, nodeKeysIndexable);
 		GraphDatabaseService graphDB = builder.newGraphDatabase();
 		this.graphDB = graphDB;
 	}
