@@ -142,8 +142,14 @@ public class PROVBuilder {
             	this.activityCache.put(activityId, elementVtCache.getText());
             if (elementVtCompleted != null)
             	this.activityCompleted.put(activityId, elementVtCompleted.getText());
-            if (elemDcterms!=null)
-            	this.activityRunID.put(activityId, elemDcterms.attributeValue("ref"));
+            String refType=null;
+            if (elemDcterms!=null){
+            	refType = this.activityType.get(elemDcterms.attributeValue("ref"));
+            	if (refType.equals("vt:wf_exec"))
+            		this.activityRunID.put(activityId, elemDcterms.attributeValue("ref"));
+            	else 
+            		this.activityRunID.put(activityId,this.activityRunID.get(elemDcterms.attributeValue("ref")));
+            }
 		}
 	}
 	
