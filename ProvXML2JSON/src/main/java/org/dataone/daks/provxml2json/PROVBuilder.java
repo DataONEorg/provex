@@ -19,13 +19,10 @@ public class PROVBuilder {
 	private HashMap<String, String> dataEntityFullName;
 	private HashMap<String, String> activityFullName;
 	private HashMap<String, String> dataType;
-	private HashMap<String, String> dataVersion;
 	private HashMap<String, String> dataDesc;
 	private HashMap<String, String> dataValue;
 	private HashMap<String, String> dataRunID;
 	private HashMap<String, String> activityType;
-	private HashMap<String, String> activityVersion;
-	private HashMap<String, String> activityDesc;
 	private HashMap<String, String> activityCache;
 	private HashMap<String, String> activityCompleted;
 	private HashMap<String, String> activityRunID;
@@ -47,13 +44,10 @@ public class PROVBuilder {
 		this.dataEntityFullName = new HashMap<String, String>();
 		this.activityFullName = new HashMap<String, String>();
 		this.dataType= new HashMap<String, String>();
-		this.dataVersion= new HashMap<String, String>();
 		this.dataDesc= new HashMap<String, String>();
 		this.dataValue= new HashMap<String, String>();
 		this.dataRunID= new HashMap<String, String>();
 		this.activityType= new HashMap<String, String>();
-		this.activityVersion= new HashMap<String, String>();
-		this.activityDesc= new HashMap<String, String>();
 		this.activityCache = new HashMap<String, String>();
 		this.activityCompleted = new HashMap<String, String>();
 		this.activityRunID = new HashMap<String, String>();
@@ -84,16 +78,14 @@ public class PROVBuilder {
             QName vtTypeQName = new QName("type", this.vtNS);
             QName vtDescQName=new QName("desc", this.vtNS);
             QName vtValueQName=new QName("value", this.provNS);
-            QName vtVersionQName=new QName("version", this.vtNS);
-            QName isPartof= new QName("isPartOf", this.dcterms);
+            QName isPartOf= new QName("isPartOf", this.dcterms);
 
             Element elemProvType = entityElem.element(provTypeQName);
             Element elemProvLabel = entityElem.element("label");
             Element elemVtType = entityElem.element(vtTypeQName);
             Element elementVtDesc=entityElem.element(vtDescQName);
             Element elementVtValue=entityElem.element(vtValueQName);
-            Element elementVtVersion=entityElem.element(vtVersionQName);
-            Element elementRunID= entityElem.element(isPartof);
+            Element elementRunID= entityElem.element(isPartOf);
             if (elemVtType!=null)
             	this.dataType.put(entityId, elemVtType.getText());    
             
@@ -101,8 +93,6 @@ public class PROVBuilder {
             	if( elemProvType.getText().equals("prov:Plan") ) {
             	     if (elementVtDesc!=null)
                        	this.dataDesc.put(entityId, elementVtDesc.getText());
-                     if (elementVtVersion!=null)
-                       	this.dataVersion.put(entityId, elementVtVersion.getText());
             		if( elemVtType != null ) {
             			if( elemVtType.getText().equals("vt:module") || 
             					elemVtType.getText().equals("vt:workflow")  )
@@ -113,7 +103,6 @@ public class PROVBuilder {
             		if( elemProvType.getText().equals("vt:data") ) {
             			if (elementVtValue!=null)
                         	this.dataValue.put(entityId, elementVtValue.getText());
-            			
             			this.dataEntities.put(entityId, entityElem);
             			if( elemProvLabel != null )
             				this.dataEntityFullName.put(entityId, 
@@ -123,8 +112,9 @@ public class PROVBuilder {
             		}
             	}
             }
+        
          if (elementRunID!=null)
-         	this.dataRunID.put(entityId, elementVtVersion.getText());
+         	this.dataRunID.put(entityId, elementRunID.attributeValue("ref"));
         }
 	}
 	// Create a dictionary for the activities
@@ -134,32 +124,26 @@ public class PROVBuilder {
             String activityId = activityElem.attributeValue("id");
             QName vtTypeQName = new QName("type", this.vtNS);
             QName vtDescQName=new QName("desc", this.vtNS);
-            QName vtCacheQName=new QName("Cache", this.vtNS);
+            QName vtCacheQName=new QName("cached", this.vtNS);
             QName vtCompletedQName=new QName("completed", this.vtNS);
-            QName vtVersionQName=new QName("version", this.vtNS);
-            QName isPartOf=new QName("isPartOf", this.dcterms);
+            QName dctermsIsPartOf=new QName("isPartOf", this.dcterms);
+            
             
             Element elemVtType = activityElem.element(vtTypeQName);
             Element elementVtDesc=activityElem.element(vtDescQName);
             Element elementVtCache=activityElem.element(vtCacheQName);
             Element elementVtCompleted=activityElem.element(vtCompletedQName);
-            Element elementVtVersion=activityElem.element(vtVersionQName);
-            Element elementRunID= activityElem.element(isPartOf);
-
+            Element elemDcterms = activityElem.element(dctermsIsPartOf);         
 
             this.activityType.put(activityId, elemVtType.getText());  
             if( ! elemVtType.getText().equals("vt:wf_exec") )
             	this.activities.put(activityId, activityElem);
             if (elementVtDesc != null)
-            	this.activityDesc.put(activityId, elementVtDesc.getText());
-            if (elementVtCache != null)
             	this.activityCache.put(activityId, elementVtCache.getText());
             if (elementVtCompleted != null)
             	this.activityCompleted.put(activityId, elementVtCompleted.getText());
-            if (elementVtVersion != null)
-            	this.activityVersion.put(activityId, elementVtVersion.getText());
-            if (elementRunID!=null)
-            	this.activityRunID.put(activityId, elementRunID.getText());
+            if (elemDcterms!=null)
+            	this.activityRunID.put(activityId, elemDcterms.attributeValue("ref"));
 		}
 	}
 	
@@ -181,11 +165,8 @@ public class PROVBuilder {
 			if( planRef != null ) {
 				Element planEntity = this.planEntities.get(planRef);
 				String name = "";
-		        Element elemVtDesc = planEntity.element("desc");
 		        Element elemProvLabel = planEntity.element("label");
-		        if( elemVtDesc != null )
-					name = elemVtDesc.getText();
-				else if( elemProvLabel != null )
+		        if( elemProvLabel != null )
 					name = elemProvLabel.getText();
 				this.activityFullName.put(key, key + "_" + name);
 			}
@@ -232,10 +213,37 @@ public class PROVBuilder {
 			sb.append("{\"subgraph\": [" + "\n");
 			// Iterate over the data items and actors to create entries of the form
 			// id [shape=ellipse]; on the DOT file
-			for( Data data: this.dataObjs )
-                sb.append("\"(" + data.id + "){\\\"name\\\":\\\"" + data.id + "\\\"," + "\\\"version\\\":\\\"" + data.version + "\\\"," + "\\\"type\\\":\\\"" + data.type + "\\\"," +"\\\"desc\\\":\\\"" + data.desc + "\\\"," + "\\\"value\\\":\\\"" + data.value + "\\\"," + "\\\"runID\\\":\\\"" + data.runID + "\\\"}\""+ "\n");			
+			for( Data data: this.dataObjs ) {
+                sb.append("\"(" + data.id + "){");
+                sb.append("\\\"name\\\":\\\"" + data.id + "\\\"," );
+                if (data.vtType!=null)
+                	sb.append( "\\\"vtType\\\":\\\"" + data.vtType + "\\\",");
+                if (data.desc !=null)
+                	sb.append("\\\"desc\\\":\\\"" + data.desc + "\\\"," );
+                if (data.value!=null)
+                	sb.append( "\\\"value\\\":\\\"" + data.value + "\\\",");
+			   if (data.runID!=null)
+				   sb.append("\\\"runID\\\":\\\"" + data.runID + "\\\"");
+			   else 
+				   sb.deleteCharAt(sb.length()-1);
+			    sb.append("}\""+ "\n");			
+			}
 			for( Actor actor: this.actors )
-                sb.append("\"(" + actor.id + "){\\\"name\\\":\\\"" + actor.id + "\\\"," + "\\\"version\\\":\\\"" + actor.version + "\\\"," + "\\\"type\\\":\\\"" + actor.type + "\\\"," +"\\\"desc\\\":\\\"" + actor.desc + "\\\"," + "\\\"Cache\\\":\\\"" + actor.cache + "\\\"," + "\\\"Completed\\\":\\\"" + actor.completed+"\\\"," + "\\\"runID\\\":\\\"" + actor.runID + "\\\"}\""+ "\n");			
+			{
+                sb.append("\"(" + actor.id + "){");
+                sb.append("\\\"name\\\":\\\"" + actor.id + "\\\"," );
+                if (actor.vtType!=null)
+                	sb.append( "\\\"vtType\\\":\\\"" + actor.vtType + "\\\",");
+                if (actor.cache!=null)
+                	sb.append( "\\\"cache\\\":\\\"" + actor.cache + "\\\",");
+                if (actor.completed!=null)
+                	sb.append( "\\\"completed\\\":\\\"" + actor.completed + "\\\",");
+                if (actor.runID!=null)
+                	sb.append("\\\"runID\\\":\\\"" + actor.runID + "\\\"");
+                else 
+ 				   sb.deleteCharAt(sb.length()-1);
+       			sb.append("}\""+ "\n");		
+			}
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
 			for ( Edge edge: this.edges ) {
 				if( edge.label.equals("used") )
@@ -294,11 +302,16 @@ public class PROVBuilder {
 			    sb.append(nl + "\t\t" + "\"query\"" + " : " + "\"CREATE n={props}\"" + ",");
 			    sb.append(nl + "\t\t" + "\"params\"" + " : " + "{" + "\"props\"" + ": {");
 			    sb.append("\"name\"" + ":" + "\"" + data.id + "\",");
-			    sb.append("\"version\"" + ":" + "\"" + data.version + "\",");
-			    sb.append("\"type\"" + ":" + "\"" + data.type + "\",");
-			    sb.append("\"desc\"" + ":" + "\"" + data.desc + "\",");
-			    sb.append("\"value\"" + ":" + "\"" + data.value + "\"," );
-			    sb.append("\"runID\"" + ":" + "\"" + data.runID + "\"" );
+			    if (data.vtType!=null)
+			    	sb.append("\"vtType\"" + ":" + "\"" + data.vtType + "\",");
+			    if (data.desc!=null)
+			    	sb.append("\"desc\"" + ":" + "\"" + data.desc + "\",");
+			    if (data.value!=null)
+			    	sb.append("\"value\"" + ":" + "\"" + data.value + "\"," );
+			    if (data.runID!=null)
+			    	sb.append("\"runID\"" + ":" + "\"" + data.runID + "\"" );
+			     else 
+	 				   sb.deleteCharAt(sb.length()-1);
 			    sb.append ("}");
 			    sb.append(nl + "\t\t" + "},");
 			    sb.append(nl + "\t\t" + "\"id\"" + " : " + reqId);
@@ -313,12 +326,16 @@ public class PROVBuilder {
 			    sb.append(nl + "\t\t" + "\"query\"" + " : " + "\"CREATE n={props}\"" + ",");
 			    sb.append(nl + "\t\t" + "\"params\"" + " : " + "{" + "\"props\"" + ": {");
 			    sb.append("\"name\"" + ":" + "\"" + actor.id + "\",");
-			    sb.append("\"version\"" + ":" + "\"" + actor.version + "\"," );
-			    sb.append("\"type\"" + ":" + "\"" + actor.type + "\",");
-			    sb.append("\"desc\"" + ":" + "\"" + actor.desc + "\"," );
-			    sb.append("\"Cache\"" + ":" + "\"" + actor.cache + "\"," );
-			    sb.append("\"Cache\"" + ":" + "\"" + actor.completed + "\"," );
-			    sb.append("\"Cache\"" + ":" + "\"" + actor.runID + "\"" );
+			    if (actor.vtType!=null)
+			    	sb.append("\"vtType\"" + ":" + "\"" + actor.vtType + "\",");
+			    if (actor.cache!=null)
+			    	sb.append("\"cache\"" + ":" + "\"" + actor.cache + "\"," );
+			    if (actor.completed!=null)
+			    	sb.append("\"completed\"" + ":" + "\"" + actor.completed + "\"," );
+			    if (actor.runID!=null)
+			    	sb.append("\"runID\"" + ":" + "\"" + actor.runID + "\"" );
+			     else 
+	 				   sb.deleteCharAt(sb.length()-1);
 			    sb.append ("}");
 			    sb.append(nl + "\t\t" + "},");
 			    sb.append(nl + "\t\t" + "\"id\"" + " : " + reqId);
@@ -372,12 +389,40 @@ public class PROVBuilder {
        		...
 		*/
 		try {
-			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
+			StringBuilder sb = new StringBuilder();
 			// Iterate over the data items and actors
-			for( Data data: this.dataObjs )
-			    out.println("CREATE n={name:\"" + data.id + "\","+ "version:\"" + data.version + "\","+"type:\"" + data.type + "\","+"desc:\"" + data.desc + "\","+"value:\"" + data.value + "\","+ "runID:\"" + data.runID + "\""+"}" );
-			for( Actor actor: this.actors )
-				out.println("CREATE n={name:\"" + actor.id + "\","+ "version:\"" + actor.version + "\","+"type:\"" + actor.type + "\","+"desc:\"" + actor.desc + "\","+"Cache:\"" + actor.cache + "\","+ "completed:\"" + actor.completed + "\","+ "runID:\"" + actor.runID + "\""+"}" );
+			for( Data data: this.dataObjs ){
+			sb.append("CREATE n={");
+			sb.append("name:\""+ data.id + "\"," );
+			if (data.vtType!=null)
+				sb.append("vtType:\""+ data.vtType + "\"," );
+			if (data.desc!=null)
+				sb.append("desc:\""+ data.desc + "\"," );
+			if (data.value!=null)
+				sb.append("value:\""+ data.value + "\"," );
+			if (data.runID!=null)
+				sb.append("runID:\""+ data.runID + "\"" );		
+			 else 
+				   sb.deleteCharAt(sb.length()-1);
+			sb.append("}"+"\n" );
+			}
+			for( Actor actor: this.actors){
+			sb.append("CREATE n={");
+			sb.append("name:\""+ actor.id + "\"," );
+		    if (actor.vtType!=null)
+		    	sb.append("vtType:\""+ actor.vtType + "\"," );
+		    if (actor.cache!=null)
+		    	sb.append("cache:\""+ actor.cache + "\"," );
+		    if (actor.completed!=null)
+		    	sb.append("completed:\""+ actor.completed + "\"," );
+		    if (actor.runID!=null)
+		    	sb.append("runID:\""+ actor.runID + "\"" );
+			 else 
+				   sb.deleteCharAt(sb.length()-1);
+			sb.append("}"+"\n" );
+			}
+			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
+			out.println(sb);
 			String reqLabel = null;
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
 			for ( Edge edge: this.edges ) {
@@ -404,9 +449,7 @@ public class PROVBuilder {
 			String nodeId = this.activityFullName.get(key);
 			Actor actor = new Actor();
 			actor.id = nodeId;		
-			actor.version=this.activityVersion.get(key);
-			actor.type= this.activityType.get(key);
-			actor.desc=this.activityDesc.get(key);
+			actor.vtType= this.activityType.get(key);
 			actor.cache=this.activityCache.get(key);
 			actor.completed=this.activityCompleted.get(key);
 			actor.runID=this.activityRunID.get(key);
@@ -421,8 +464,7 @@ public class PROVBuilder {
 			String nodeId = this.dataEntityFullName.get(key);
 			Data data = new Data();
 			data.id = nodeId;		
-		    data.version=this.dataVersion.get(key);
-		    data.type=this.dataType.get(key);
+		    data.vtType=this.dataType.get(key);
 		    data.desc=this.dataDesc.get(key);
 		    data.value= this.dataValue.get(key);
 		    data.runID=this.dataRunID.get(key);

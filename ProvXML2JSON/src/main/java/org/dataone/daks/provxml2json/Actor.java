@@ -5,9 +5,7 @@ public class Actor {
 	
 	String id;
 	String name;
-	String version;
-	String type;
-	String desc;
+	String vtType;
 	String cache;
 	String completed;
 	String runID;
@@ -17,12 +15,10 @@ public class Actor {
 	}
 	
 	
-	public Actor(String id, String name, String version, String type, String desc, String cache, String completed, String runID) {
+	public Actor(String id, String name, String vtType, String cache, String completed, String runID) {
 		this.id = id;
 		this.name = name;
-		this.version=version;
-		this.type=type;
-		this.desc=desc;
+		this.vtType=vtType;
 		this.cache=cache;
 		this.completed=completed;
 		this.runID=runID;
