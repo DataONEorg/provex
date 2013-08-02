@@ -47,16 +47,24 @@ public class TreeCover {
         System.out.println();
         Digraph gPrime = g.copy();
         Digraph gPrimeRev = gPrime.reverse();
-        coverAlgorithm2(gPrime, gPrimeRev);
+        coverAlgorithm3(gPrime, gPrimeRev);
         System.out.println("Postorder traversal: ");
-        postorder(g, gRev, this.root);
+        //postorder(g, gRev, this.root);
+        postorder(gPrime, gPrimeRev, this.root);
         System.out.println();
         System.out.println("Recursive postorder traversal: ");
         postorderRecursive(g, this.root);
+        //postorderRecursive(gPrime, this.root);
+        System.out.println();
+        System.out.println("Process tree intervals ");
         processTreeIntervals(g);
         System.out.println();
         System.out.println("Postorder traversal with tree codes: ");
+        //postorderRecursiveTreeCodes(g, this.root);
         postorderRecursiveTreeCodes(g, this.root);
+        System.out.println();
+        System.out.println("Node codes ");
+        printTreeCodes(g);
 	}
 	
 	
@@ -209,6 +217,78 @@ public class TreeCover {
         return retVal;
 	}
 
+	
+	private boolean coverAlgorithm3(Digraph g, Digraph gRev) {
+		List<String> topSort = g.topologicalSort();
+		boolean retVal = false;
+		if(topSort == null) {
+			System.out.println("The graph has a cycle.");
+			return false;
+		}
+		Hashtable<String, Set<String>> pred = new Hashtable<String, Set<String>>();
+		for( String s: topSort) {
+			Set<String> set = new LinkedHashSet<String>();
+			pred.put(s, set);
+		}
+		for( String v: topSort ) {
+			int vposg = g.posIndex.get(v);
+			int vposgrev = gRev.posIndex.get(v);
+			while( gRev.adj.get(vposgrev).size() > 1 ) {
+				Iterator<String> it = gRev.adj.get(vposgrev).iterator();
+				String u = it.next();
+				String uprime = it.next();
+				int uposgrev = gRev.posIndex.get(u);
+				int uprimeposgrev = gRev.posIndex.get(uprime);
+				if( pred.get(u).size() > pred.get(uprime).size() ) {
+					//delete the edge (uprime, v)
+					int uprimeposg = g.posIndex.get(uprime);
+					g.adj.get(uprimeposg).remove(v);
+					gRev.adj.get(vposgrev).remove(uprime);
+				}
+				else {
+					//delete the edge (u, v)
+					int uposg = g.posIndex.get(u);
+					g.adj.get(uposg).remove(v);
+					gRev.adj.get(vposgrev).remove(u);
+				}
+			}
+			//pred(v) <- {u} u pred(u) for every incoming edge (u, v);
+			Iterator<String> it = gRev.adj.get(vposgrev).iterator();
+			while(it.hasNext()) {
+				String u = it.next();
+				pred.get(v).add(u);
+				Iterator<String> itinner = pred.get(u).iterator();
+				while(itinner.hasNext()) {
+					String upred = itinner.next();
+					pred.get(v).add(upred);
+				}
+			}
+		}
+		retVal = true;
+		System.out.println();
+        System.out.println("After cover algorithm: ");
+		System.out.println("Graph: ");
+        System.out.println(g.toString());
+        System.out.println();
+        System.out.println("Reverse graph: ");
+        System.out.println(g.reverse().toString());
+        System.out.println();
+        System.out.println("Pred: ");
+        for( String s: topSort) {
+			Set<String> set = pred.get(s);
+			System.out.print(s + ": ");
+			Iterator<String> it = set.iterator();
+			while(it.hasNext()) {
+				System.out.print(it.next() + " ");
+			}
+			System.out.println();
+		}
+        System.out.println();
+        return retVal;
+	}
+
+	
+	
 	private void postorder(Digraph g, Digraph gRev, String startNode) {
 		if( startNode == null )
 			return;
@@ -222,7 +302,7 @@ public class TreeCover {
 				marked.put(currNode, true);
 				currNode = g.adj.get(currNodePos).get(0);
 			}
-			else{
+			else {
 				//Visit the node
 				System.out.println(currNode + ":" + visited);
 				this.rightIndex.put(currNode, visited);
@@ -249,11 +329,18 @@ public class TreeCover {
 					int minVal = Integer.MAX_VALUE;
 					for( int i = 0; i < g.adj.get(pos).size(); i++ ) {
 						String child = g.adj.get(pos).get(i);
+						
+						if(this.leftIndex.get(child) == null) {
+							System.out.println(child + " has null leftIndex for parent " + currNode);
+						}
+						
 						int childLeftVal = this.leftIndex.get(child);
 						if( childLeftVal < minVal )
 							minVal = childLeftVal;
 					}
 					this.leftIndex.put(currNode, minVal);
+					
+					//System.out.println(currNode + " is given leftIndex " + minVal);
 				}
 			}
 		}
@@ -297,10 +384,21 @@ public class TreeCover {
 		int nodePos = g.posIndex.get(node);
 		for( int i = 0; i < g.adj.get(nodePos).size(); i++ ) {
 			String child = g.adj.get(nodePos).get(i);
-			postorderRecursive(g, child);
+			postorderRecursiveTreeCodes(g, child);
 		}
 		TreeCode code = this.treeCodes.get(node);
 		System.out.println(node + ":" + code.toString() );
+	}
+	
+	
+	
+	private void printTreeCodes(Digraph g) {
+		for( int i = 0; i < g.adj.size(); i++ ) {
+			String node = g.posIndex.inverse().get(i);
+			TreeCode code = this.treeCodes.get(node);
+			System.out.println(node + ":" + code.toString() );
+		}
+		
 	}
 	
 	
