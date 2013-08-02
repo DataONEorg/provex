@@ -14,7 +14,7 @@ public class TreeCode {
 	}
 	
 	
-	public void addCode(TreeCode other) {
+	public void addCodeOLD(TreeCode other) {
 		//Process all of the intervals in the TreeCode other
 		for( int i = 0; i < other.intervals.size(); i++ ) {
 			TreeInterval otherInterval = other.intervals.get(i);
@@ -40,6 +40,50 @@ public class TreeCode {
 			else if( thisInterval.subsumes(otherInterval) ) {
 				;
 			} 
+		}
+	}
+	
+	
+	public void addCode(TreeCode other) {
+		//Process all of the intervals in the TreeCode other
+		for( int i = 0; i < other.intervals.size(); i++ ) {
+			TreeInterval otherInterval = other.intervals.get(i);
+			//Check if the ith interval in other subsumes or is subsumed
+			//by some jth interval in this TreeCode
+			TreeInterval thisInterval = this.intervals.get(0);
+			//the ith other interval subsumes this jth interval
+			//so replace this jth interval with the other ith interval
+			if( otherInterval.subsumes(thisInterval) ) {
+				thisInterval.left = otherInterval.left;
+				thisInterval.right = otherInterval.right;
+				int j = 1; 
+				while( j < this.intervals.size() ) {
+					thisInterval = this.intervals.get(j);
+					if( otherInterval.subsumes(thisInterval) )
+						this.intervals.remove(j);
+					else
+						j++;
+				}
+			}
+			//the ith other interval is subsumed by this 0th interval
+			//so just ignore the ith other interval
+			else if( thisInterval.subsumes(otherInterval) ) {
+				;
+			}
+			//otherwise find if there is some this jth interval that subsumes
+			//the ith other interval, if not then add the ith other interval to this list
+			else {
+				boolean subsumed = false;
+				for(int j = 1; j < this.intervals.size(); j++) {
+					thisInterval = this.intervals.get(j);
+					if( thisInterval.subsumes(otherInterval) ) {
+						subsumed = true;
+						break;
+					}
+				}
+				if( !subsumed )
+					this.intervals.add(otherInterval);
+			}
 		}
 	}
 	
