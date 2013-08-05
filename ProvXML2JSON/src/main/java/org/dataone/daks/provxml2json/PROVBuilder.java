@@ -405,7 +405,7 @@ public class PROVBuilder {
 			if (data.value!=null)
 				sb.append("value:\""+ data.value + "\"," );
 			if (data.runID!=null)
-				sb.append("runID:\""+ data.runID + "\"" );		
+				sb.append("runID:\""+ data.runID + "\"," );		
 			sb.append("wfID:\""+ data.wfID + "\"" );		
 			sb.append("};"+"\n" );
 			}
@@ -419,7 +419,7 @@ public class PROVBuilder {
 		    if (actor.completed!=null)
 		    	sb.append("completed:\""+ actor.completed + "\"," );
 		    if (actor.runID!=null)
-		    	sb.append("runID:\""+ actor.runID + "\"" );
+		    	sb.append("runID:\""+ actor.runID + "\"," );
 			sb.append("wfID:\""+ actor.wfID + "\"" );		
 			sb.append("};"+"\n" );
 			}
