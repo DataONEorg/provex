@@ -72,17 +72,38 @@ public class TreeCode {
 			}
 			//otherwise find if there is some this jth interval that subsumes
 			//the ith other interval, if not then add the ith other interval to this list
+			//also check if the ith other interval subsumes some this jth interval
+			//and if that is the case then replace the values of this jth interval
 			else {
-				boolean subsumed = false;
+				boolean thisSubsumesOther = false;
+				boolean otherSubsumesThis = false;
+				int thisJpos = -1;
 				for(int j = 1; j < this.intervals.size(); j++) {
 					thisInterval = this.intervals.get(j);
 					if( thisInterval.subsumes(otherInterval) ) {
-						subsumed = true;
+						thisSubsumesOther = true;
+						break;
+					}
+					else if( otherInterval.subsumes(thisInterval) ) {
+						otherSubsumesThis = true;
+						thisJpos = j;
 						break;
 					}
 				}
-				if( !subsumed )
+				if( ! thisSubsumesOther && ! otherSubsumesThis )
 					this.intervals.add(otherInterval);
+				else if( otherSubsumesThis ) {
+					this.intervals.get(thisJpos).left = otherInterval.left;
+					this.intervals.get(thisJpos).right = otherInterval.right;
+					int k = thisJpos + 1;
+					while( k < this.intervals.size() ) {
+						thisInterval = this.intervals.get(k);
+						if( otherInterval.subsumes(thisInterval) )
+							this.intervals.remove(k);
+						else
+							k++;
+					}
+				}
 			}
 		}
 	}
