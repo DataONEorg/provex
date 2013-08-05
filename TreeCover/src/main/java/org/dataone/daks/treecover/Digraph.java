@@ -62,6 +62,29 @@ public class Digraph {
 			e.printStackTrace();
 		}
 	}
+    
+    
+    /**
+     * Same as crateFromFile, only that the graph is read from an InputStream
+     */
+    public void createFromInputStream(InputStream istream) {
+		BufferedReader buff = null;
+		String line = null;
+		try {
+			buff = new BufferedReader(new InputStreamReader(istream));
+			while((line = buff.readLine()) != null) {
+				if ( line.trim().length() == 0 )
+					continue;
+				StringTokenizer tok = new StringTokenizer(line);
+				String id1 = tok.nextToken();
+				String id2 = tok.nextToken();
+				this.addEdge(id1, id2);
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
 
         
    /**

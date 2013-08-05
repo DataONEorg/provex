@@ -9,6 +9,7 @@ import org.junit.Test;
 public class TreeIntervalTest {
     
     
+	@Test
     public void testTreeIntervalToString() {
     	//should print [3,5]
     	TreeInterval interval = new TreeInterval(3,5);

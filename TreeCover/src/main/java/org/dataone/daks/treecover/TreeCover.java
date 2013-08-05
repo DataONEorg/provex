@@ -68,6 +68,19 @@ public class TreeCover {
 	}
 	
 	
+	public void createCover(Digraph g) {
+		Digraph gRev = g.reverse();
+		this.createVirtualRoot(g, gRev);
+        Digraph gPrime = g.copy();
+        Digraph gPrimeRev = gPrime.reverse();
+        coverAlgorithm4(gPrime, gPrimeRev);
+        postorder(gPrime, gPrimeRev, this.root);
+        processTreeIntervals(g);
+        System.out.println("Node codes: ");
+        printTreeCodes(g);
+	}
+	
+	
 	private void createVirtualRoot(Digraph g, Digraph gRev) {
 		String vroot = "root";
 		//Find the nodes in that have no incoming edges by using
@@ -286,8 +299,57 @@ public class TreeCover {
         System.out.println();
         return retVal;
 	}
-
 	
+	
+	private boolean coverAlgorithm4(Digraph g, Digraph gRev) {
+		List<String> topSort = g.topologicalSort();
+		boolean retVal = false;
+		if(topSort == null) {
+			System.out.println("The graph has a cycle.");
+			return false;
+		}
+		Hashtable<String, Set<String>> pred = new Hashtable<String, Set<String>>();
+		for( String s: topSort) {
+			Set<String> set = new LinkedHashSet<String>();
+			pred.put(s, set);
+		}
+		for( String v: topSort ) {
+			int vposg = g.posIndex.get(v);
+			int vposgrev = gRev.posIndex.get(v);
+			while( gRev.adj.get(vposgrev).size() > 1 ) {
+				Iterator<String> it = gRev.adj.get(vposgrev).iterator();
+				String u = it.next();
+				String uprime = it.next();
+				int uposgrev = gRev.posIndex.get(u);
+				int uprimeposgrev = gRev.posIndex.get(uprime);
+				if( pred.get(u).size() > pred.get(uprime).size() ) {
+					//delete the edge (uprime, v)
+					int uprimeposg = g.posIndex.get(uprime);
+					g.adj.get(uprimeposg).remove(v);
+					gRev.adj.get(vposgrev).remove(uprime);
+				}
+				else {
+					//delete the edge (u, v)
+					int uposg = g.posIndex.get(u);
+					g.adj.get(uposg).remove(v);
+					gRev.adj.get(vposgrev).remove(u);
+				}
+			}
+			//pred(v) <- {u} u pred(u) for every incoming edge (u, v);
+			Iterator<String> it = gRev.adj.get(vposgrev).iterator();
+			while(it.hasNext()) {
+				String u = it.next();
+				pred.get(v).add(u);
+				Iterator<String> itinner = pred.get(u).iterator();
+				while(itinner.hasNext()) {
+					String upred = itinner.next();
+					pred.get(v).add(upred);
+				}
+			}
+		}
+        return true;
+	}
+
 	
 	private void postorder(Digraph g, Digraph gRev, String startNode) {
 		if( startNode == null )
@@ -304,7 +366,7 @@ public class TreeCover {
 			}
 			else {
 				//Visit the node
-				System.out.println(currNode + ":" + visited);
+				//System.out.println(currNode + ":" + visited);
 				this.rightIndex.put(currNode, visited);
 				//If the current node is a leaf node then assign to the left index
 				//the same value as to the right index
