@@ -35,6 +35,8 @@ public class PROVBuilder {
 	private Namespace vtNS;
 	private Namespace dcterms;
 	
+	UUID wfID=UUID.randomUUID();
+
 	
 	public PROVBuilder() {
 		this.dataEntities = new HashMap<String, Element>();
@@ -229,9 +231,8 @@ public class PROVBuilder {
                 if (data.value!=null)
                 	sb.append( "\\\"value\\\":\\\"" + data.value + "\\\",");
 			   if (data.runID!=null)
-				   sb.append("\\\"runID\\\":\\\"" + data.runID + "\\\"");
-			   else 
-				   sb.deleteCharAt(sb.length()-1);
+				   sb.append("\\\"runID\\\":\\\"" + data.runID + "\\\",");
+			    sb.append("\\\"wfID\\\":\\\"" + data.wfID + "\\\"");
 			    sb.append("}\""+ "\n");			
 			}
 			for( Actor actor: this.actors )
@@ -245,9 +246,8 @@ public class PROVBuilder {
                 if (actor.completed!=null)
                 	sb.append( "\\\"completed\\\":\\\"" + actor.completed + "\\\",");
                 if (actor.runID!=null)
-                	sb.append("\\\"runID\\\":\\\"" + actor.runID + "\\\"");
-                else 
- 				   sb.deleteCharAt(sb.length()-1);
+                	sb.append("\\\"runID\\\":\\\"" + actor.runID + "\\\",");
+            	sb.append("\\\"wfID\\\":\\\"" + actor.runID + "\\\"");
        			sb.append("}\""+ "\n");		
 			}
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
@@ -315,9 +315,8 @@ public class PROVBuilder {
 			    if (data.value!=null)
 			    	sb.append("\"value\"" + ":" + "\"" + data.value + "\"," );
 			    if (data.runID!=null)
-			    	sb.append("\"runID\"" + ":" + "\"" + data.runID + "\"" );
-			     else 
-	 				   sb.deleteCharAt(sb.length()-1);
+			    	sb.append("\"runID\"" + ":" + "\"" + data.runID + "\"," );
+		    	sb.append("\"wfID\"" + ":" + "\"" + data.wfID + "\"" );
 			    sb.append ("}");
 			    sb.append(nl + "\t\t" + "},");
 			    sb.append(nl + "\t\t" + "\"id\"" + " : " + reqId);
@@ -339,9 +338,8 @@ public class PROVBuilder {
 			    if (actor.completed!=null)
 			    	sb.append("\"completed\"" + ":" + "\"" + actor.completed + "\"," );
 			    if (actor.runID!=null)
-			    	sb.append("\"runID\"" + ":" + "\"" + actor.runID + "\"" );
-			     else 
-	 				   sb.deleteCharAt(sb.length()-1);
+			    	sb.append("\"runID\"" + ":" + "\"" + actor.runID + "\"," );
+		    	sb.append("\"wfID\"" + ":" + "\"" + actor.wfID + "\"" );
 			    sb.append ("}");
 			    sb.append(nl + "\t\t" + "},");
 			    sb.append(nl + "\t\t" + "\"id\"" + " : " + reqId);
@@ -408,9 +406,8 @@ public class PROVBuilder {
 				sb.append("value:\""+ data.value + "\"," );
 			if (data.runID!=null)
 				sb.append("runID:\""+ data.runID + "\"" );		
-			 else 
-				   sb.deleteCharAt(sb.length()-1);
-			sb.append("}"+"\n" );
+			sb.append("wfID:\""+ data.wfID + "\"" );		
+			sb.append("};"+"\n" );
 			}
 			for( Actor actor: this.actors){
 			sb.append("CREATE n={");
@@ -423,9 +420,8 @@ public class PROVBuilder {
 		    	sb.append("completed:\""+ actor.completed + "\"," );
 		    if (actor.runID!=null)
 		    	sb.append("runID:\""+ actor.runID + "\"" );
-			 else 
-				   sb.deleteCharAt(sb.length()-1);
-			sb.append("}"+"\n" );
+			sb.append("wfID:\""+ actor.wfID + "\"" );		
+			sb.append("};"+"\n" );
 			}
 			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
 			out.println(sb);
@@ -433,12 +429,12 @@ public class PROVBuilder {
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
 			for ( Edge edge: this.edges ) {
 				if( edge.label.equals("used") )
-					reqLabel = "USED";
+					reqLabel = "used";
 				else if( edge.label.equals("genBy") )
-					reqLabel = "WASGENBY";
+					reqLabel = "wasGeneratedBy";
 			    out.print("START n=node:node_auto_index(name='" + edge.startId + "'), ");
 			    out.print("m=node:node_auto_index(name='" + edge.endId + "') ");
-			    out.println("CREATE n-[r:" + reqLabel + "]->m");
+			    out.println("CREATE n-[r:" + reqLabel + "]->m;");
 			}
 	        out.println();
 			out.close();
@@ -459,6 +455,7 @@ public class PROVBuilder {
 			actor.cache=this.activityCache.get(key);
 			actor.completed=this.activityCompleted.get(key);
 			actor.runID=this.activityRunID.get(key);
+		    actor.wfID= this.wfID;
 			this.actors.add(actor);
 		}
 	}
@@ -474,6 +471,7 @@ public class PROVBuilder {
 		    data.desc=this.dataDesc.get(key);
 		    data.value= this.dataValue.get(key);
 		    data.runID=this.dataRunID.get(key);
+		    data.wfID= this.wfID;
 			dataObjs.add(data);
 		}
 	}
