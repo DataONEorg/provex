@@ -444,7 +444,6 @@ public class PROVBuilder {
 	    }
 	}
 	
-	
 	private void createActorsList() {
 		this.actors = new ArrayList<Actor>();
 		for (String key : this.activities.keySet()) {
