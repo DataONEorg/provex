@@ -117,7 +117,7 @@ public class PROVBuilder {
             			if( elemVtType.getText().equals("vt:module") || 
             					elemVtType.getText().equals("vt:workflow")  )
             				this.planEntities.put(entityId, entityElem);
-            			if( elemVtType.getText().equals("vt:module"))
+            			    if( elemVtType.getText().equals("vt:module"))
             					this.modules.put(entityId, entityElem);
             			    if( elemProvLabel != null )
                 				this.dataEntityFullName.put(entityId, 
@@ -265,7 +265,7 @@ public class PROVBuilder {
                 if (data.vtType!=null)
                 	sb.append( "\\\"vtType\\\":\\\"" + data.vtType + "\\\",");
                 if (data.desc !=null)
-                	sb.append("\\\"desc\\\":\\\"" + data.desc + "\\\"," );
+                	sb.append("\\\"description\\\":\\\"" + data.desc + "\\\"," );
                 if (data.value!=null)
                 	sb.append( "\\\"value\\\":\\\"" + data.value + "\\\",");
 			   if (data.runID!=null)
@@ -297,7 +297,7 @@ public class PROVBuilder {
                 if (module.cache!=null)
                 	sb.append( "\\\"cache\\\":\\\"" + module.cache + "\\\",");
                 if (module.desc!=null)
-                	sb.append( "\\\"desc\\\":\\\"" + module.desc + "\\\",");
+                	sb.append( "\\\"description\\\":\\\"" + module.desc + "\\\",");
                 if (module.vtPackage!=null)
                 	sb.append("\\\"package\\\":\\\"" + module.vtPackage + "\\\",");
                 if (module.version!=null)
@@ -313,6 +313,8 @@ public class PROVBuilder {
 					sb.append("\"(" + edge.startId + ")-[:wasGeneratedBy]->(" + edge.endId + ")\"," + "\n");
 				else if( edge.label.equals("connect") )
 					sb.append("\"(" + edge.startId + ")-[:isConnectedWith]->(" + edge.endId + ")\"," + "\n");
+				else if( edge.label.equals("associatedWith") )
+					sb.append("\"(" + edge.startId + ")-[:wasAssociatedWith]->(" + edge.endId + ")\"," + "\n");
 			}
 			sb.deleteCharAt(sb.length()-1);
 			sb.deleteCharAt(sb.length()-1);
@@ -368,7 +370,7 @@ public class PROVBuilder {
 			    if (data.vtType!=null)
 			    	sb.append("\"vtType\"" + ":" + "\"" + data.vtType + "\",");
 			    if (data.desc!=null)
-			    	sb.append("\"desc\"" + ":" + "\"" + data.desc + "\",");
+			    	sb.append("\"description\"" + ":" + "\"" + data.desc + "\",");
 			    if (data.value!=null)
 			    	sb.append("\"value\"" + ":" + "\"" + data.value + "\"," );
 			    if (data.runID!=null)
@@ -416,7 +418,7 @@ public class PROVBuilder {
 			    if (module.cache!=null)
 			    	sb.append("\"cache\"" + ":" + "\"" + module.cache + "\"," );
 			    if (module.desc!=null)
-			    	sb.append("\"desc\"" + ":" + "\"" + module.desc + "\"," );
+			    	sb.append("\"description\"" + ":" + "\"" + module.desc + "\"," );
 			    if (module.vtPackage!=null)
 			    	sb.append("\"package\"" + ":" + "\"" + module.vtPackage + "\"," );
 			    if (module.version!=null)
@@ -438,6 +440,8 @@ public class PROVBuilder {
 					reqLabel = "wasGeneratedBy";
 				else if( edge.label.equals("connect") )
 					reqLabel = "isConnectedWith";
+				else if( edge.label.equals("associatedWith") )
+					reqLabel = "wasAssociatedWith";
 				sb.append(nl + "\t" + "{" + nl + "\t\t" + "\"method\"" + " : " + "\"POST\"" + ",");
 			    sb.append(nl + "\t\t" + "\"to\"" + " : " + "\"/cypher\"" + ",");
 			    sb.append(nl + "\t\t" + "\"body\"" + " : " + "{");
@@ -485,7 +489,7 @@ public class PROVBuilder {
 			if (data.vtType!=null)
 				sb.append("vtType:\""+ data.vtType + "\"," );
 			if (data.desc!=null)
-				sb.append("desc:\""+ data.desc + "\"," );
+				sb.append("description:\""+ data.desc + "\"," );
 			if (data.value!=null)
 				sb.append("value:\""+ data.value + "\"," );
 			if (data.runID!=null)
@@ -515,7 +519,7 @@ public class PROVBuilder {
 			    if (module.cache!=null)
 			    	sb.append("cache:\""+ module.cache + "\"," );
 			    if (module.desc!=null)
-			    	sb.append("desc:\""+ module.desc + "\"," );
+			    	sb.append("description:\""+ module.desc + "\"," );
 			    if (module.vtPackage!=null)
 			    	sb.append("package:\""+ module.vtPackage + "\"," );
 			    if (module.version!=null)
@@ -533,7 +537,9 @@ public class PROVBuilder {
 				else if( edge.label.equals("genBy") )
 					reqLabel = "wasGeneratedBy";
 				else if( edge.label.equals("connect") )
-					reqLabel = "IsConnectedWith";
+					reqLabel = "isConnectedWith";
+				else if( edge.label.equals("associatedWith") )
+					reqLabel = "wasAssociatedWith";
 			    out.print("START n=node:node_auto_index(name='" + edge.startId + "'), ");
 			    out.print("m=node:node_auto_index(name='" + edge.endId + "') ");
 			    out.println("CREATE n-[r:" + reqLabel + "]->m;");
@@ -634,6 +640,20 @@ public class PROVBuilder {
 			String endNodeId = this.dataEntityFullName.get(dest);
 			Edge edge = new Edge();
 			edge.label = "connect";
+			edge.startId = startNodeId;
+			edge.endId = endNodeId;
+			this.edges.add(edge);
+		}
+		for ( Iterator i = root.elementIterator("wasAssociatedWith"); i.hasNext(); ) {
+			Element elemassociatedWith= (Element) i.next();
+			Element elemPlan = elemassociatedWith.element("plan");
+			String source = elemPlan.attributeValue("ref");
+			Element elemAct = elemassociatedWith.element("activity");
+			String dest = elemAct.attributeValue("ref");
+			String startNodeId = this.dataEntityFullName.get(source);
+			String endNodeId = this.activityFullName.get(dest);
+			Edge edge = new Edge();
+			edge.label = "associatedWith";
 			edge.startId = startNodeId;
 			edge.endId = endNodeId;
 			this.edges.add(edge);
