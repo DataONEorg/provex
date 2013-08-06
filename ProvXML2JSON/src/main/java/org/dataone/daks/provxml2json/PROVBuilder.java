@@ -6,6 +6,7 @@ import java.util.*;
 import org.dom4j.*;
 
 import com.sun.org.apache.xml.internal.utils.NameSpace;
+import com.sun.tools.javac.resources.version;
 
 import sun.awt.image.OffScreenImage;
 
@@ -15,6 +16,7 @@ public class PROVBuilder {
 	private HashMap<String, Element> dataEntities;
 	private HashMap<String, Element> planEntities;
 	private HashMap<String, Element> activities;
+	private HashMap<String, Element> modules;
 	private HashMap<String, String> wasAssociatedWith;
 	private HashMap<String, String> dataEntityFullName;
 	private HashMap<String, String> activityFullName;
@@ -26,9 +28,14 @@ public class PROVBuilder {
 	private HashMap<String, String> activityCache;
 	private HashMap<String, String> activityCompleted;
 	private HashMap<String, String> activityRunID;
+	private HashMap<String, String> moduleCache;
+	private HashMap<String, String> moduleVersion;
+	private HashMap<String, String> modulePackage;
+
 	
 	private ArrayList<Actor> actors;
 	private ArrayList<Data> dataObjs;
+	private ArrayList<Module> moduleObjs;
 	private ArrayList<Edge> edges;
 	
 	private Namespace provNS;
@@ -42,6 +49,7 @@ public class PROVBuilder {
 		this.dataEntities = new HashMap<String, Element>();
 		this.planEntities = new HashMap<String, Element>();
 		this.activities = new HashMap<String, Element>();
+		this.modules = new HashMap<String, Element>();
 		this.wasAssociatedWith = new HashMap<String, String>();
 		this.dataEntityFullName = new HashMap<String, String>();
 		this.activityFullName = new HashMap<String, String>();
@@ -53,7 +61,10 @@ public class PROVBuilder {
 		this.activityCache = new HashMap<String, String>();
 		this.activityCompleted = new HashMap<String, String>();
 		this.activityRunID = new HashMap<String, String>();
-
+		this.moduleCache = new HashMap<String, String>();
+		this.moduleVersion = new HashMap<String, String>();
+		this.modulePackage = new HashMap<String, String>();
+	
 		
 		this.provNS = new Namespace("prov", "http://www.w3.org/ns/prov#");
 		this.vtNS = new Namespace("vt", "http://www.vistrails.org/registry.xsd");
@@ -68,19 +79,24 @@ public class PROVBuilder {
 		this.createActivityFullNames(root);
 		this.createActorsList();
 		this.createDataObjsList();
+		this.createModuleObjsList();
 		this.createEdges(root);
 	}
 	
 	// Create a dictionary for the entities
 	private void createEntitiesHT(Element root) {
 		for ( Iterator i = root.elementIterator("entity"); i.hasNext(); ) {
-            Element entityElem = (Element) i.next();           
+            
+			Element entityElem = (Element) i.next();           
             String entityId = entityElem.attributeValue("id");
             QName provTypeQName = new QName("type", this.provNS);
             QName vtTypeQName = new QName("type", this.vtNS);
             QName vtDescQName=new QName("desc", this.vtNS);
             QName vtValueQName=new QName("value", this.provNS);
             QName isPartOf= new QName("isPartOf", this.dcterms);
+            QName vtCacheQName=new QName("cache", this.vtNS);
+            QName vtVersionQName=new QName("version", this.vtNS);
+            QName vtPackageQName=new QName("package", this.vtNS);
 
             Element elemProvType = entityElem.element(provTypeQName);
             Element elemProvLabel = entityElem.element("label");
@@ -88,21 +104,40 @@ public class PROVBuilder {
             Element elementVtDesc=entityElem.element(vtDescQName);
             Element elementVtValue=entityElem.element(vtValueQName);
             Element elementRunID= entityElem.element(isPartOf);
+            Element elementCache= entityElem.element(vtCacheQName);
+            Element elementVersion= entityElem.element(vtVersionQName);
+            Element elementPackage= entityElem.element(vtPackageQName);
+
             if (elemVtType!=null)
             	this.dataType.put(entityId, elemVtType.getText());    
             
             if( elemProvType != null ) {
             	if( elemProvType.getText().equals("prov:Plan") ) {
-            	     if (elementVtDesc!=null)
-                       	this.dataDesc.put(entityId, elementVtDesc.getText());
             		if( elemVtType != null ) {
             			if( elemVtType.getText().equals("vt:module") || 
             					elemVtType.getText().equals("vt:workflow")  )
             				this.planEntities.put(entityId, entityElem);
+            			if( elemVtType.getText().equals("vt:module"))
+            					this.modules.put(entityId, entityElem);
+            			    if( elemProvLabel != null )
+                				this.dataEntityFullName.put(entityId, 
+                						entityId + "_" + elemProvLabel.getText());
+                			else
+                				this.dataEntityFullName.put(entityId, entityId);
+            			    if (elementCache!=null)
+                            	this.moduleCache.put(entityId, elementCache.getText());
+            			    if (elementVersion!=null)
+                            	this.moduleVersion.put(entityId, elementVersion.getText());
+            			    if (elementPackage!=null)
+                            	this.modulePackage.put(entityId, elementPackage.getText());
+            			     if (elementVtDesc!=null)
+                             	this.dataDesc.put(entityId, elementVtDesc.getText());
             		}
             	}
             	else {
             		if( elemProvType.getText().equals("vt:data") ) {
+            	 	     if (elementVtDesc!=null)
+                            	this.dataDesc.put(entityId, elementVtDesc.getText());
             			if (elementVtValue!=null)
                         	this.dataValue.put(entityId, elementVtValue.getText());
             			this.dataEntities.put(entityId, entityElem);
@@ -113,7 +148,8 @@ public class PROVBuilder {
             				this.dataEntityFullName.put(entityId, entityId);
             		}
             	}
-            }
+            		
+            	}
         
          if (elementRunID!=null)
          	this.dataRunID.put(entityId, elementRunID.attributeValue("ref"));
@@ -154,6 +190,8 @@ public class PROVBuilder {
             }
 		}
 	}
+
+	
 	
 	// Create a dictionary for the 'wasAssociatedWith' elements
 	private void createWasAssociatedWithHT(Element root) {
@@ -247,7 +285,24 @@ public class PROVBuilder {
                 	sb.append( "\\\"completed\\\":\\\"" + actor.completed + "\\\",");
                 if (actor.runID!=null)
                 	sb.append("\\\"runID\\\":\\\"" + actor.runID + "\\\",");
-            	sb.append("\\\"wfID\\\":\\\"" + actor.runID + "\\\"");
+            	sb.append("\\\"wfID\\\":\\\"" + actor.wfID + "\\\"");
+       			sb.append("}\""+ "\n");		
+			}
+			for( Module module: this.moduleObjs)
+			{
+                sb.append("\"(" + module.id + "){");
+                sb.append("\\\"name\\\":\\\"" + module.id + "\\\"," );
+                if (module.vtType!=null)
+                	sb.append( "\\\"vtType\\\":\\\"" + module.vtType + "\\\",");
+                if (module.cache!=null)
+                	sb.append( "\\\"cache\\\":\\\"" + module.cache + "\\\",");
+                if (module.desc!=null)
+                	sb.append( "\\\"desc\\\":\\\"" + module.desc + "\\\",");
+                if (module.vtPackage!=null)
+                	sb.append("\\\"package\\\":\\\"" + module.vtPackage + "\\\",");
+                if (module.version!=null)
+                	sb.append("\\\"version\\\":\\\"" + module.version + "\\\",");
+            	sb.append("\\\"wfID\\\":\\\"" + module.wfID + "\\\"");
        			sb.append("}\""+ "\n");		
 			}
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
@@ -256,6 +311,8 @@ public class PROVBuilder {
 					sb.append("\"(" + edge.startId + ")-[:used]->(" + edge.endId + ")\"," + "\n");
 				else if( edge.label.equals("genBy") )
 					sb.append("\"(" + edge.startId + ")-[:wasGeneratedBy]->(" + edge.endId + ")\"," + "\n");
+				else if( edge.label.equals("connect") )
+					sb.append("\"(" + edge.startId + ")-[:isConnectedWith]->(" + edge.endId + ")\"," + "\n");
 			}
 			sb.deleteCharAt(sb.length()-1);
 			sb.deleteCharAt(sb.length()-1);
@@ -347,13 +404,40 @@ public class PROVBuilder {
 			    sb.append(",");
 			    reqId++;
 			}
+			for( Module module: this.moduleObjs ) {
+				sb.append(nl + "\t" + "{" + nl + "\t\t" + "\"method\"" + " : " + "\"POST\"" + ",");
+			    sb.append(nl + "\t\t" + "\"to\"" + " : " + "\"/cypher\"" + ",");
+			    sb.append(nl + "\t\t" + "\"body\"" + " : " + "{");
+			    sb.append(nl + "\t\t" + "\"query\"" + " : " + "\"CREATE n={props}\"" + ",");
+			    sb.append(nl + "\t\t" + "\"params\"" + " : " + "{" + "\"props\"" + ": {");
+			    sb.append("\"name\"" + ":" + "\"" + module.id + "\",");
+			    if (module.vtType!=null)
+			    	sb.append("\"vtType\"" + ":" + "\"" + module.vtType + "\",");
+			    if (module.cache!=null)
+			    	sb.append("\"cache\"" + ":" + "\"" + module.cache + "\"," );
+			    if (module.desc!=null)
+			    	sb.append("\"desc\"" + ":" + "\"" + module.desc + "\"," );
+			    if (module.vtPackage!=null)
+			    	sb.append("\"package\"" + ":" + "\"" + module.vtPackage + "\"," );
+			    if (module.version!=null)
+			    	sb.append("\"version\"" + ":" + "\"" + module.version + "\"," );
+		    	sb.append("\"wfID\"" + ":" + "\"" + module.wfID + "\"" );
+			    sb.append ("}");
+			    sb.append(nl + "\t\t" + "},");
+			    sb.append(nl + "\t\t" + "\"id\"" + " : " + reqId);
+			    sb.append(nl + "\t" + "}");
+			    sb.append(",");
+			    reqId++;
+			}
 			String reqLabel = null;
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
 			for ( Edge edge: this.edges ) {
 				if( edge.label.equals("used") )
-					reqLabel = "USED";
+					reqLabel = "used";
 				else if( edge.label.equals("genBy") )
-					reqLabel = "WASGENBY";
+					reqLabel = "wasGeneratedBy";
+				else if( edge.label.equals("connect") )
+					reqLabel = "isConnectedWith";
 				sb.append(nl + "\t" + "{" + nl + "\t\t" + "\"method\"" + " : " + "\"POST\"" + ",");
 			    sb.append(nl + "\t\t" + "\"to\"" + " : " + "\"/cypher\"" + ",");
 			    sb.append(nl + "\t\t" + "\"body\"" + " : " + "{");
@@ -423,6 +507,22 @@ public class PROVBuilder {
 			sb.append("wfID:\""+ actor.wfID + "\"" );		
 			sb.append("};"+"\n" );
 			}
+			for( Module module: this.moduleObjs){
+				sb.append("CREATE n={");
+				sb.append("name:\""+ module.id + "\"," );
+			    if (module.vtType!=null)
+			    	sb.append("vtType:\""+ module.vtType + "\"," );
+			    if (module.cache!=null)
+			    	sb.append("cache:\""+ module.cache + "\"," );
+			    if (module.desc!=null)
+			    	sb.append("desc:\""+ module.desc + "\"," );
+			    if (module.vtPackage!=null)
+			    	sb.append("package:\""+ module.vtPackage + "\"," );
+			    if (module.version!=null)
+			    	sb.append("version:\""+ module.version + "\"," );
+				sb.append("wfID:\""+ module.wfID + "\"" );		
+				sb.append("};"+"\n" );
+				}
 			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
 			out.println(sb);
 			String reqLabel = null;
@@ -432,6 +532,8 @@ public class PROVBuilder {
 					reqLabel = "used";
 				else if( edge.label.equals("genBy") )
 					reqLabel = "wasGeneratedBy";
+				else if( edge.label.equals("connect") )
+					reqLabel = "IsConnectedWith";
 			    out.print("START n=node:node_auto_index(name='" + edge.startId + "'), ");
 			    out.print("m=node:node_auto_index(name='" + edge.endId + "') ");
 			    out.println("CREATE n-[r:" + reqLabel + "]->m;");
@@ -474,7 +576,21 @@ public class PROVBuilder {
 			dataObjs.add(data);
 		}
 	}
-	
+	private void createModuleObjsList() {
+		this.moduleObjs = new ArrayList<Module>();
+		for (String key : this.modules.keySet()) {
+			String nodeId = this.dataEntityFullName.get(key);
+			Module module = new Module();
+			module.id = nodeId;		
+		    module.vtType=this.dataType.get(key);
+		    module.desc=this.dataDesc.get(key);
+            module.vtPackage=this.modulePackage.get(key);
+            module.version=this.moduleVersion.get(key);
+            module.cache=this.moduleCache.get(key);
+		    module.wfID= this.wfID;
+			moduleObjs.add(module);
+		}
+	}
 	
 	private void createEdges(Element root) {
 		this.edges = new ArrayList<Edge>();
@@ -502,6 +618,22 @@ public class PROVBuilder {
 			String endNodeId = this.activityFullName.get(actRef);
 			Edge edge = new Edge();
 			edge.label = "genBy";
+			edge.startId = startNodeId;
+			edge.endId = endNodeId;
+			this.edges.add(edge);
+		}
+		for ( Iterator i = root.elementIterator("connection"); i.hasNext(); ) {
+			Element elemconnect = (Element) i.next();
+            QName vtSourceName = new QName("source", this.vtNS);
+			Element elemSource = elemconnect.element(vtSourceName);
+			String source = elemSource.getText();
+            QName vtDestName = new QName("dest", this.vtNS);
+			Element elemDest = elemconnect.element(vtDestName);
+			String dest = elemDest.getText();
+			String startNodeId = this.dataEntityFullName.get(source);
+			String endNodeId = this.dataEntityFullName.get(dest);
+			Edge edge = new Edge();
+			edge.label = "connect";
 			edge.startId = startNodeId;
 			edge.endId = endNodeId;
 			this.edges.add(edge);
