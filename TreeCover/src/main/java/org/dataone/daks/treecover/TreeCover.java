@@ -106,7 +106,7 @@ public class TreeCover {
 	
 	
 	private boolean coverAlgorithm(Digraph g, Digraph gRev) {
-		List<String> topSort = g.topologicalSort();
+		List<String> topSort = g.topSort();
 		boolean retVal = false;
 		if(topSort == null) {
 			System.out.println("The graph has a cycle.");
@@ -160,7 +160,7 @@ public class TreeCover {
 	
 	
 	private boolean coverAlgorithm2(Digraph g, Digraph gRev) {
-		List<String> topSort = g.topologicalSort();
+		List<String> topSort = g.topSort();
 		boolean retVal = false;
 		if(topSort == null) {
 			System.out.println("The graph has a cycle.");
@@ -232,7 +232,7 @@ public class TreeCover {
 
 	
 	private boolean coverAlgorithm3(Digraph g, Digraph gRev) {
-		List<String> topSort = g.topologicalSort();
+		List<String> topSort = g.topSort();
 		boolean retVal = false;
 		if(topSort == null) {
 			System.out.println("The graph has a cycle.");
@@ -302,7 +302,7 @@ public class TreeCover {
 	
 	
 	private boolean coverAlgorithm4(Digraph g, Digraph gRev) {
-		List<String> topSort = g.topologicalSort();
+		List<String> topSort = g.topSort();
 		boolean retVal = false;
 		if(topSort == null) {
 			System.out.println("The graph has a cycle.");
@@ -428,9 +428,10 @@ public class TreeCover {
 		}
 		//Merge the intervals associated with outgoing edges p -> q
 		//Process the nodes p in reverse topological order
-		List<String> topSort = g.topologicalSort();
-		for( int i = topSort.size() - 1; i >= 0; i-- ) {
-			String pNode = topSort.get(i);
+		List<String> revTopSort = g.reverseTopSort();
+		for( int i = 0; i < revTopSort.size(); i++ ) {
+			String pNode = revTopSort.get(i);
+			//System.out.println("REVTOPSORT " + i + " : " + pNode);
 			TreeCode pCode = this.treeCodes.get(pNode);
 			int pNodePos = g.posIndex.get(pNode);
 			for( int j = 0; j < g.adj.get(pNodePos).size(); j++ ) {
@@ -458,7 +459,8 @@ public class TreeCover {
 		for( int i = 0; i < g.adj.size(); i++ ) {
 			String node = g.posIndex.inverse().get(i);
 			TreeCode code = this.treeCodes.get(node);
-			System.out.println(node + ":" + code.toString() );
+			int postorder = this.rightIndex.get(node);
+			System.out.println(node + ":" + code.toString() + " postorder: " + postorder );
 		}
 		
 	}

@@ -46,17 +46,24 @@ public class Digraph {
      */  
     public void createFromFile(String infile) {
 		BufferedReader buff = null;
-		String line = null;
 		try {
 			buff = new BufferedReader(new FileReader(infile));
-			while((line = buff.readLine()) != null) {
-				if ( line.trim().length() == 0 )
-					continue;
-				StringTokenizer tok = new StringTokenizer(line);
-				String id1 = tok.nextToken();
-				String id2 = tok.nextToken();
-				this.addEdge(id1, id2);
-			}
+			processData(buff);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+    
+    
+    /**
+     * Create the graph from a dot file
+     */
+    public void createFromDotFile(String dotFile) {
+		BufferedReader buff = null;
+		try {
+			buff = new BufferedReader(new FileReader(dotFile));
+			processDotData(buff);
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -69,20 +76,77 @@ public class Digraph {
      */
     public void createFromInputStream(InputStream istream) {
 		BufferedReader buff = null;
-		String line = null;
 		try {
 			buff = new BufferedReader(new InputStreamReader(istream));
-			while((line = buff.readLine()) != null) {
-				if ( line.trim().length() == 0 )
-					continue;
-				StringTokenizer tok = new StringTokenizer(line);
-				String id1 = tok.nextToken();
-				String id2 = tok.nextToken();
-				this.addEdge(id1, id2);
-			}
+			processData(buff);
 		}
 		catch(Exception e) {
 			e.printStackTrace();
+		}
+	}
+    
+    
+    /**
+     * Create the graph from an InputStream representing a dot file
+     */
+    public void createFromDotInputStream(InputStream istream) {
+		BufferedReader buff = null;
+		try {
+			buff = new BufferedReader(new InputStreamReader(istream));
+			processDotData(buff);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+    
+    
+    /**
+     * Process the data read from a BufferedReader associated with an InputStream or FileReader
+     * to create the graph
+     */
+    private void processData(BufferedReader buff) throws IOException {
+		String line = null;
+		while((line = buff.readLine()) != null) {
+			if ( line.trim().length() == 0 )
+				continue;
+			StringTokenizer tok = new StringTokenizer(line);
+			String id1 = tok.nextToken();
+			String id2 = tok.nextToken();
+			this.addEdge(id1, id2);
+		}
+	}
+    
+    
+    /**
+     * Create the graph from a dot file
+    */
+	/*
+    digraph G {
+	   0;
+	   ...
+	   0->1 ;
+	   ...
+	   }
+	*/
+	public void processDotData(BufferedReader buff) throws IOException {
+		String line = null;
+		while( (line = buff.readLine()) != null ) {
+			line = line.trim();
+			if( line.length() == 0 )
+				continue;
+			else if( line.startsWith("digraph") || line.startsWith("}") )
+				continue;
+			//Lines defining the nodes, ignore them
+			else if( (! line.contains("->")) ) {
+				;
+			}
+			//Lines defining the edges
+			else {
+				String id1 = line.substring(0, line.indexOf("->"));
+				String id2 = line.substring(line.indexOf("->")+2, line.indexOf(";")-1);
+				this.addEdge(id1, id2);
+			}
 		}
 	}
 
@@ -197,14 +261,25 @@ public class Digraph {
     
     
     /**
-     * Obtain a topological sort of the nodes using DFS. The method that looks
+     * Obtain a reverse topological sort of the nodes using DFS. The method that looks
      * for a cycle also computes the topological sort (in reverse postorder).
      * If a cycle is found no topological sort is possible.
      */
-    public List<String> topologicalSort() {
+    public List<String> reverseTopSort() {
     	List<String> retVal = null;
     	if( ! this.hasCycle() )
     		retVal = this.reversePost;
+    	return retVal;
+    }
+    
+    
+    public List<String> topSort() {
+    	List<String> retVal = null;
+    	if( ! this.hasCycle() ) {
+    		retVal = new ArrayList<String>();
+    		for(int i = this.reversePost.size()-1; i >= 0; i--)
+    			retVal.add(this.reversePost.get(i));
+    	}
     	return retVal;
     }
     
@@ -322,7 +397,10 @@ public class Digraph {
      */
     public static void main(String[] args) {
         Digraph g = new Digraph();
-        g.createFromFile(args[0]);
+        if( args[1].equals("false") )
+        	g.createFromFile(args[0]);
+        else if( args[1].equals("true") )
+        	g.createFromDotFile(args[0]);
         System.out.println("Graph: ");
         System.out.println(g.toString());
         System.out.println();
@@ -335,7 +413,7 @@ public class Digraph {
         System.out.println(g.verticesListToStringReverse(g.findCycle()));
         System.out.println();
         System.out.println("Topological sort: ");
-        System.out.println(g.verticesListToStringReverse(g.topologicalSort()));
+        System.out.println(g.verticesListToStringReverse(g.reverseTopSort()));
         System.out.println();
         System.out.print("Edge removed: ");
         System.out.println(g.removeEdge("d3", "d2"));
@@ -345,7 +423,7 @@ public class Digraph {
         System.out.println();
         System.out.println();
         System.out.println("Topological sort: ");
-        System.out.println(g.verticesListToStringReverse(g.topologicalSort()));
+        System.out.println(g.verticesListToStringReverse(g.reverseTopSort()));
     }
 
 }

@@ -123,6 +123,26 @@ public class TreeCodeTest {
     	code1.addCode(code4);
     	assertTrue(code1.toString().equals("[1,2],[2,4]"));
     }
+	
+	
+	@Test
+    public void testTreeCode10() {
+    	//[36,36] added to [77,90] added to [[97,97] added to [92,96]] added to [5,5] should print
+		//[5,5],[97,97],[92,96],[77,90],[36,36]
+    	TreeCode code1 = new TreeCode(5,5);
+    	TreeCode code2 = new TreeCode(92,96);
+    	TreeCode code3 = new TreeCode(97,97);
+    	code2.addCode(code3);
+    	assertTrue(code2.toString().equals("[92,96],[97,97]"));
+    	code1.addCode(code2);
+    	assertTrue(code1.toString().equals("[5,5],[92,96],[97,97]"));
+    	TreeCode code4 = new TreeCode(77,90);
+    	code1.addCode(code4);
+    	assertTrue(code1.toString().equals("[5,5],[92,96],[97,97],[77,90]"));
+    	TreeCode code5 = new TreeCode(36,36);
+    	code1.addCode(code5);
+    	assertTrue(code1.toString().equals("[5,5],[92,96],[97,97],[77,90],[36,36]"));
+    }
     
     
 }

@@ -109,6 +109,22 @@ public class TreeCode {
 	}
 	
 	
+	//Let the postorder number of a node n be j, and let the index associated with n be i.
+	//There exists a direct path from node n to some other node m with the postorder number
+	//k iff i <= k < j
+	//Note: change to i <= k <= j, even if in the original paper it is as stated above
+	public boolean reachable(int postorder) {
+		boolean retVal = false;
+		for(TreeInterval interval: this.intervals) {
+			if( interval.left <= postorder && postorder <= interval.right ) {
+				retVal = true;
+				break;
+			}
+		}
+		return retVal;
+	}
+	
+	
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		for( TreeInterval interval : this.intervals )
