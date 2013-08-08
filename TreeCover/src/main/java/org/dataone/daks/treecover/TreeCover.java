@@ -1,5 +1,6 @@
 package org.dataone.daks.treecover;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -17,17 +18,21 @@ public class TreeCover {
 	String root;
 	Hashtable<String, TreeCode> treeCodes;
 	
+	boolean dfsReachable;
+	
 	public TreeCover() {
 		this.leftIndex = new Hashtable<String, Integer>();
 		this.rightIndex = new Hashtable<String, Integer>();
 		this.root = null;
 		this.treeCodes = new Hashtable<String, TreeCode>();
+		this.dfsReachable = false;
 	}
 	
 	
 	public static void main(String[] args) {
 		TreeCover cover = new TreeCover();
-		cover.createCover(args[0]);
+		//cover.createCover(args[0]);
+		cover.testTreeCover(args[0]);
 	}
 	
 	
@@ -75,9 +80,73 @@ public class TreeCover {
         Digraph gPrimeRev = gPrime.reverse();
         coverAlgorithm4(gPrime, gPrimeRev);
         postorder(gPrime, gPrimeRev, this.root);
-        processTreeIntervals(g);
-        System.out.println("Node codes: ");
+        //processTreeIntervals(g);
+        processTreeIntervals2(g, gPrime);
+        System.out.println();
+        System.out.println("Node codes after processTreeIntervals2: ");
+        System.out.println();
         printTreeCodes(g);
+	}
+	
+	
+	public void testTreeCover(String dotFile) {
+		//use the resource file graph101dot.txt
+		try {
+			InputStream inputStream = new FileInputStream(dotFile);
+			Digraph g = new Digraph();
+			g.createFromDotInputStream(inputStream);
+			execTreeCoverTest(g);
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+	public void execTreeCoverTest(Digraph g) {
+		int discrepancies = 0;
+		int counter = 0;
+    	TreeCover cover = new TreeCover();
+		cover.createCover(g);
+		for( int i = 0; i < g.adj.size(); i++ ) {
+			String fromNode = g.posIndex.inverse().get(i);
+			for( int j = 0; j < g.adj.size(); j++ ) {
+				String toNode = g.posIndex.inverse().get(j);
+				if( ! fromNode.equals(toNode) ) {
+					boolean treeCoverReachable = treeCoverReachabilityCheck(cover, fromNode, toNode);
+					this.dfsReachable = false;
+					dfsReachabilityCheck(g, fromNode, toNode);
+					if( treeCoverReachable != this.dfsReachable ) {
+						System.out.println(fromNode + " -> " + toNode + " : " + treeCoverReachable + "-" + this.dfsReachable);
+						discrepancies++;
+					}
+					counter++;
+				}
+			}
+		}
+		System.out.println("Total tests: " + counter);
+		System.out.println("Total discrepancies: " + discrepancies);
+    }
+	
+	
+	private boolean treeCoverReachabilityCheck(TreeCover cover, String fromNode, String toNode) {
+		TreeCode fromCode = cover.treeCodes.get(fromNode);
+		int toCodePostorder = cover.rightIndex.get(toNode);
+		return fromCode.reachable(toCodePostorder);
+	}
+	
+	
+	private void dfsReachabilityCheck(Digraph g, String fromNode, String toNode) {
+		//if( this.dfsReachable ) ;
+		for( String child: g.adj.get(g.posIndex.get(fromNode)) ) {
+			if( toNode.equals(child) ) {
+				this.dfsReachable = true;
+				break;
+			}
+			else
+				dfsReachabilityCheck(g, child, toNode);
+		}
 	}
 	
 	
@@ -437,6 +506,42 @@ public class TreeCover {
 			for( int j = 0; j < g.adj.get(pNodePos).size(); j++ ) {
 				String qNode = g.adj.get(pNodePos).get(j);
 				TreeCode qCode = this.treeCodes.get(qNode);
+				pCode.addCode(qCode);
+			}
+		}
+	}
+	
+	
+	private void processTreeIntervals2(Digraph g, Digraph tree) {
+		//Create the tree code with the initial values created for the spanning tree
+		for( int i = 0; i < g.adj.size(); i++ ) {
+			String node = g.posIndex.inverse().get(i);
+			TreeCode code = new TreeCode(this.leftIndex.get(node), this.rightIndex.get(node) );
+			this.treeCodes.put(node, code);
+		}
+		System.out.println();
+        System.out.println("Node codes before merging in processTreeIntervals2: ");
+        System.out.println();
+        printTreeCodes(g);
+		//Merge the intervals associated with outgoing edges p -> q
+		//Process the nodes p in reverse topological order
+		List<String> revTopSort = g.reverseTopSort();
+		//List<String> revTopSort = tree.reverseTopSort();
+		for( int i = 0; i < revTopSort.size(); i++ ) {
+			String pNode = revTopSort.get(i);
+			//System.out.println("REVTOPSORT " + i + " : " + pNode);
+			TreeCode pCode = this.treeCodes.get(pNode);
+			int pNodePos = g.posIndex.get(pNode);
+			if( pNode.equals("98") ) {
+				System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   FOUND NODE 98 ");
+				System.out.println("NODE 98 Code: " + pCode.toString());
+			}
+			for( int j = 0; j < g.adj.get(pNodePos).size(); j++ ) {
+				String qNode = g.adj.get(pNodePos).get(j);
+				TreeCode qCode = this.treeCodes.get(qNode);
+				if( pNode.equals("98") )
+					System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   EDGE 98 -> " + qNode);
+				//if( ! tree.hasEdge(pNode, qNode) )
 				pCode.addCode(qCode);
 			}
 		}

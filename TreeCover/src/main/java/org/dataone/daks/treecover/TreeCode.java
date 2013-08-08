@@ -45,6 +45,8 @@ public class TreeCode {
 	
 	
 	public void addCode(TreeCode other) {
+		if( this.intervals.get(0).right == 41 )
+			System.out.println("!!!!!!!!!!!!!!!!!!!!!! Found interval with 98 on addCode");
 		//Process all of the intervals in the TreeCode other
 		for( int i = 0; i < other.intervals.size(); i++ ) {
 			TreeInterval otherInterval = other.intervals.get(i);
@@ -91,7 +93,7 @@ public class TreeCode {
 					}
 				}
 				if( ! thisSubsumesOther && ! otherSubsumesThis )
-					this.intervals.add(otherInterval);
+					this.intervals.add(otherInterval.copy());
 				else if( otherSubsumesThis ) {
 					this.intervals.get(thisJpos).left = otherInterval.left;
 					this.intervals.get(thisJpos).right = otherInterval.right;

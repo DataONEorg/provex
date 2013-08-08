@@ -199,6 +199,19 @@ public class Digraph {
 		}
 		return retVal;
     }
+    
+    
+    /**
+     * Determine if a directed edge v->w is in the digraph.
+     */
+    public boolean hasEdge(String v, String w) {
+    	boolean retVal = false;
+    	if( this.posIndex.containsKey(v) ) {
+    		int vPos = this.posIndex.get(v);
+    		retVal = this.adj.get(vPos).contains(w);
+		}
+		return retVal;
+    }
 
     
    /**
