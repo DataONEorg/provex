@@ -80,7 +80,7 @@ public class TreeCoverTest {
 	}
     
     
-    @Test
+    //@Test
     public void testTreeCover7() {
 		//use the resource file graph101dot.txt
 		InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("graph101dot.txt");
@@ -103,6 +103,16 @@ public class TreeCoverTest {
     public void testTreeCover9() {
 		//use the resource file graph1000dot.txt
 		InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("graph1000dot.txt");
+		Digraph g = new Digraph();
+		g.createFromDotInputStream(inputStream);
+		execTreeCoverTest(g);
+	}
+	
+	
+	@Test
+    public void testTreeCover10() {
+		//use the resource file graph10000dot.txt
+		InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("graph10000dot.txt");
 		Digraph g = new Digraph();
 		g.createFromDotInputStream(inputStream);
 		execTreeCoverTest(g);

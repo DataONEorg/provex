@@ -426,7 +426,7 @@ public class Digraph {
         System.out.println(g.verticesListToStringReverse(g.findCycle()));
         System.out.println();
         System.out.println("Topological sort: ");
-        System.out.println(g.verticesListToStringReverse(g.reverseTopSort()));
+        System.out.println(g.verticesListToString(g.topSort()));
         System.out.println();
         System.out.print("Edge removed: ");
         System.out.println(g.removeEdge("d3", "d2"));
@@ -436,7 +436,7 @@ public class Digraph {
         System.out.println();
         System.out.println();
         System.out.println("Topological sort: ");
-        System.out.println(g.verticesListToStringReverse(g.reverseTopSort()));
+        System.out.println(g.verticesListToString(g.topSort()));
     }
 
 }
