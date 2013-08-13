@@ -49,7 +49,7 @@ public class CreateTreeCoverIndex {
 		coverIdx.addCodes(nodeNames, cover);
 		System.out.println();
 		System.out.println("Node properties: ");
-		coverIdx.printNodes(nodeNames);
+		//coverIdx.printNodes(nodeNames);
 		System.out.println();
 		coverIdx.shutdownDB();
 	}
