@@ -1,6 +1,7 @@
 package org.dataone.daks.pbase;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +44,13 @@ public class CreateTreeCoverIndex {
 		Digraph g = coverIdx.createDigraph();
 		TreeCover cover = new TreeCover();
 		cover.createCover(g);
-		coverIdx.createNodeNameList();
+		List<String> nodeNames = coverIdx.createNodeNameList();
+		System.out.println("Adding codes: ");
+		coverIdx.addCodes(nodeNames, cover);
+		System.out.println();
+		System.out.println("Node properties: ");
+		coverIdx.printNodes(nodeNames);
+		System.out.println();
 		coverIdx.shutdownDB();
 	}
 	
@@ -79,6 +86,67 @@ public class CreateTreeCoverIndex {
 			//System.out.println(name);
 		}
 		return list;
+	}
+	
+	
+	//Obsolete method, kept to illustrate the use of parameters
+	/*
+	private void addCodes(List<String> nodeNames, TreeCover cover) {
+		ExecutionEngine engine = new ExecutionEngine(graphDB, StringLogger.SYSTEM);
+		for(String nodeName: nodeNames) {
+			String query = "START n=node:node_auto_index(name='" + nodeName + "') SET n={idx} RETURN n; ";
+			Map<String, Object> idxMap = new HashMap<String, Object>();
+			idxMap.put( "postorder", cover.getPostorder(nodeName));
+			idxMap.put( "code", cover.getCode(nodeName).toString());
+			Map<String, Object> idxParam = new HashMap<String, Object>();
+			idxParam.put( "idx", idxMap);
+			ExecutionResult result = engine.execute(query, idxParam);
+			ResourceIterator<Map<String, Object>> it = result.iterator();
+			while (it.hasNext()) {
+				Map<String, Object> map = it.next();
+				System.out.println(map.get("n"));
+			}
+		}
+	}
+	*/
+	
+	
+	private void addCodes(List<String> nodeNames, TreeCover cover) {
+		ExecutionEngine engine = new ExecutionEngine(graphDB, StringLogger.SYSTEM);
+		for(String nodeName: nodeNames) {
+			String query = "START n=node:node_auto_index(name='" + nodeName + "') SET n.postorder=" +
+					       cover.getPostorder(nodeName) + " , n.code='" + cover.getCode(nodeName).toString() + 
+					       "' RETURN n; ";
+			ExecutionResult result = engine.execute(query);
+			ResourceIterator<Map<String, Object>> it = result.iterator();
+			while (it.hasNext()) {
+				Map<String, Object> map = it.next();
+				//System.out.println(map.get("n"));
+			}
+		}
+	}
+	
+	
+	private void printNodes(List<String> nodeNames) {
+		ExecutionEngine engine = new ExecutionEngine(graphDB, StringLogger.SYSTEM);
+		String query = "START n=node:node_auto_index(name={name1}) RETURN n; "; 
+		for(String nodeName: nodeNames) {
+			Map<String, Object> nameMap = new HashMap<String, Object>();
+			nameMap.put( "name1", nodeName);
+			ExecutionResult result = engine.execute(query, nameMap);
+			ResourceIterator<Map<String, Object>> it = result.iterator();
+			while (it.hasNext()) {
+				Map<String, Object> map = it.next();
+				StringBuilder builder = new StringBuilder();
+				for (String key : map.keySet() ) {
+					Node node = (Node)map.get(key);
+					for(String propKey: node.getPropertyKeys())
+						builder.append(propKey + ":" + node.getProperty(propKey) + ", ");
+					builder.delete(builder.toString().length()-2, builder.toString().length());
+					System.out.println(builder.toString());
+				}
+			}
+		}
 	}
 	
 	
