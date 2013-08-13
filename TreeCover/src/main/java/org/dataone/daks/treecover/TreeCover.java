@@ -42,6 +42,16 @@ public class TreeCover {
 	}
 	
 	
+	public TreeCode getCode(String node) {
+		return this.treeCodes.get(node);
+	}
+	
+	
+	public int getPostorder(String node) {
+		return this.rightIndex.get(node);
+	}
+	
+	
 	private void createVirtualRoot(Digraph g, Digraph gRev) {
 		String vroot = "root";
 		//Find the nodes in that have no incoming edges by using

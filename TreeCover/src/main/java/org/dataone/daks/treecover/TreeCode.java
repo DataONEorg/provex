@@ -2,6 +2,7 @@ package org.dataone.daks.treecover;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 public class TreeCode {
 
@@ -11,6 +12,21 @@ public class TreeCode {
 		TreeInterval interval = new TreeInterval(left, right);
 		this.intervals = new ArrayList<TreeInterval>();
 		this.intervals.add(interval);
+	}
+	
+	
+	public TreeCode(String str) {
+		this.intervals = new ArrayList<TreeInterval>();
+		String s1 = str.replace('[', ' ');
+		String s2 = s1.replace(']', ' ');
+		StringTokenizer tok = new StringTokenizer(s2, ",");
+		while( tok.hasMoreTokens() ) {
+			String intervalStr = tok.nextToken().trim();
+			String left = intervalStr.substring(0, intervalStr.indexOf(':'));
+			String right = intervalStr.substring(intervalStr.indexOf(':')+1, intervalStr.length());
+			TreeInterval interval = new TreeInterval(Integer.valueOf(left), Integer.valueOf(right));
+			this.intervals.add(interval);
+		}
 	}
 	
 	
