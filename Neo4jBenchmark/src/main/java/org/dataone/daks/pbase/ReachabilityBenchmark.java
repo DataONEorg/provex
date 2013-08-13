@@ -26,6 +26,7 @@ public class ReachabilityBenchmark {
 	private List<String> nodeNamesList;
 	private int[] fromPosList;
 	private int[] toPosList;
+	private int[] results;
 	
 	
 	ReachabilityBenchmark() {
@@ -87,6 +88,10 @@ public class ReachabilityBenchmark {
 		this.reachabilityCypher(queryReps);
 		endTime = System.currentTimeMillis();
 		System.out.println("Evaluated queries " + queryReps + " times, total time: " + (endTime-startTime)/1000.0);
+		
+		this.printResultsToFile("reachabilityResults.txt");
+		
+		//System.exit(0);
 
 		System.out.println("Second test with warm caches");
 		
@@ -172,6 +177,7 @@ public class ReachabilityBenchmark {
 					resultCount++;
 				}
 				//System.out.println("query " + j + " number of results : " + resultCount);
+				this.results[i] = resultCount;
 				resultCount = 0;
 			}
 		}
@@ -211,6 +217,29 @@ public class ReachabilityBenchmark {
 		for(int i = 0; i < this.fromPosList.length; i++) {
 			System.out.println(this.nodeNamesList.get(this.fromPosList[i]) + " -> " + 
 					this.nodeNamesList.get(this.toPosList[i]) );
+		}
+	}
+	
+	
+	public void printResultsToFile(String fileName) {
+		PrintWriter pw = null;
+		try {
+			pw = new PrintWriter(new FileWriter(fileName));
+			for(int i = 0; i < this.fromPosList.length; i++) {
+				if( results[i] == 1 ) {
+					System.out.println(this.nodeNamesList.get(this.fromPosList[i]) + " -> " + 
+						this.nodeNamesList.get(this.toPosList[i]) + "  " + this.results[i] );
+					pw.println(this.nodeNamesList.get(this.fromPosList[i]) + " -> " + 
+						this.nodeNamesList.get(this.toPosList[i]) + "  " + this.results[i] );
+					pw.flush();
+				}
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			pw.close();
 		}
 	}
 	
@@ -267,6 +296,7 @@ public class ReachabilityBenchmark {
 			}
 			this.fromPosList = new int[fromPosArrayList.size()];
 			this.toPosList = new int[toPosArrayList.size()];
+			this.results = new int[fromPosArrayList.size()];
 			for(int i = 0; i < fromPosArrayList.size(); i++) {
 				this.fromPosList[i] = fromPosArrayList.get(i);
 				this.toPosList[i] = toPosArrayList.get(i);
