@@ -27,7 +27,7 @@ public class TreeInterval {
 	
 	
 	public String toString() {
-		return "[" + this.left + "," + this.right + "]";
+		return "[" + this.left + ":" + this.right + "]";
 	}
 	
 	

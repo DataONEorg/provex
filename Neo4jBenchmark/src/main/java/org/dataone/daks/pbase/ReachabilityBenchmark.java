@@ -18,6 +18,8 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.kernel.impl.util.StringLogger;
 
+import org.dataone.daks.treecover.*;
+
 
 public class ReachabilityBenchmark {
 	
@@ -26,6 +28,9 @@ public class ReachabilityBenchmark {
 	private List<String> nodeNamesList;
 	private int[] fromPosList;
 	private int[] toPosList;
+	private int[] results;
+	
+	private boolean useTreeCoverIdx;
 	
 	
 	ReachabilityBenchmark() {
@@ -46,6 +51,13 @@ public class ReachabilityBenchmark {
 		builder.setConfig(GraphDatabaseSettings.read_only, "true");
 		GraphDatabaseService graphDB = builder.newGraphDatabase();
 		this.graphDB = graphDB;
+		this.useTreeCoverIdx = false;
+	}
+	
+	
+	public ReachabilityBenchmark(String dbFile, boolean useTreeCoverIdx) {
+		this(dbFile);
+		this.useTreeCoverIdx = useTreeCoverIdx;
 	}
 	
 	
@@ -84,9 +96,16 @@ public class ReachabilityBenchmark {
 		System.out.println("Initial test with cold caches");
 		
 		startTime = System.currentTimeMillis();
-		this.reachabilityCypher(queryReps);
+		if( ! this.useTreeCoverIdx )
+			this.reachabilityCypher(queryReps);
+		else
+			this.reachabilityTreeCover(queryReps);
 		endTime = System.currentTimeMillis();
 		System.out.println("Evaluated queries " + queryReps + " times, total time: " + (endTime-startTime)/1000.0);
+		
+		this.printResultsToFile("reachabilityResults.txt");
+		
+		//System.exit(0);
 
 		System.out.println("Second test with warm caches");
 		
@@ -95,7 +114,10 @@ public class ReachabilityBenchmark {
 		
 		for (int i = 0 ; i < benchmarkReps; i++) {
 			startTime = System.currentTimeMillis();
-			this.reachabilityCypher(queryReps);
+			if( ! this.useTreeCoverIdx )
+				this.reachabilityCypher(queryReps);
+			else
+				this.reachabilityTreeCover(queryReps);
 			endTime = System.currentTimeMillis();
 			tmp = (endTime-startTime);
 			aggregatedCypherTime += tmp;
@@ -172,7 +194,36 @@ public class ReachabilityBenchmark {
 					resultCount++;
 				}
 				//System.out.println("query " + j + " number of results : " + resultCount);
+				this.results[i] = resultCount;
 				resultCount = 0;
+			}
+		}
+	}
+	
+	
+	private void reachabilityTreeCover(int queryReps) {
+		ExecutionEngine engine = new ExecutionEngine(graphDB, StringLogger.SYSTEM);
+		for(int i = 0; i < this.fromPosList.length; i++) {
+			String query1 = "START n=node:node_auto_index(name='" + this.nodeNamesList.get(this.fromPosList[i]) + 
+					"') RETURN n; ";
+			String query2 = "START m=node:node_auto_index(name='" + this.nodeNamesList.get(this.toPosList[i]) + 
+					"') RETURN m; ";
+			for(int j = 0; j < queryReps; j++) {
+				ExecutionResult result1 = engine.execute(query1);
+				scala.collection.Iterator<Node> it1 = result1.columnAs("n");
+				Node node1 = it1.next();
+				String codeStr = node1.getProperty("code").toString();
+				TreeCode code = new TreeCode(codeStr);
+				result1.close();
+				ExecutionResult result2 = engine.execute(query2);
+				scala.collection.Iterator<Node> it2 = result2.columnAs("m");
+				Node node2 = it2.next();
+				int postorder = (int)((Long)node2.getProperty("postorder")).longValue();
+				result2.close();
+				if( code.reachable(postorder) )
+					this.results[i] = 1;
+				else
+					this.results[i] = 0;
 			}
 		}
 	}
@@ -211,6 +262,29 @@ public class ReachabilityBenchmark {
 		for(int i = 0; i < this.fromPosList.length; i++) {
 			System.out.println(this.nodeNamesList.get(this.fromPosList[i]) + " -> " + 
 					this.nodeNamesList.get(this.toPosList[i]) );
+		}
+	}
+	
+	
+	public void printResultsToFile(String fileName) {
+		PrintWriter pw = null;
+		try {
+			pw = new PrintWriter(new FileWriter(fileName));
+			for(int i = 0; i < this.fromPosList.length; i++) {
+				if( results[i] == 1 ) {
+					System.out.println(this.nodeNamesList.get(this.fromPosList[i]) + " -> " + 
+						this.nodeNamesList.get(this.toPosList[i]) + "  " + this.results[i] );
+					pw.println(this.nodeNamesList.get(this.fromPosList[i]) + " -> " + 
+						this.nodeNamesList.get(this.toPosList[i]) + "  " + this.results[i] );
+					pw.flush();
+				}
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			pw.close();
 		}
 	}
 	
@@ -267,6 +341,7 @@ public class ReachabilityBenchmark {
 			}
 			this.fromPosList = new int[fromPosArrayList.size()];
 			this.toPosList = new int[toPosArrayList.size()];
+			this.results = new int[fromPosArrayList.size()];
 			for(int i = 0; i < fromPosArrayList.size(); i++) {
 				this.fromPosList[i] = fromPosArrayList.get(i);
 				this.toPosList[i] = toPosArrayList.get(i);

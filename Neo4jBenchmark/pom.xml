@@ -26,5 +26,32 @@
       <artifactId>neo4j</artifactId>
       <version>1.9.1</version>
     </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>14.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.dataone.daks.treecover</groupId>
+      <artifactId>TreeCover</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
   </dependencies>
+  
+  <repositories>
+    <repository>
+    	<id>lib</id>
+    		<name>lib</name>
+    		<releases>
+        		<enabled>true</enabled>
+        		<checksumPolicy>ignore</checksumPolicy>
+    		</releases>
+    		<snapshots>
+        		<enabled>true</enabled>
+    		</snapshots>
+    		<url>file://${project.basedir}/lib</url>
+    </repository>
+  </repositories>
+  
 </project>
+
