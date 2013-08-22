@@ -274,7 +274,7 @@ public class PROVBuilder {
                 	sb.append( "\\\"value\\\":\\\"" + data.value + "\\\",");
 			   if (data.runID!=null)
 				   sb.append("\\\"runID\\\":\\\"" + data.runID + "\\\",");
-			    sb.append("\\\"wfID\\\":\\\"" + data.wfID + "\\\"");
+			    sb.append("\\\"wfID\\\":\\\"" + data.wfID + "\\\",");
 			    sb.append("\\\"type\\\":\\\"" + "data" + "\\\"");
 			    sb.append("}\""+ "\n");			
 			}
@@ -290,7 +290,7 @@ public class PROVBuilder {
                 	sb.append( "\\\"completed\\\":\\\"" + actor.completed + "\\\",");
                 if (actor.runID!=null)
                 	sb.append("\\\"runID\\\":\\\"" + actor.runID + "\\\",");
-            	sb.append("\\\"wfID\\\":\\\"" + actor.wfID + "\\\"");
+            	sb.append("\\\"wfID\\\":\\\"" + actor.wfID + "\\\",");
             	sb.append("\\\"type\\\":\\\"" + "actor" + "\\\"");
        			sb.append("}\""+ "\n");		
 			}
@@ -308,7 +308,7 @@ public class PROVBuilder {
                 	sb.append("\\\"package\\\":\\\"" + module.vtPackage + "\\\",");
                 if (module.version!=null)
                 	sb.append("\\\"version\\\":\\\"" + module.version + "\\\",");
-            	sb.append("\\\"wfID\\\":\\\"" + module.wfID + "\\\"");
+            	sb.append("\\\"wfID\\\":\\\"" + module.wfID + "\\\",");
             	sb.append("\\\"type\\\":\\\"" + "module" + "\\\"");
        			sb.append("}\""+ "\n");		
 			}
@@ -400,7 +400,7 @@ public class PROVBuilder {
 			    if (data.runID!=null)
 			    	sb.append("\"runID\"" + ":" + "\"" + data.runID + "\"," );
 		    	sb.append("\"wfID\"" + ":" + "\"" + data.wfID + "\"" );
-		    	sb.append("\"type\"" + ":" + "\"" + "data" + "\"" );
+		    	sb.append("\"type\"" + ":" + "\"" + "data" + "\"," );
 
 			    sb.append ("}");
 			    sb.append(nl + "\t\t" + "},");
@@ -424,7 +424,7 @@ public class PROVBuilder {
 			    	sb.append("\"completed\"" + ":" + "\"" + actor.completed + "\"," );
 			    if (actor.runID!=null)
 			    	sb.append("\"runID\"" + ":" + "\"" + actor.runID + "\"," );
-		    	sb.append("\"wfID\"" + ":" + "\"" + actor.wfID + "\"" );
+		    	sb.append("\"wfID\"" + ":" + "\"" + actor.wfID + "\"," );
 		    	sb.append("\"type\"" + ":" + "\"" + "activity" + "\"" );
 			    sb.append ("}");
 			    sb.append(nl + "\t\t" + "},");
@@ -450,7 +450,7 @@ public class PROVBuilder {
 			    	sb.append("\"package\"" + ":" + "\"" + module.vtPackage + "\"," );
 			    if (module.version!=null)
 			    	sb.append("\"version\"" + ":" + "\"" + module.version + "\"," );
-		    	sb.append("\"wfID\"" + ":" + "\"" + module.wfID + "\"" );
+		    	sb.append("\"wfID\"" + ":" + "\"" + module.wfID + "\"," );
 		    	sb.append("\"type\"" + ":" + "\"" + "module" + "\"" );
 			    sb.append ("}");
 			    sb.append(nl + "\t\t" + "},");
@@ -524,7 +524,7 @@ public class PROVBuilder {
 				sb.append("value:\""+ data.value + "\"," );
 			if (data.runID!=null)
 				sb.append("runID:\""+ data.runID + "\"," );		
-			sb.append("wfID:\""+ data.wfID + "\"" );
+			sb.append("wfID:\""+ data.wfID + "\"," );
 			sb.append("type:\""+ "data" + "\"" );		
 			sb.append("};"+"\n" );
 			}
@@ -539,7 +539,7 @@ public class PROVBuilder {
 		    	sb.append("completed:\""+ actor.completed + "\"," );
 		    if (actor.runID!=null)
 		    	sb.append("runID:\""+ actor.runID + "\"," );
-			sb.append("wfID:\""+ actor.wfID + "\"" );
+			sb.append("wfID:\""+ actor.wfID + "\"," );
 			sb.append("type:\""+ "activity" + "\"" );		
 			sb.append("};"+"\n" );
 			}
@@ -556,7 +556,7 @@ public class PROVBuilder {
 			    	sb.append("package:\""+ module.vtPackage + "\"," );
 			    if (module.version!=null)
 			    	sb.append("version:\""+ module.version + "\"," );
-				sb.append("wfID:\""+ module.wfID + "\"" );	
+				sb.append("wfID:\""+ module.wfID + "\"," );	
 				sb.append("type:\""+ "module" + "\"" );		
 				sb.append("};"+"\n" );
 				}
