@@ -227,15 +227,19 @@ public class PROVBuilder {
 	}
 	
 	
-	protected void createDOTFile(String filename) {
+	protected void createDOTFile(String filename, String filePath) {
 		try {
 			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
 			out.println("digraph TheGraph {");
 			out.println();
+			out.println("rankdir = BT");
+			out.println("node[style=\"filled\";color=\"#CCCC00\"; fillcolor=\"#F4F4CC\"]");
+			out.println("edge[style=dashed]");
 			// Iterate over the data items and actors to create entries of the form
 			// id [shape=ellipse]; on the DOT file
 			for( Data data: this.dataObjs )
 			    out.println(data.id + " [shape=ellipse];");
+			out.println("node[style=\"filled\";color=\"#1AA4A7\"; fillcolor=\"#BAE3E4\"]");
 			for( Actor actor: this.actors )
 				out.println(actor.id + " [shape=rectangle];");
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
@@ -246,6 +250,10 @@ public class PROVBuilder {
 					out.println(edge.startId + " -> " + edge.endId + ";");
 			}
 			out.println();
+			out.println( "labelloc=\"t\"");
+			out.println("fontsize=25");
+			out.println("labeljust=left");
+			out.println("label=\"" +filePath+"\";");
 			out.println("}");
 			out.println();
 	        out.close();
@@ -337,8 +345,8 @@ public class PROVBuilder {
 					sb.append("\"(" + edge.startId + ")-[:isConnectedWith]->(" + edge.endId + ")\"," + "\n");
 				else if( edge.label.equals("associatedWith") )
 					sb.append("\"(" + edge.startId + ")-[:wasAssociatedWith]->(" + edge.endId + ")\"," + "\n");
-				else if( edge.label.equals("isIn") )
-					sb.append("\"(" + edge.startId + ")-[:isIn]->(" + edge.endId + ")\"," + "\n");
+				else if( edge.label.equals("belongsTo") )
+					sb.append("\"(" + edge.startId + ")-[:belongsTo]->(" + edge.endId + ")\"," + "\n");
 			}
 			sb.deleteCharAt(sb.length()-1);
 			sb.deleteCharAt(sb.length()-1);
@@ -470,8 +478,8 @@ public class PROVBuilder {
 					reqLabel = "isConnectedWith";
 				else if( edge.label.equals("associatedWith") )
 					reqLabel = "wasAssociatedWith";
-				else if( edge.label.equals("isIn") )
-					reqLabel = "isIn";
+				else if( edge.label.equals("belongsTo") )
+					reqLabel = "belongsTo";
 				sb.append(nl + "\t" + "{" + nl + "\t\t" + "\"method\"" + " : " + "\"POST\"" + ",");
 			    sb.append(nl + "\t\t" + "\"to\"" + " : " + "\"/cypher\"" + ",");
 			    sb.append(nl + "\t\t" + "\"body\"" + " : " + "{");
@@ -562,12 +570,14 @@ public class PROVBuilder {
 				}
 			//Add an extra node representing the workflow to the graph
 			sb.append("CREATE n={");
+			sb.append("name:\""+ this.wfID + "\"," );
 			sb.append("wfID:\""+ this.wfID + "\"," );
 			sb.append("type:\""+ "workflow" + "\"" );				
 			sb.append("};"+"\n" );
 			 //Add runID nodes
   			for( String runIDNode: this.runIDs ) {
   				sb.append("CREATE n={");
+  				sb.append("name:\""+ runIDNode + "\"," );
   				sb.append("wfID:\""+ this.wfID + "\"," );
   				sb.append("runID:\""+ runIDNode + "\"," );
   				sb.append("type:\""+ "runID" + "\"" );				
@@ -586,8 +596,8 @@ public class PROVBuilder {
 					reqLabel = "isConnectedWith";
 				else if( edge.label.equals("associatedWith") )
 					reqLabel = "wasAssociatedWith";
-				else if( edge.label.equals("isIn") )
-					reqLabel = "isIn";
+				else if( edge.label.equals("belongsTo") )
+					reqLabel = "belongsTo";
 			    out.print("START n=node:node_auto_index(name='" + edge.startId + "'), ");
 			    out.print("m=node:node_auto_index(name='" + edge.endId + "') ");
 			    out.println("CREATE n-[r:" + reqLabel + "]->m;");
@@ -711,7 +721,7 @@ public class PROVBuilder {
 			Edge edge = new Edge();
 			edge.startId=this.wfID.toString();
 			edge.endId=runIDNode;
-			edge.label = "isIn";
+			edge.label = "belongsTo";
 			this.edges.add(edge);
 			
 		}
