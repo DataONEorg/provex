@@ -3,6 +3,8 @@ package org.dataone.daks.provxml2json;
 import java.io.*;
 import java.util.*;
 
+import javax.management.loading.PrivateClassLoader;
+
 import org.dom4j.*;
 
 import com.sun.org.apache.xml.internal.utils.NameSpace;
@@ -24,19 +26,19 @@ public class PROVBuilder {
 	private HashMap<String, String> dataDesc;
 	private HashMap<String, String> dataValue;
 	private HashMap<String, String> dataRunID;
-	private HashMap<String, String> activityType;
 	private HashMap<String, String> activityCache;
 	private HashMap<String, String> activityCompleted;
-	private HashMap<String, String> activityRunID;
-	private HashMap<String, String> moduleCache;
 	private HashMap<String, String> moduleVersion;
 	private HashMap<String, String> modulePackage;
+
 
 	
 	private ArrayList<Actor> actors;
 	private ArrayList<Data> dataObjs;
 	private ArrayList<Module> moduleObjs;
 	private ArrayList<Edge> edges;
+	private Set<String> runIDs = new HashSet<String>();
+    
 	
 	private Namespace provNS;
 	private Namespace vtNS;
@@ -57,11 +59,8 @@ public class PROVBuilder {
 		this.dataDesc= new HashMap<String, String>();
 		this.dataValue= new HashMap<String, String>();
 		this.dataRunID= new HashMap<String, String>();
-		this.activityType= new HashMap<String, String>();
-		this.activityCache = new HashMap<String, String>();
 		this.activityCompleted = new HashMap<String, String>();
-		this.activityRunID = new HashMap<String, String>();
-		this.moduleCache = new HashMap<String, String>();
+	    this.activityCache = new HashMap<String, String>();
 		this.moduleVersion = new HashMap<String, String>();
 		this.modulePackage = new HashMap<String, String>();
 	
@@ -125,7 +124,7 @@ public class PROVBuilder {
                 			else
                 				this.dataEntityFullName.put(entityId, entityId);
             			    if (elementCache!=null)
-                            	this.moduleCache.put(entityId, elementCache.getText());
+                            	this.activityCache.put(entityId, elementCache.getText());
             			    if (elementVersion!=null)
                             	this.moduleVersion.put(entityId, elementVersion.getText());
             			    if (elementPackage!=null)
@@ -173,7 +172,7 @@ public class PROVBuilder {
             Element elementVtCompleted=activityElem.element(vtCompletedQName);
             Element elemDcterms = activityElem.element(dctermsIsPartOf);         
 
-            this.activityType.put(activityId, elemVtType.getText());  
+            this.dataType.put(activityId, elemVtType.getText());  
             if( ! elemVtType.getText().equals("vt:wf_exec") )
             	this.activities.put(activityId, activityElem);
             if (elementVtDesc != null)
@@ -182,11 +181,16 @@ public class PROVBuilder {
             	this.activityCompleted.put(activityId, elementVtCompleted.getText());
             String refType=null;
             if (elemDcterms!=null){
-            	refType = this.activityType.get(elemDcterms.attributeValue("ref"));
-            	if (refType.equals("vt:wf_exec"))
-            		this.activityRunID.put(activityId, elemDcterms.attributeValue("ref"));
-            	else 
-            		this.activityRunID.put(activityId,this.activityRunID.get(elemDcterms.attributeValue("ref")));
+            	refType = this.dataType.get(elemDcterms.attributeValue("ref"));
+            	if (refType.equals("vt:wf_exec")){
+            		this.dataRunID.put(activityId, elemDcterms.attributeValue("ref"));
+                // add this runID to the list of runIDs for the current workflow
+                runIDs.add (elemDcterms.attributeValue("ref"));
+            	}
+            	else {
+            		this.dataRunID.put(activityId,this.dataRunID.get(elemDcterms.attributeValue("ref")));
+            		runIDs.add(this.dataRunID.get(elemDcterms.attributeValue("ref")));
+            	}
             }
 		}
 	}
@@ -223,15 +227,19 @@ public class PROVBuilder {
 	}
 	
 	
-	protected void createDOTFile(String filename) {
+	protected void createDOTFile(String filename, String filePath) {
 		try {
 			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
 			out.println("digraph TheGraph {");
 			out.println();
+			out.println("rankdir = BT");
+			out.println("node[style=\"filled\";color=\"#CCCC00\"; fillcolor=\"#F4F4CC\"]");
+			out.println("edge[style=dashed]");
 			// Iterate over the data items and actors to create entries of the form
 			// id [shape=ellipse]; on the DOT file
 			for( Data data: this.dataObjs )
 			    out.println(data.id + " [shape=ellipse];");
+			out.println("node[style=\"filled\";color=\"#1AA4A7\"; fillcolor=\"#BAE3E4\"]");
 			for( Actor actor: this.actors )
 				out.println(actor.id + " [shape=rectangle];");
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
@@ -242,6 +250,10 @@ public class PROVBuilder {
 					out.println(edge.startId + " -> " + edge.endId + ";");
 			}
 			out.println();
+			out.println( "labelloc=\"t\"");
+			out.println("fontsize=25");
+			out.println("labeljust=left");
+			out.println("label=\"" +filePath+"\";");
 			out.println("}");
 			out.println();
 	        out.close();
@@ -270,7 +282,8 @@ public class PROVBuilder {
                 	sb.append( "\\\"value\\\":\\\"" + data.value + "\\\",");
 			   if (data.runID!=null)
 				   sb.append("\\\"runID\\\":\\\"" + data.runID + "\\\",");
-			    sb.append("\\\"wfID\\\":\\\"" + data.wfID + "\\\"");
+			    sb.append("\\\"wfID\\\":\\\"" + data.wfID + "\\\",");
+			    sb.append("\\\"type\\\":\\\"" + "data" + "\\\"");
 			    sb.append("}\""+ "\n");			
 			}
 			for( Actor actor: this.actors )
@@ -285,7 +298,8 @@ public class PROVBuilder {
                 	sb.append( "\\\"completed\\\":\\\"" + actor.completed + "\\\",");
                 if (actor.runID!=null)
                 	sb.append("\\\"runID\\\":\\\"" + actor.runID + "\\\",");
-            	sb.append("\\\"wfID\\\":\\\"" + actor.wfID + "\\\"");
+            	sb.append("\\\"wfID\\\":\\\"" + actor.wfID + "\\\",");
+            	sb.append("\\\"type\\\":\\\"" + "actor" + "\\\"");
        			sb.append("}\""+ "\n");		
 			}
 			for( Module module: this.moduleObjs)
@@ -302,9 +316,25 @@ public class PROVBuilder {
                 	sb.append("\\\"package\\\":\\\"" + module.vtPackage + "\\\",");
                 if (module.version!=null)
                 	sb.append("\\\"version\\\":\\\"" + module.version + "\\\",");
-            	sb.append("\\\"wfID\\\":\\\"" + module.wfID + "\\\"");
+            	sb.append("\\\"wfID\\\":\\\"" + module.wfID + "\\\",");
+            	sb.append("\\\"type\\\":\\\"" + "module" + "\\\"");
        			sb.append("}\""+ "\n");		
 			}
+			//Add an extra node representing the workflow to the graph
+			  sb.append("\"(" + this.wfID + "){");
+              sb.append("\\\"type\\\":\\\"" + "workflow" + "\\\"," );
+              sb.append("\\\"wfID\\\":\\\"" + this.wfID + "\\\"," );
+              sb.append("}\""+ "\n");		
+              //Add runID nodes
+  			for( String runIDNode: this.runIDs ) {
+  			  sb.append("\"(" + runIDNode + "){");
+              sb.append("\\\"type\\\":\\\"" + "runID" + "\\\"," );
+              sb.append("\\\"wfID\\\":\\\"" + this.wfID + "\\\"," );
+              sb.append("\\\"wfID\\\":\\\"" + runIDNode+ "\\\"," );
+              sb.append("}\""+ "\n");	
+  			}
+  			
+              
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
 			for ( Edge edge: this.edges ) {
 				if( edge.label.equals("used") )
@@ -315,6 +345,8 @@ public class PROVBuilder {
 					sb.append("\"(" + edge.startId + ")-[:isConnectedWith]->(" + edge.endId + ")\"," + "\n");
 				else if( edge.label.equals("associatedWith") )
 					sb.append("\"(" + edge.startId + ")-[:wasAssociatedWith]->(" + edge.endId + ")\"," + "\n");
+				else if( edge.label.equals("belongsTo") )
+					sb.append("\"(" + edge.startId + ")-[:belongsTo]->(" + edge.endId + ")\"," + "\n");
 			}
 			sb.deleteCharAt(sb.length()-1);
 			sb.deleteCharAt(sb.length()-1);
@@ -376,6 +408,8 @@ public class PROVBuilder {
 			    if (data.runID!=null)
 			    	sb.append("\"runID\"" + ":" + "\"" + data.runID + "\"," );
 		    	sb.append("\"wfID\"" + ":" + "\"" + data.wfID + "\"" );
+		    	sb.append("\"type\"" + ":" + "\"" + "data" + "\"," );
+
 			    sb.append ("}");
 			    sb.append(nl + "\t\t" + "},");
 			    sb.append(nl + "\t\t" + "\"id\"" + " : " + reqId);
@@ -398,7 +432,8 @@ public class PROVBuilder {
 			    	sb.append("\"completed\"" + ":" + "\"" + actor.completed + "\"," );
 			    if (actor.runID!=null)
 			    	sb.append("\"runID\"" + ":" + "\"" + actor.runID + "\"," );
-		    	sb.append("\"wfID\"" + ":" + "\"" + actor.wfID + "\"" );
+		    	sb.append("\"wfID\"" + ":" + "\"" + actor.wfID + "\"," );
+		    	sb.append("\"type\"" + ":" + "\"" + "activity" + "\"" );
 			    sb.append ("}");
 			    sb.append(nl + "\t\t" + "},");
 			    sb.append(nl + "\t\t" + "\"id\"" + " : " + reqId);
@@ -423,7 +458,8 @@ public class PROVBuilder {
 			    	sb.append("\"package\"" + ":" + "\"" + module.vtPackage + "\"," );
 			    if (module.version!=null)
 			    	sb.append("\"version\"" + ":" + "\"" + module.version + "\"," );
-		    	sb.append("\"wfID\"" + ":" + "\"" + module.wfID + "\"" );
+		    	sb.append("\"wfID\"" + ":" + "\"" + module.wfID + "\"," );
+		    	sb.append("\"type\"" + ":" + "\"" + "module" + "\"" );
 			    sb.append ("}");
 			    sb.append(nl + "\t\t" + "},");
 			    sb.append(nl + "\t\t" + "\"id\"" + " : " + reqId);
@@ -442,6 +478,8 @@ public class PROVBuilder {
 					reqLabel = "isConnectedWith";
 				else if( edge.label.equals("associatedWith") )
 					reqLabel = "wasAssociatedWith";
+				else if( edge.label.equals("belongsTo") )
+					reqLabel = "belongsTo";
 				sb.append(nl + "\t" + "{" + nl + "\t\t" + "\"method\"" + " : " + "\"POST\"" + ",");
 			    sb.append(nl + "\t\t" + "\"to\"" + " : " + "\"/cypher\"" + ",");
 			    sb.append(nl + "\t\t" + "\"body\"" + " : " + "{");
@@ -494,7 +532,8 @@ public class PROVBuilder {
 				sb.append("value:\""+ data.value + "\"," );
 			if (data.runID!=null)
 				sb.append("runID:\""+ data.runID + "\"," );		
-			sb.append("wfID:\""+ data.wfID + "\"" );		
+			sb.append("wfID:\""+ data.wfID + "\"," );
+			sb.append("type:\""+ "data" + "\"" );		
 			sb.append("};"+"\n" );
 			}
 			for( Actor actor: this.actors){
@@ -508,7 +547,8 @@ public class PROVBuilder {
 		    	sb.append("completed:\""+ actor.completed + "\"," );
 		    if (actor.runID!=null)
 		    	sb.append("runID:\""+ actor.runID + "\"," );
-			sb.append("wfID:\""+ actor.wfID + "\"" );		
+			sb.append("wfID:\""+ actor.wfID + "\"," );
+			sb.append("type:\""+ "activity" + "\"" );		
 			sb.append("};"+"\n" );
 			}
 			for( Module module: this.moduleObjs){
@@ -524,9 +564,25 @@ public class PROVBuilder {
 			    	sb.append("package:\""+ module.vtPackage + "\"," );
 			    if (module.version!=null)
 			    	sb.append("version:\""+ module.version + "\"," );
-				sb.append("wfID:\""+ module.wfID + "\"" );		
+				sb.append("wfID:\""+ module.wfID + "\"," );	
+				sb.append("type:\""+ "module" + "\"" );		
 				sb.append("};"+"\n" );
 				}
+			//Add an extra node representing the workflow to the graph
+			sb.append("CREATE n={");
+			sb.append("name:\""+ this.wfID + "\"," );
+			sb.append("wfID:\""+ this.wfID + "\"," );
+			sb.append("type:\""+ "workflow" + "\"" );				
+			sb.append("};"+"\n" );
+			 //Add runID nodes
+  			for( String runIDNode: this.runIDs ) {
+  				sb.append("CREATE n={");
+  				sb.append("name:\""+ runIDNode + "\"," );
+  				sb.append("wfID:\""+ this.wfID + "\"," );
+  				sb.append("runID:\""+ runIDNode + "\"," );
+  				sb.append("type:\""+ "runID" + "\"" );				
+  				sb.append("};"+"\n" );
+  			}
 			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
 			out.println(sb);
 			String reqLabel = null;
@@ -540,6 +596,8 @@ public class PROVBuilder {
 					reqLabel = "isConnectedWith";
 				else if( edge.label.equals("associatedWith") )
 					reqLabel = "wasAssociatedWith";
+				else if( edge.label.equals("belongsTo") )
+					reqLabel = "belongsTo";
 			    out.print("START n=node:node_auto_index(name='" + edge.startId + "'), ");
 			    out.print("m=node:node_auto_index(name='" + edge.endId + "') ");
 			    out.println("CREATE n-[r:" + reqLabel + "]->m;");
@@ -558,10 +616,10 @@ public class PROVBuilder {
 			String nodeId = this.activityFullName.get(key);
 			Actor actor = new Actor();
 			actor.id = nodeId;		
-			actor.vtType= this.activityType.get(key);
+			actor.vtType= this.dataType.get(key);
 			actor.cache=this.activityCache.get(key);
 			actor.completed=this.activityCompleted.get(key);
-			actor.runID=this.activityRunID.get(key);
+			actor.runID=this.dataRunID.get(key);
 		    actor.wfID= this.wfID;
 			this.actors.add(actor);
 		}
@@ -592,7 +650,7 @@ public class PROVBuilder {
 		    module.desc=this.dataDesc.get(key);
             module.vtPackage=this.modulePackage.get(key);
             module.version=this.moduleVersion.get(key);
-            module.cache=this.moduleCache.get(key);
+            module.cache=this.activityCache.get(key);
 		    module.wfID= this.wfID;
 			moduleObjs.add(module);
 		}
@@ -658,6 +716,16 @@ public class PROVBuilder {
 			edge.endId = endNodeId;
 			this.edges.add(edge);
 		}
+		//create edges between workflow and its runs
+		for( String runIDNode: this.runIDs ) {
+			Edge edge = new Edge();
+			edge.startId=this.wfID.toString();
+			edge.endId=runIDNode;
+			edge.label = "belongsTo";
+			this.edges.add(edge);
+			
+		}
+
 	}
 	
 	
