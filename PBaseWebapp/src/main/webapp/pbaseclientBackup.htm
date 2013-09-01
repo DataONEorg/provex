@@ -1,0 +1,154 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.3.0pr3/build/cssreset/reset-min.css"> 
+	<link rel="stylesheet" type="text/css" href="http://axosoft.github.com/yui3-gallery/layout/build/assets/skins/sam/gallery-axo-layout.css"> 
+	<link rel="stylesheet" type="text/css" href="http://axosoft.github.com/yui3-gallery/layout/build/assets/skins/sam/gallery-axo-layout-skin.css"> 
+
+	<script type="text/javascript" src="http://yui.yahooapis.com/3.3.0pr3/build/yui/yui.js"></script>
+
+	<script type="text/javascript" src="http://axosoft.github.com/yui3-gallery/layout/build/gallery-axo-layout.js"></script>
+
+    <title>Axosoft Layout Example</title>
+
+	<style>
+
+	.yui3-skin-sam .yui3-layout-vertical > .yui3-layout-content {
+		border:5px solid black;
+		padding:1px;
+	}
+
+	.yui3-skin-sam .yui3-layoutchild {
+		opacity:0.8;
+	}
+
+	#left {
+		background:yellow;
+	}
+
+	#right {
+		background:red
+	}
+
+	#top {
+		background:green;
+	}
+
+	#bottom {
+		background:magenta
+	}
+
+	#center {
+		background:blue
+	}
+
+	#bottom .yui3-layoutchild {
+		background:white;
+		border:1px solid black;
+	}
+
+	#bottom1 {
+		opacity:0.1;
+	}
+
+	#bottom2 {
+		opacity:0.2;
+	}
+
+	#bottom3 {
+		opacity:0.3;
+	}
+
+	#bottom4 {
+		opacity:0.4;
+	}
+
+	.yui3-layoutchild-content .yui3-widget-hd {
+		background: white;
+		color: black;
+		border:solid black 1px;
+		padding-left:5px;
+		height:23px;
+	}
+
+	.yui3-layoutChild-button-collapse, .yui3-layoutChild-button-expand {
+		width: 17px;
+		height: 13px;
+		right:5px;
+		top:5px;
+		position: absolute;
+		background: transparent url(http://developer.yahoo.com/yui/build/layout/assets/skins/sam/layout_sprite.png) no-repeat;
+	}
+
+	#left .yui3-layoutChild-button-collapse {
+		background-position: -20px -160px;
+	} 
+
+	#left .yui3-layoutChild-button-expand {
+		background-position: -20px -140px;
+	} 
+
+	#right .yui3-layoutChild-button-collapse {
+		background-position: -20px -200px;
+	} 
+
+	#right .yui3-layoutChild-button-expand {
+		background-position: -20px -120px;
+	} 
+
+	</style>
+
+</head>
+
+<body class="yui3-skin-sam">
+
+<script>
+
+YUI().use('gallery-axo-layout', 'resize', function(Y)
+{
+	// This creates a vertical layout whose size is tied to the window size
+	var layout = new Y.Layout({orientation: 'vertical', sizeToWindow: true });
+
+	// This adds a child (layout unit) to the layout.  Since it is a vertical layout,
+	// and this is the first child, it will show up on the top.  LayoutChild is
+	// a widget, so it supports configuration arguments such as id and height.
+	// The resize:true parameter will add resizing capability to the child.
+	layout.add(new Y.LayoutChild({id:'top', height:100, resize: true }));
+
+	// This creates another layout and adds it as a child to the root layout,
+	// resulting in a nested layout.  The fluid:true parameter means that the height
+	// of this child will be determined by available space.
+	var centerLayout = new Y.Layout({fluid: true, orientation: 'horizontal' });
+	layout.add(centerLayout);
+
+	// This is another child layout, but with an initial fixed height and resizable.
+	var bottomLayout = new Y.Layout({id:'bottom', height:100, orientation: 'horizontal', resize: true });
+	layout.add(bottomLayout);
+	
+	// We now fill up the center child layout. Two of the children have initial
+	// fixed widths, and are collapsable and resizable.  The center child will be
+	// sized according to available space.
+	// We will also give the children standard module format sections and auto-generated headers,
+	// by using the *Std layout children
+	centerLayout.add(new Y.LayoutChildCollapsableStd({id: 'left', width:150, resize: true, label:'Left'}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'center', fluid: true, label:'Center' }));
+	centerLayout.add(new Y.LayoutChildCollapsableStd({id: 'right', width:150, resize: true, label:'Right'}));
+
+	// The bottom layout will be divided into 4 parts.  The first part will have
+	// a fixed width of 100 pixels.  The remaining three are given a weight using
+	// the fluid argument.  They will fill up the remaining space, and their
+	// weights will result in 1:2:3 proportions in their size.
+	bottomLayout.add(new Y.LayoutChild({id: 'bottom1', width:100}));
+	bottomLayout.add(new Y.LayoutChild({id: 'bottom2', fluid:1}));
+	bottomLayout.add(new Y.LayoutChild({id: 'bottom3', fluid:2}));
+	bottomLayout.add(new Y.LayoutChild({id: 'bottom4', fluid:3}));
+
+	layout.render();
+});
+
+</script>
+
+
+</body>
+</html>
