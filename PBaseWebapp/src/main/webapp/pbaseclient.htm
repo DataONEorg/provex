@@ -34,13 +34,19 @@
 
 	#top {
 		background:blue;
+		opacity:0.6;
 	}
 
 	#bottom {
 		background:yellow;
+		opacity:0.6;
 	}
 
-	#center {
+	#center1 {
+		background:white;
+	}
+	
+	#center2 {
 		background:white;
 	}
 
@@ -77,6 +83,14 @@
 	#left .yui3-layoutChild-button-expand {
 		background-position: -20px -140px;
 	} 
+	
+	#center1 .yui3-layoutChild-button-collapse {
+		background-position: -20px -160px;
+	} 
+
+	#center1 .yui3-layoutChild-button-expand {
+		background-position: -20px -140px;
+	}
 
 	#right .yui3-layoutChild-button-collapse {
 		background-position: -20px -200px;
@@ -96,35 +110,22 @@
 
 YUI().use('gallery-axo-layout', 'resize', function(Y)
 {
-	// This creates a vertical layout whose size is tied to the window size
+
 	var layout = new Y.Layout({orientation: 'vertical', sizeToWindow: true });
 
-	// This adds a child (layout unit) to the layout.  Since it is a vertical layout,
-	// and this is the first child, it will show up on the top.  LayoutChild is
-	// a widget, so it supports configuration arguments such as id and height.
-	// The resize:true parameter will add resizing capability to the child.
-	layout.add(new Y.LayoutChild({id:'top', height:100, resize: true }));
+	layout.add(new Y.LayoutChild({id:'top', height:80, resize: true }));
 
-	// This creates another layout and adds it as a child to the root layout,
-	// resulting in a nested layout.  The fluid:true parameter means that the height
-	// of this child will be determined by available space.
 	var centerLayout = new Y.Layout({fluid: true, orientation: 'horizontal' });
 	layout.add(centerLayout);
 
-	// This is another child layout, but with an initial fixed height and resizable.
-	var bottomLayout = new Y.Layout({id:'bottom', height:100, orientation: 'horizontal', resize: true });
+	var bottomLayout = new Y.Layout({id:'bottom', height:80, orientation: 'horizontal', resize: true });
 	layout.add(bottomLayout);
 	
-	// We now fill up the center child layout. Two of the children have initial
-	// fixed widths, and are collapsable and resizable.  The center child will be
-	// sized according to available space.
-	// We will also give the children standard module format sections and auto-generated headers,
-	// by using the *Std layout children
 	centerLayout.add(new Y.LayoutChildCollapsableStd({id: 'left', width:150, resize: true, label:'Left'}));
-	centerLayout.add(new Y.LayoutChildStd({id: 'center', fluid: true, label:'Center' }));
-	centerLayout.add(new Y.LayoutChildCollapsableStd({id: 'right', width:150, resize: true, label:'Right'}));
+	centerLayout.add(new Y.LayoutChildCollapsableStd({id: 'center1', width:550, resize: true, label:'Center1' }));
+	centerLayout.add(new Y.LayoutChildStd({id: 'center2', fluid: true, label:'Center2' }));
+	centerLayout.add(new Y.LayoutChildCollapsableStd({id: 'right', width:100, resize: true, label:'Right'}));
 
-	// Add a child to the bottom layout.
 	bottomLayout.add(new Y.LayoutChild({id: 'bottom1'}));
 
 	layout.render();
