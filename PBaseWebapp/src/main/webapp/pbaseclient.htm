@@ -58,6 +58,10 @@
 	#bottom1 {
 		opacity:0.1;
 	}
+	
+	#wfContainer {
+		
+	}
 
 	.yui3-layoutchild-content .yui3-widget-hd {
 		background: white;
@@ -99,6 +103,10 @@
 	#right .yui3-layoutChild-button-expand {
 		background-position: -20px -120px;
 	} 
+	
+	#center1 > .yui3-widget-content-expanded {
+		height: 25px;
+	}
 
 	</style>
 
@@ -121,14 +129,20 @@ YUI().use('gallery-axo-layout', 'resize', function(Y)
 	var bottomLayout = new Y.Layout({id:'bottom', height:80, orientation: 'horizontal', resize: true });
 	layout.add(bottomLayout);
 	
-	centerLayout.add(new Y.LayoutChildCollapsableStd({id: 'left', width:150, resize: true, label:'Left'}));
-	centerLayout.add(new Y.LayoutChildCollapsableStd({id: 'center1', width:550, resize: true, label:'Center1' }));
-	centerLayout.add(new Y.LayoutChildStd({id: 'center2', fluid: true, label:'Center2' }));
-	centerLayout.add(new Y.LayoutChildCollapsableStd({id: 'right', width:100, resize: true, label:'Right'}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'left', width:150, resize: true, label: 'left'}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'center1', width:550, resize: true, label: 'center1'}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'center2', fluid: true, label: 'center2'}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'right', width:100, resize: true, label: 'right'}));
 
 	bottomLayout.add(new Y.LayoutChild({id: 'bottom1'}));
 
 	layout.render();
+});
+
+YUI().use('node', function (Y) {
+	var center1 = Y.one('#center1'),
+	wfContainerHTML = '<div id="wfContainer"><span>Hello World!</span></div>';
+	center1.get('children').slice(-1).item(0).insert(wfContainerHTML, 'after');
 });
 
 </script>
