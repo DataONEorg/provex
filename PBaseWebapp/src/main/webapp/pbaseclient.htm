@@ -6,16 +6,16 @@
 	<link rel="stylesheet" type="text/css" href="http://axosoft.github.com/yui3-gallery/layout/build/assets/skins/sam/gallery-axo-layout.css"> 
 	<link rel="stylesheet" type="text/css" href="http://axosoft.github.com/yui3-gallery/layout/build/assets/skins/sam/gallery-axo-layout-skin.css"> 
 
+	<script type="text/javascript" src="http://jgraph.github.io/mxgraph/javascript/src/js/mxClient.js"></script>
+
 	<script type="text/javascript" src="http://yui.yahooapis.com/3.3.0pr3/build/yui/yui.js"></script>
 
 	<script type="text/javascript" src="http://axosoft.github.com/yui3-gallery/layout/build/gallery-axo-layout.js"></script>
 	
-	<script type="text/javascript" src="http://jgraph.github.com/mxgraph/javascript/src/js/mxClient.js"></script>
-	
 	<script type="text/javascript">
 	
-	function displayTrace(container, traceJSON) {
-    	// Checks if the browser is supported
+	function displayTraceJSON(container, traceJSON) {
+		// Checks if the browser is supported
     	if (!mxClient.isBrowserSupported()) {
     		// Displays an error message if the browser is not supported.
     		mxUtils.error('Browser is not supported!', 200, false);
@@ -30,7 +30,7 @@
     		mxRectangleShape.prototype.crisp = true;
     				
     		// Creates the graph inside the given container
-    		graph = new mxGraph(container);
+    		var graph = new mxGraph(container);
     		graph.graphHandler.scaleGrid = true;
     		graph.setPanning(true);
 
@@ -39,18 +39,18 @@
     		
     		// Gets the default parent for inserting new cells. This
     		// is normally the first child of the root (ie. layer 0).
-    		parent = graph.getDefaultParent();
+    		var parent = graph.getDefaultParent();
     								
     		// Adds cells to the model in a single step
     		graph.getModel().beginUpdate();
     		try {
     			
-    			traceNodesArray = new Array();
-    			traceEdgesArray = new Array();
+    			var traceNodesArray = new Array();
+    			var traceEdgesArray = new Array();
     			
-    			fillTrace(traceJSON);
+    			fillTrace(traceJSON, graph, parent, traceNodesArray, traceEdgesArray);
     			
-    			layout = new mxHierarchicalLayout(graph);
+    			var layout = new mxHierarchicalLayout(graph);
     			layout.execute(parent);
     			
     		}
@@ -67,14 +67,9 @@
     		
     	}
     }
-
-
-    function createAndDisplayTraceJSON(traceJSON) {
-    	displayTrace(document.getElementById('wfContainer'), traceJSON);
-    }
     
     
-    function fillTrace(traceJSON) {
+    function fillTrace(traceJSON, graph, parent, traceNodesArray, traceEdgesArray) {
     	var vertex = null;
     	var edge = null;
     	var tuple = null;
@@ -228,14 +223,18 @@ YUI().use('gallery-axo-layout', 'resize', function(Y)
 	layout.render();
 });
 
-YUI().use('node', 'json-parse', function (Y) {
-	var center1 = Y.one('#center1'),
-	wfContainerHTML = '<div id="wfContainer"></div>';
+YUI().use('node', function (Y) {
+	var center1 = Y.one('#center1');
+	var wfContainerHTML = '<div id="wfContainer"></div>';
 	center1.get('children').slice(-1).item(0).insert(wfContainerHTML, 'after');
-	
+});
+
+YUI().use('node', 'json-parse', function (Y) {
 	var traceJSONStr = '{"edges":[{"endNodeId":"p0","edgeLabel":"u","startNodeId":"a0"},{"endNodeId":"p0","edgeLabel":"u","startNodeId":"a1"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a3"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a4"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a5"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a6"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a2"},{"endNodeId":"p2","edgeLabel":"u","startNodeId":"a8"},{"endNodeId":"p2","edgeLabel":"u","startNodeId":"a7"},{"endNodeId":"p3","edgeLabel":"u","startNodeId":"a10"},{"endNodeId":"p3","edgeLabel":"u","startNodeId":"a11"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a13"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a14"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a15"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a16"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a12"},{"endNodeId":"p5","edgeLabel":"u","startNodeId":"a18"},{"endNodeId":"p5","edgeLabel":"u","startNodeId":"a17"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a20"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p7","edgeLabel":"u","startNodeId":"a21"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a22"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a23"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a25"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a26"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a28"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a29"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a31"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a24"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a27"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a30"},{"endNodeId":"p12","edgeLabel":"u","startNodeId":"a33"},{"endNodeId":"p12","edgeLabel":"u","startNodeId":"a34"},{"endNodeId":"p13","edgeLabel":"u","startNodeId":"a32"},{"endNodeId":"p13","edgeLabel":"u","startNodeId":"a35"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a36"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a37"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a21"},{"endNodeId":"a2","edgeLabel":"g","startNodeId":"p0"},{"endNodeId":"a7","edgeLabel":"g","startNodeId":"p1"},{"endNodeId":"a9","edgeLabel":"g","startNodeId":"p2"},{"endNodeId":"a12","edgeLabel":"g","startNodeId":"p3"},{"endNodeId":"a17","edgeLabel":"g","startNodeId":"p4"},{"endNodeId":"a19","edgeLabel":"g","startNodeId":"p5"},{"endNodeId":"a21","edgeLabel":"g","startNodeId":"p6"},{"endNodeId":"a24","edgeLabel":"g","startNodeId":"p8"},{"endNodeId":"a27","edgeLabel":"g","startNodeId":"p9"},{"endNodeId":"a30","edgeLabel":"g","startNodeId":"p10"},{"endNodeId":"a32","edgeLabel":"g","startNodeId":"p11"},{"endNodeId":"a35","edgeLabel":"g","startNodeId":"p12"}],"nodes":[{"nodeId":"a17","nodeType":"d"},{"nodeId":"p7","nodeType":"i"},{"nodeId":"a3","nodeType":"d"},{"nodeId":"p0","nodeType":"i"},{"nodeId":"p11","nodeType":"i"},{"nodeId":"a35","nodeType":"d"},{"nodeId":"a24","nodeType":"d"},{"nodeId":"a36","nodeType":"d"},{"nodeId":"a9","nodeType":"d"},{"nodeId":"p14","nodeType":"i"},{"nodeId":"a16","nodeType":"d"},{"nodeId":"a10","nodeType":"d"},{"nodeId":"a14","nodeType":"d"},{"nodeId":"a23","nodeType":"d"},{"nodeId":"a22","nodeType":"d"},{"nodeId":"a8","nodeType":"d"},{"nodeId":"a25","nodeType":"d"},{"nodeId":"a37","nodeType":"d"},{"nodeId":"p3","nodeType":"i"},{"nodeId":"a27","nodeType":"d"},{"nodeId":"p10","nodeType":"i"},{"nodeId":"a21","nodeType":"d"},{"nodeId":"p8","nodeType":"i"},{"nodeId":"a34","nodeType":"d"},{"nodeId":"a7","nodeType":"d"},{"nodeId":"a20","nodeType":"d"},{"nodeId":"a1","nodeType":"d"},{"nodeId":"a2","nodeType":"d"},{"nodeId":"a11","nodeType":"d"},{"nodeId":"a29","nodeType":"d"},{"nodeId":"p2","nodeType":"i"},{"nodeId":"a33","nodeType":"d"},{"nodeId":"a18","nodeType":"d"},{"nodeId":"a26","nodeType":"d"},{"nodeId":"p12","nodeType":"i"},{"nodeId":"p9","nodeType":"i"},{"nodeId":"a13","nodeType":"d"},{"nodeId":"a28","nodeType":"d"},{"nodeId":"a30","nodeType":"d"},{"nodeId":"a4","nodeType":"d"},{"nodeId":"p4","nodeType":"i"},{"nodeId":"a31","nodeType":"d"},{"nodeId":"a19","nodeType":"d"},{"nodeId":"p1","nodeType":"i"},{"nodeId":"a15","nodeType":"d"},{"nodeId":"a6","nodeType":"d"},{"nodeId":"a12","nodeType":"d"},{"nodeId":"a0","nodeType":"d"},{"nodeId":"p6","nodeType":"i"},{"nodeId":"a5","nodeType":"d"},{"nodeId":"a32","nodeType":"d"},{"nodeId":"p5","nodeType":"i"},{"nodeId":"p13","nodeType":"i"}]}' ;     
-	traceJSON = Y.JSON.parse(traceJSONStr);
-	createAndDisplayTraceJSON(traceJSON);
+	var traceJSON = Y.JSON.parse(traceJSONStr);
+	//var wfContainer = Y.one('#wfContainer');
+	var wfContainer = document.getElementById('wfContainer');
+	displayTraceJSON(wfContainer, traceJSON);
 });
 
 </script>
