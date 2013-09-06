@@ -8,6 +8,8 @@ public class Edge {
 	String endId;
 	String startName;
 	String endName;
+	String runID;
+
 	
 	
 	public Edge() {
@@ -15,12 +17,13 @@ public class Edge {
 	}
 	
 	
-	public Edge(String startId, String endId, String label, String startName, String endName) {
+	public Edge(String startId, String endId, String label, String startName, String endName, String runID) {
 		this.startId = startId;
 		this.endId = endId;
 		this.label = label;
 		this.startName = startName;
 		this.endName = endName;
+		this.runID=runID;
 	}
 
 

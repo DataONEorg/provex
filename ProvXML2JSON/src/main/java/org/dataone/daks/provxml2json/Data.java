@@ -1,5 +1,7 @@
 package org.dataone.daks.provxml2json;
 
+import java.util.UUID;
+
 
 public class Data {
 	
@@ -9,17 +11,19 @@ public class Data {
 	String desc;
 	String value;
 	String runID;
+	UUID wfID;
 	
 	public Data() {
 		
 	}
 	
-	public Data(String id, String name, String vtType, String desc, String value, String runID) {
+	public Data(String id, String name, String vtType, String desc, String value, String runID, UUID wfID) {
 		 this.id = id;
 		 this.name = name;
 		 this.vtType=vtType;
 		 this.desc=desc;
 		 this.value=value;
 		 this.runID=runID;
+		 this.wfID=wfID;
 	} 
 }

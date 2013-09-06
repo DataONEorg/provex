@@ -25,9 +25,11 @@ public class ProvXML2JSON {
 		this.provBuilder = new PROVBuilder();
 		this.provBuilder.processDocument(provRoot);
 		this.provBuilder.createJSONFile("out.json");
-		this.provBuilder.createDOTFile("out.dot",filePath.toString());
+		filePath=filePath.substring(0,filePath.length() -4); //remove the .xml suffix from the filePath 
+		this.provBuilder.createDOTFileAllRuns(filePath+".dot",filePath.toString());
+		this.provBuilder.createDOTFile(filePath.toString());
 		this.provBuilder.createRESTCypherFile("test.txt");
-		this.provBuilder.createTextCypherFile("batch.txt");
+		this.provBuilder.createTextCypherFile(filePath+ ".cql");
 	}
 	
 	

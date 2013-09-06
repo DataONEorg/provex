@@ -30,6 +30,8 @@ public class PROVBuilder {
 	private HashMap<String, String> activityCompleted;
 	private HashMap<String, String> moduleVersion;
 	private HashMap<String, String> modulePackage;
+	private HashMap<String, String> actorModule;
+
 
 
 	
@@ -45,6 +47,7 @@ public class PROVBuilder {
 	private Namespace dcterms;
 	
 	UUID wfID=UUID.randomUUID();
+	String wfVersion;
 
 	
 	public PROVBuilder() {
@@ -63,6 +66,8 @@ public class PROVBuilder {
 	    this.activityCache = new HashMap<String, String>();
 		this.moduleVersion = new HashMap<String, String>();
 		this.modulePackage = new HashMap<String, String>();
+		this.actorModule = new HashMap<String, String>();
+
 	
 		
 		this.provNS = new Namespace("prov", "http://www.w3.org/ns/prov#");
@@ -76,10 +81,10 @@ public class PROVBuilder {
 		this.createActivitiesHT(root);
 		this.createWasAssociatedWithHT(root);
 		this.createActivityFullNames(root);
+		this.createEdges(root);
 		this.createActorsList();
 		this.createDataObjsList();
 		this.createModuleObjsList();
-		this.createEdges(root);
 	}
 	
 	// Create a dictionary for the entities
@@ -96,6 +101,8 @@ public class PROVBuilder {
             QName vtCacheQName=new QName("cache", this.vtNS);
             QName vtVersionQName=new QName("version", this.vtNS);
             QName vtPackageQName=new QName("package", this.vtNS);
+            QName vtId=new QName("id", this.vtNS);
+
 
             Element elemProvType = entityElem.element(provTypeQName);
             Element elemProvLabel = entityElem.element("label");
@@ -106,18 +113,23 @@ public class PROVBuilder {
             Element elementCache= entityElem.element(vtCacheQName);
             Element elementVersion= entityElem.element(vtVersionQName);
             Element elementPackage= entityElem.element(vtPackageQName);
+            Element elementId= entityElem.element(vtId);
+
 
             if (elemVtType!=null)
             	this.dataType.put(entityId, elemVtType.getText());    
             
             if( elemProvType != null ) {
             	if( elemProvType.getText().equals("prov:Plan") ) {
-            		if( elemVtType != null ) {
+            		 if (elementId!=null)
+            			 this.wfVersion=elementId.getText();
+             		if( elemVtType != null ) {
             			if( elemVtType.getText().equals("vt:module") || 
             					elemVtType.getText().equals("vt:workflow")  )
             				this.planEntities.put(entityId, entityElem);
             			    if( elemVtType.getText().equals("vt:module"))
             					this.modules.put(entityId, entityElem);
+
             			    if( elemProvLabel != null )
                 				this.dataEntityFullName.put(entityId, 
                 						entityId + "_" + elemProvLabel.getText());
@@ -227,21 +239,29 @@ public class PROVBuilder {
 	}
 	
 	
-	protected void createDOTFile(String filename, String filePath) {
+	protected void createDOTFileAllRuns(String filename, String filePath) {
 		try {
 			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
 			out.println("digraph TheGraph {");
 			out.println();
-			out.println("rankdir = BT");
-			out.println("node[style=\"filled\";color=\"#CCCC00\"; fillcolor=\"#F4F4CC\"]");
+			out.println("rankdir =BT");
+			out.println("node[style=\"filled\",color=\"#CCCC00\", fillcolor=\"#F6F6CC\"]");
 			out.println("edge[style=dashed]");
+			out.println("color= blue;");
 			// Iterate over the data items and actors to create entries of the form
 			// id [shape=ellipse]; on the DOT file
 			for( Data data: this.dataObjs )
 			    out.println(data.id + " [shape=ellipse];");
-			out.println("node[style=\"filled\";color=\"#1AA4A7\"; fillcolor=\"#BAE3E4\"]");
-			for( Actor actor: this.actors )
-				out.println(actor.id + " [shape=rectangle];");
+			out.println("node[style=\"filled\",color=\"#1AA4A7\", fillcolor=\"#DCF1F1\"]");
+			for( Module module: this.moduleObjs ) {
+				out.println("subgraph cluster_"+ module.id +" {");
+				out.println("style=dotted;");			
+			    for( Actor actor: this.actors ){
+					if (actor.module.equals(module.id))
+						out.println(actor.id + " [shape=rectangle];");
+				}
+				out.println("}");
+			}
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
 			for ( Edge edge: this.edges ) {
 				if( edge.label.equals("used") )
@@ -252,8 +272,23 @@ public class PROVBuilder {
 			out.println();
 			out.println( "labelloc=\"t\"");
 			out.println("fontsize=25");
-			out.println("labeljust=left");
-			out.println("label=\"" +filePath+"\";");
+			out.println("labeljust=left");	
+			out.println("label=\"" +filePath+"_"+ wfVersion+"\";");
+			//Workflow Graph
+			out.println("subgraph cluster {");
+			out.println( "labelloc=\"t\"");
+			out.println("label=\"" +filePath+"Workflow"+"\";");
+			out.println("style=filled;");
+		    out.println("color=\"#f2f2f2\";");
+			out.println("node[style=\"filled\",color=\"#1AA4A7\", fillcolor=\"#bae3e4\"]");
+			out.println("edge[style=solid]");
+			for( Module module: this.moduleObjs )
+				out.println(module.id + " [shape=rectangle];");
+			for ( Edge edge: this.edges ) {
+				 if( edge.label.equals("connect") )
+					out.println(edge.startId + " -> " + edge.endId + ";");
+			}
+			out.println("}");
 			out.println("}");
 			out.println();
 	        out.close();
@@ -263,6 +298,46 @@ public class PROVBuilder {
 	    }
 	}
 	
+	protected void createDOTFile(String filePath) {
+		try {
+			new File(filePath).mkdirs();
+			for(String runIDNode: this.runIDs ) {
+				PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filePath+"/"+filePath+runIDNode+".dot")));
+				out.println("digraph TheGraph {");
+				out.println();
+				out.println("rankdir = BT");
+				out.println("edge[style=dashed]");
+			    out.println("node[style=\"filled\", color=\"#1AA4A7\", fillcolor=\"#DCF1F1\"]");
+	  			for( Actor actor: this.actors ){
+	  			if (actor.runID.equals(runIDNode))
+	  					out.println(actor.id + " [shape=rectangle];");
+	  		}
+				out.println("node[style=\"filled\",color=\"#CCCC00\", fillcolor=\"#F6F6CC\"]");
+			 //Create the edges for the 'used' and 'wasGeneratedBy' relations
+			for ( Edge edge: this.edges ) {
+				if (edge.runID!=null && edge.runID.equals(runIDNode))
+				{
+				if( edge.label.equals("used") )
+					out.println(edge.startId + " -> " + edge.endId + ";");
+				else if( edge.label.equals("genBy") )
+					out.println(edge.startId + " -> " + edge.endId + ";");
+				}
+			}
+			out.println();
+			out.println( "labelloc=\"t\"");
+			out.println("fontsize=25");
+			out.println("labeljust=left");	
+			out.println("label=\"" +filePath+"_"+ wfVersion + " -- runID= "+ runIDNode+"\";");
+			out.println("}");
+			out.println();
+	        out.close();
+	    }
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+	    }
+		
+	}
 	
 	protected void createJSONFile(String filename) {
 		try {
@@ -328,7 +403,7 @@ public class PROVBuilder {
               //Add runID nodes
   			for( String runIDNode: this.runIDs ) {
   			  sb.append("\"(" + runIDNode + "){");
-              sb.append("\\\"type\\\":\\\"" + "runID" + "\\\"," );
+              sb.append("\\\"type\\\":\\\"" + "run" + "\\\"," );
               sb.append("\\\"wfID\\\":\\\"" + this.wfID + "\\\"," );
               sb.append("\\\"wfID\\\":\\\"" + runIDNode+ "\\\"," );
               sb.append("}\""+ "\n");	
@@ -547,6 +622,7 @@ public class PROVBuilder {
 		    	sb.append("completed:\""+ actor.completed + "\"," );
 		    if (actor.runID!=null)
 		    	sb.append("runID:\""+ actor.runID + "\"," );
+		    sb.append("module:\""+ actor.module + "\"," );
 			sb.append("wfID:\""+ actor.wfID + "\"," );
 			sb.append("type:\""+ "activity" + "\"" );		
 			sb.append("};"+"\n" );
@@ -580,10 +656,11 @@ public class PROVBuilder {
   				sb.append("name:\""+ runIDNode + "\"," );
   				sb.append("wfID:\""+ this.wfID + "\"," );
   				sb.append("runID:\""+ runIDNode + "\"," );
-  				sb.append("type:\""+ "runID" + "\"" );				
+  				sb.append("type:\""+ "run" + "\"" );				
   				sb.append("};"+"\n" );
   			}
 			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
+			out.println("BEGIN");
 			out.println(sb);
 			String reqLabel = null;
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
@@ -602,6 +679,8 @@ public class PROVBuilder {
 			    out.print("m=node:node_auto_index(name='" + edge.endId + "') ");
 			    out.println("CREATE n-[r:" + reqLabel + "]->m;");
 			}
+			out.println("commit");
+			out.println("exit");
 	        out.println();
 			out.close();
 	    }
@@ -619,6 +698,7 @@ public class PROVBuilder {
 			actor.vtType= this.dataType.get(key);
 			actor.cache=this.activityCache.get(key);
 			actor.completed=this.activityCompleted.get(key);
+			actor.module=this.actorModule.get(key);
 			actor.runID=this.dataRunID.get(key);
 		    actor.wfID= this.wfID;
 			this.actors.add(actor);
@@ -667,6 +747,7 @@ public class PROVBuilder {
 			String startNodeId = this.activityFullName.get(actRef); 
 			String endNodeId = this.dataEntityFullName.get(entRef);
 			Edge edge = new Edge();
+			edge.runID=dataRunID.get(actRef);
 			edge.label = "used";
 			edge.startId = startNodeId;
 			edge.endId = endNodeId;
@@ -681,6 +762,7 @@ public class PROVBuilder {
 			String startNodeId = this.dataEntityFullName.get(entRef);
 			String endNodeId = this.activityFullName.get(actRef);
 			Edge edge = new Edge();
+			edge.runID=dataRunID.get(actRef);
 			edge.label = "genBy";
 			edge.startId = startNodeId;
 			edge.endId = endNodeId;
@@ -707,13 +789,15 @@ public class PROVBuilder {
 			Element elemPlan = elemassociatedWith.element("plan");
 			String source = elemPlan.attributeValue("ref");
 			Element elemAct = elemassociatedWith.element("activity");
-			String dest = elemAct.attributeValue("ref");
+			String destNodeId = elemAct.attributeValue("ref");
 			String startNodeId = this.dataEntityFullName.get(source);
-			String endNodeId = this.activityFullName.get(dest);
+			String endNodeId = this.activityFullName.get(destNodeId);
+			this.actorModule.put(destNodeId,startNodeId);
 			Edge edge = new Edge();
 			edge.label = "associatedWith";
 			edge.startId = startNodeId;
 			edge.endId = endNodeId;
+			edge.runID=dataRunID.get(destNodeId);
 			this.edges.add(edge);
 		}
 		//create edges between workflow and its runs
