@@ -65,7 +65,7 @@
     		graph.view.setTranslate( (container.clientWidth/2) - (bounds.width/2), 
     				(container.clientHeight/2) - (bounds.height/2) );
     		
-    		createButtons(graph, layout, parent, btnContainer, Y);
+    		activateButtons(graph, layout, parent, btnContainer, Y);
     		
     	}
     }
@@ -93,17 +93,37 @@
 		}
     }
     
-    function createButtons(graph, layout, parent, containerID, Y) {
+    function createButtons(containerID, Y) {
     	var container = Y.one('#' + containerID);
     	var btnContainerHTML = '<div id="' + containerID + 'BtnContainer"></div>';
     	container.get('children').slice(-1).item(0).insert(btnContainerHTML, 'after');
-    	var zoomInBtn = mxUtils.button( '+', function() { graph.zoomIn(); } );
-    	var zoomOutBtn = mxUtils.button( '-', function() { graph.zoomOut(); } );
-    	var layoutBtn = mxUtils.button('layout', function() { layout.execute(parent); });
     	var btnContainer = Y.one('#' + containerID + 'BtnContainer');
-    	btnContainer.insert(zoomInBtn);
-    	btnContainer.insert(zoomOutBtn);
-    	btnContainer.insert(layoutBtn);
+		var zoomInBtn = createButton(btnContainer, '+', containerID + 'ZoomInBtn');
+    	var zoomOutBtn = createButton(btnContainer, '-', containerID + 'ZoomOutBtn');
+    	var layoutBtn = createButton(btnContainer, 'layout', containerID + 'LayoutBtn');
+    	//alert(JSON.stringify(zoomInBtn, null, 4));
+    	//alert(zoomInBtn.toSource());
+    }
+    
+    function activateButtons(graph, layout, parent, containerID, Y) {
+    	var zoomInBtn = Y.one('#' + containerID + 'ZoomInBtn');
+    	var zoomInBtnFunc = function() { graph.zoomIn(); } ;
+    	zoomInBtn.set('onclick', zoomInBtnFunc);
+    	var zoomOutBtn = Y.one('#' + containerID + 'ZoomOutBtn');
+    	var zoomOutBtnFunc = function() { graph.zoomOut(); } ;
+    	zoomOutBtn.set('onclick', zoomOutBtnFunc);
+    	var layoutBtn = Y.one('#' + containerID + 'LayoutBtn');
+    	var layoutBtnFunc = function() { layout.execute(parent); } ;
+    	layoutBtn.set('onclick', layoutBtnFunc);	
+    }
+    
+    function createButton(container, label, btnId){
+        var button = document.createElement("input");
+        button.id = btnId;
+        button.type = "button";
+        button.value = label;
+        container.insert(button);
+        return button;
     }
     
     </script>
@@ -254,6 +274,8 @@ YUI().use('node', function (Y) {
 	var center2 = Y.one('#center2');
 	var traceContainerHTML = '<div id="traceContainer"></div>';
 	center2.get('children').slice(-1).item(0).insert(traceContainerHTML, 'after');
+	createButtons('left', Y);
+	createButtons('right', Y);
 });
 
 YUI().use('node', 'json-parse', 'event-base', function (Y) {
