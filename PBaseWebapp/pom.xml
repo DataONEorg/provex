@@ -59,6 +59,21 @@
             <version>1.0-alpha-4</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+      		<groupId>dom4j</groupId>
+      		<artifactId>dom4j</artifactId>
+      		<version>1.6.1</version>
+		</dependency>
+		<dependency>
+      		<groupId>org.neo4j</groupId>
+      		<artifactId>neo4j</artifactId>
+      		<version>1.9.1</version>
+    	</dependency>
+		<dependency>
+			<groupId>com.sun.jersey.contribs</groupId>
+			<artifactId>jersey-multipart</artifactId>
+			<version>${jersey-version}</version>
+		</dependency>
     </dependencies>
     <properties>
         <jersey-version>1.8</jersey-version>

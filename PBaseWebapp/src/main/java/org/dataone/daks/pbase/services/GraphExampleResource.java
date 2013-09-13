@@ -1,5 +1,5 @@
 
-package org.dataone.daks.pbase;
+package org.dataone.daks.pbase.services;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
