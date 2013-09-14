@@ -1,4 +1,4 @@
-package org.dataone.daks.pbase.provxml2neo4j;
+package org.dataone.daks.pbase.neo4j;
 
 import java.io.*;
 

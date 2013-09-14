@@ -11,7 +11,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.dataone.daks.pbase.provxml2neo4j.BatchCypher;
+import org.dataone.daks.pbase.neo4j.BatchCypher;
 import org.dataone.daks.pbase.provxml2neo4j.ProvXML2Neo4j;
 
 import com.sun.jersey.core.header.FormDataContentDisposition;
@@ -36,7 +36,7 @@ public class ProvTraceUploadService {
 		
 		String nodeKeysIndexable = "name,graph_id";
 		BatchCypher batch = new BatchCypher("graphdbs/" + graphdbname, nodeKeysIndexable);
-		batch.doBatch(uploadedFileName + ".cql");
+		batch.doBatch(graphdbname + ".cql");
 		batch.shutdownDB();
 
 		String output = "Database created with the name : " + graphdbname;
