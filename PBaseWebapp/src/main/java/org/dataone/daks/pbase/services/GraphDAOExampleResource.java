@@ -19,9 +19,9 @@ public class GraphDAOExampleResource {
     @GET 
     @Produces("text/plain")
     public String getIt() {
-    	GraphDAO dao = new GraphDAO("graphdbs/ComboBreaker");
+    	GraphDAO dao = GraphDAO.getInstance();
+    	dao.init("graphdbs/ComboBreaker");
     	String retVal = dao.outputGraphNodes();
-    	dao.shutdownDB();
     	return retVal;
     }
 }

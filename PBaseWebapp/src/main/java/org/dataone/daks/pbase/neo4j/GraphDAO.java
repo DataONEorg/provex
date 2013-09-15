@@ -13,30 +13,33 @@ public class GraphDAO {
 	
 	private GraphDatabaseService graphDB;
 	
+	private static final GraphDAO instance = new GraphDAO();
+	
 	
 	public GraphDAO() {
 
 	}
 	
 	
-	public GraphDAO(GraphDatabaseService graphDB) {
-		this();
-		this.graphDB = graphDB;
-	}
+	public static GraphDAO getInstance() {
+    	return instance;
+    }
 	
 	
-	public GraphDAO(String dbFile) {
-		this();
-		GraphDatabaseFactory factory = new GraphDatabaseFactory();
-		GraphDatabaseBuilder builder = factory.newEmbeddedDatabaseBuilder(dbFile);
-		builder.setConfig(GraphDatabaseSettings.read_only, "true");
-		GraphDatabaseService graphDB = builder.newGraphDatabase();
-		this.graphDB = graphDB;
+	public void init(String dbFile) {
+		if( this.graphDB == null ) {
+			GraphDatabaseFactory factory = new GraphDatabaseFactory();
+			GraphDatabaseBuilder builder = factory.newEmbeddedDatabaseBuilder(dbFile);
+			builder.setConfig(GraphDatabaseSettings.read_only, "true");
+			GraphDatabaseService graphDB = builder.newGraphDatabase();
+			this.graphDB = graphDB;
+		}
 	}
 	
 	
 	public void shutdownDB() {
 		this.graphDB.shutdown();
+		this.graphDB = null;
 	}
 	
 	

@@ -274,7 +274,7 @@ public class PROVBuilder {
 			for( Module module: this.moduleObjs )
 				out.println(module.id + " [shape=rectangle];");
 			for ( Edge edge: this.edges ) {
-				 if( edge.label.equals("connect") )
+				if( edge.label.equals("connect") )
 					out.println(edge.startId + " -> " + edge.endId + ";");
 			}
 			out.println("}");
@@ -290,42 +290,40 @@ public class PROVBuilder {
 	protected void createDOTFile(String filePath) {
 		try {
 			new File(filePath).mkdirs();
-			for(String runIDNode: this.runIDs ) {
+			for( String runIDNode: this.runIDs ) {
 				PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filePath+"/"+filePath+runIDNode+".dot")));
 				out.println("digraph TheGraph {");
 				out.println();
 				out.println("rankdir = BT");
 				out.println("edge[style=dashed]");
 			    out.println("node[style=\"filled\", color=\"#1AA4A7\", fillcolor=\"#DCF1F1\"]");
-	  			for( Actor actor: this.actors ){
-	  			if (actor.runID.equals(runIDNode))
+	  			for( Actor actor: this.actors ) {
+	  				if (actor.runID.equals(runIDNode))
 	  					out.println(actor.id + " [shape=rectangle];");
-	  		}
-				out.println("node[style=\"filled\",color=\"#CCCC00\", fillcolor=\"#F6F6CC\"]");
-			 //Create the edges for the 'used' and 'wasGeneratedBy' relations
-			for ( Edge edge: this.edges ) {
-				if (edge.runID!=null && edge.runID.equals(runIDNode))
-				{
-				if( edge.label.equals("used") )
-					out.println(edge.startId + " -> " + edge.endId + ";");
-				else if( edge.label.equals("genBy") )
-					out.println(edge.startId + " -> " + edge.endId + ";");
-				}
+	  			}
+	  			out.println("node[style=\"filled\",color=\"#CCCC00\", fillcolor=\"#F6F6CC\"]");
+	  			//Create the edges for the 'used' and 'wasGeneratedBy' relations
+	  			for ( Edge edge: this.edges ) {
+	  				if (edge.runID!=null && edge.runID.equals(runIDNode)) {
+	  					if( edge.label.equals("used") )
+	  						out.println(edge.startId + " -> " + edge.endId + ";");
+	  					else if( edge.label.equals("genBy") )
+	  						out.println(edge.startId + " -> " + edge.endId + ";");
+	  				}
+	  			}
+	  			out.println();
+	  			out.println( "labelloc=\"t\"");
+	  			out.println("fontsize=25");
+	  			out.println("labeljust=left");	
+	  			out.println("label=\"" +filePath+"_"+ wfVersion + " -- runID= "+ runIDNode+"\";");
+	  			out.println("}");
+	  			out.println();
+	  			out.close();
 			}
-			out.println();
-			out.println( "labelloc=\"t\"");
-			out.println("fontsize=25");
-			out.println("labeljust=left");	
-			out.println("label=\"" +filePath+"_"+ wfVersion + " -- runID= "+ runIDNode+"\";");
-			out.println("}");
-			out.println();
-	        out.close();
-	    }
 		}
 		catch (IOException e) {
 			e.printStackTrace();
 	    }
-		
 	}
 	
 	protected void createJSONFile(String filename) {
@@ -336,22 +334,21 @@ public class PROVBuilder {
 			// Iterate over the data items and actors to create entries of the form
 			// id [shape=ellipse]; on the DOT file
 			for( Data data: this.dataObjs ) {
-                sb.append("\"(" + data.id + "){");
-                sb.append("\\\"name\\\":\\\"" + data.id + "\\\"," );
-                if (data.vtType!=null)
-                	sb.append( "\\\"vtType\\\":\\\"" + data.vtType + "\\\",");
+				sb.append("\"(" + data.id + "){");
+				sb.append("\\\"name\\\":\\\"" + data.id + "\\\"," );
+				if (data.vtType!=null)
+					sb.append( "\\\"vtType\\\":\\\"" + data.vtType + "\\\",");
                 if (data.desc !=null)
                 	sb.append("\\\"description\\\":\\\"" + data.desc + "\\\"," );
                 if (data.value!=null)
                 	sb.append( "\\\"value\\\":\\\"" + data.value + "\\\",");
-			   if (data.runID!=null)
-				   sb.append("\\\"runID\\\":\\\"" + data.runID + "\\\",");
+                if (data.runID!=null)
+                	sb.append("\\\"runID\\\":\\\"" + data.runID + "\\\",");
 			    sb.append("\\\"wfID\\\":\\\"" + data.wfID + "\\\",");
 			    sb.append("\\\"type\\\":\\\"" + "data" + "\\\"");
 			    sb.append("}\""+ "\n");			
 			}
-			for( Actor actor: this.actors )
-			{
+			for( Actor actor: this.actors ) {
                 sb.append("\"(" + actor.id + "){");
                 sb.append("\\\"name\\\":\\\"" + actor.id + "\\\"," );
                 if (actor.vtType!=null)
@@ -366,8 +363,7 @@ public class PROVBuilder {
             	sb.append("\\\"type\\\":\\\"" + "actor" + "\\\"");
        			sb.append("}\""+ "\n");		
 			}
-			for( Module module: this.moduleObjs)
-			{
+			for( Module module: this.moduleObjs) {
                 sb.append("\"(" + module.id + "){");
                 sb.append("\\\"name\\\":\\\"" + module.id + "\\\"," );
                 if (module.vtType!=null)
@@ -385,19 +381,18 @@ public class PROVBuilder {
        			sb.append("}\""+ "\n");		
 			}
 			//Add an extra node representing the workflow to the graph
-			  sb.append("\"(" + this.wfID + "){");
-              sb.append("\\\"type\\\":\\\"" + "workflow" + "\\\"," );
-              sb.append("\\\"wfID\\\":\\\"" + this.wfID + "\\\"," );
-              sb.append("}\""+ "\n");		
-              //Add runID nodes
+			sb.append("\"(" + this.wfID + "){");
+            sb.append("\\\"type\\\":\\\"" + "workflow" + "\\\"," );
+            sb.append("\\\"wfID\\\":\\\"" + this.wfID + "\\\"," );
+            sb.append("}\""+ "\n");		
+            //Add runID nodes
   			for( String runIDNode: this.runIDs ) {
-  			  sb.append("\"(" + runIDNode + "){");
-              sb.append("\\\"type\\\":\\\"" + "run" + "\\\"," );
-              sb.append("\\\"wfID\\\":\\\"" + this.wfID + "\\\"," );
-              sb.append("\\\"wfID\\\":\\\"" + runIDNode+ "\\\"," );
-              sb.append("}\""+ "\n");	
+  				sb.append("\"(" + runIDNode + "){");
+  				sb.append("\\\"type\\\":\\\"" + "run" + "\\\"," );
+  				sb.append("\\\"wfID\\\":\\\"" + this.wfID + "\\\"," );
+  				sb.append("\\\"wfID\\\":\\\"" + runIDNode+ "\\\"," );
+  				sb.append("}\""+ "\n");	
   			}
-  			
               
 			// Create the edges for the 'used' and 'wasGeneratedBy' relations
 			for ( Edge edge: this.edges ) {
@@ -639,7 +634,7 @@ public class PROVBuilder {
 			sb.append("wfID:\""+ this.wfID + "\"," );
 			sb.append("type:\""+ "workflow" + "\"" );				
 			sb.append("};"+"\n" );
-			 //Add runID nodes
+			//Add runID nodes
   			for( String runIDNode: this.runIDs ) {
   				sb.append("CREATE n={");
   				sb.append("name:\""+ runIDNode + "\"," );
