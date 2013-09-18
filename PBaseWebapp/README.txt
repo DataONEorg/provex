@@ -34,7 +34,7 @@ http://localhost:8080/PBaseWebapp/
 
 Url of restful web service:
 
-http://localhost:8080/PBaseWebapp/webresources/myresource
+http://localhost:8080/PBaseWebapp/webresources/graphexample
 
 
 

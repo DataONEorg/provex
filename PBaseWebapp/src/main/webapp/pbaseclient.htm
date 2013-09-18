@@ -14,7 +14,7 @@
 	
 	<script type="text/javascript">
 	
-	function displayTraceJSON(container, traceJSON, Y) {
+	function displayGraphJSON(container, graphJSON, btnContainer, Y) {
 		// Checks if the browser is supported
     	if (!mxClient.isBrowserSupported()) {
     		// Displays an error message if the browser is not supported.
@@ -45,10 +45,10 @@
     		graph.getModel().beginUpdate();
     		try {
     			
-    			var traceNodesArray = new Array();
-    			var traceEdgesArray = new Array();
+    			var graphNodesArray = new Array();
+    			var graphEdgesArray = new Array();
     			
-    			fillTrace(traceJSON, graph, parent, traceNodesArray, traceEdgesArray);
+    			fillGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray);
     			
     			var layout = new mxHierarchicalLayout(graph);
     			layout.execute(parent);
@@ -65,47 +65,105 @@
     		graph.view.setTranslate( (container.clientWidth/2) - (bounds.width/2), 
     				(container.clientHeight/2) - (bounds.height/2) );
     		
-    		createButtons(graph, layout, parent, 'left', Y);
+    		activateButtons(graph, layout, parent, btnContainer, Y);
     		
     	}
     }
     
     
-    function fillTrace(traceJSON, graph, parent, traceNodesArray, traceEdgesArray) {
+    function fillGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray) {
     	var vertex = null;
     	var edge = null;
     	var tuple = null;
-    	for(var i = 0; i < traceJSON.nodes.length; i++) {
-    		tuple = traceJSON.nodes[i];
-    		if( traceNodesArray[tuple.nodeId] == undefined ) {
+    	for(var i = 0; i < graphJSON.nodes.length; i++) {
+    		tuple = graphJSON.nodes[i];
+    		if( graphNodesArray[tuple.nodeId] == undefined ) {
     			if(tuple.nodeType == "d")
     				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 80, 30, "shape=ellipse");
     			else
     				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 80, 30);
-    			traceNodesArray[tuple.nodeId] = vertex;
+    			graphNodesArray[tuple.nodeId] = vertex;
 			}
 		}
-    	for(var i = 0; i < traceJSON.edges.length; i++) {
-    		tuple = traceJSON.edges[i];
-    		edge = graph.insertEdge(parent, null, tuple.edgeLabel, traceNodesArray[tuple.startNodeId], 
-    				traceNodesArray[tuple.endNodeId]);
-    		traceEdgesArray[tuple.startNodeId + "_" + tuple.endNodeId] = edge;
+    	for(var i = 0; i < graphJSON.edges.length; i++) {
+    		tuple = graphJSON.edges[i];
+    		edge = graph.insertEdge(parent, null, tuple.edgeLabel, graphNodesArray[tuple.startNodeId], 
+    				graphNodesArray[tuple.endNodeId]);
+    		graphEdgesArray[tuple.startNodeId + "_" + tuple.endNodeId] = edge;
 		}
     }
     
-    function createButtons(graph, layout, parent, containerID, Y) {
+    function createButtons(containerID, Y) {
     	var container = Y.one('#' + containerID);
     	var btnContainerHTML = '<div id="' + containerID + 'BtnContainer"></div>';
     	container.get('children').slice(-1).item(0).insert(btnContainerHTML, 'after');
-    	var zoomInBtn = mxUtils.button( '+', function() { graph.zoomIn(); } );
-    	var zoomOutBtn = mxUtils.button( '-', function() { graph.zoomOut(); } );
-    	var layoutBtn = mxUtils.button('layout', function() { layout.execute(parent); });
     	var btnContainer = Y.one('#' + containerID + 'BtnContainer');
-    	btnContainer.insert(zoomInBtn);
-    	btnContainer.insert(zoomOutBtn);
-    	btnContainer.insert(layoutBtn);
+		var zoomInBtn = createButton(btnContainer, '+', containerID + 'ZoomInBtn');
+    	var zoomOutBtn = createButton(btnContainer, '-', containerID + 'ZoomOutBtn');
+    	var layoutBtn = createButton(btnContainer, 'layout', containerID + 'LayoutBtn');
+    	//alert(JSON.stringify(zoomInBtn, null, 4));
+    	//alert(zoomInBtn.toSource());
     }
     
+    function activateButtons(graph, layout, parent, containerID, Y) {
+    	var zoomInBtn = Y.one('#' + containerID + 'ZoomInBtn');
+    	var zoomInBtnFunc = function() { graph.zoomIn(); } ;
+    	zoomInBtn.set('onclick', zoomInBtnFunc);
+    	var zoomOutBtn = Y.one('#' + containerID + 'ZoomOutBtn');
+    	var zoomOutBtnFunc = function() { graph.zoomOut(); } ;
+    	zoomOutBtn.set('onclick', zoomOutBtnFunc);
+    	var layoutBtn = Y.one('#' + containerID + 'LayoutBtn');
+    	var layoutBtnFunc = function() { layout.execute(parent); } ;
+    	layoutBtn.set('onclick', layoutBtnFunc);	
+    }
+    
+    function createButton(container, label, btnId){
+        var button = document.createElement("input");
+        button.id = btnId;
+        button.type = "button";
+        button.value = label;
+        container.insert(button);
+        return button;
+    }
+    
+    function createTabs(containerID, Y) {
+    	var container = Y.one('#' + containerID);
+    	var tabsContainerHTML = '<div id="' + containerID + 'tabsContainer"></div>';
+    	container.get('children').slice(-1).item(0).insert(tabsContainerHTML, 'after');
+    	var tabsContainer = Y.one('#' + containerID + 'tabsContainer');
+    	var tabview = new Y.TabView({
+            children: [{
+                label: 'foo',
+                content: '<p>foo content</p>'
+            }, {
+                label: 'bar',
+                content: '<p>bar content</p>'
+            }, {
+                label: 'baz',
+                content: '<p>baz content</p>'
+            }]
+        });
+        //tabview.render('#demo');
+        tabview.render(tabsContainer);
+    }
+    
+    function callGraphRestfulWS(url, container, btnContainer, Y) {
+    	Y.io(url, {
+    		//data: 'suspect=butler',
+    		on: {
+    			complete: function (id, response) {
+    				if (response.status >= 200 && response.status < 300) {
+    					var json = Y.JSON.parse(response.responseText);
+    					displayGraphJSON(container, json, btnContainer, Y);
+    					//alert(JSON.stringify(json, null, 4));
+    				}
+    				else {
+    					alert('ERROR');
+    				}
+    			}
+    		}
+    	});
+    }
     </script>
 
     <title>Axosoft Layout Example</title>
@@ -147,6 +205,7 @@
 	
 	#center2 {
 		background:white;
+		overflow:scroll;
 	}
 
 	#bottom .yui3-layoutchild {
@@ -203,7 +262,23 @@
 		height: 25px;
 	}
 	
+	#center1 > .yui3-widget-content-expanded > .yui3-widget-hd {
+		border: 0px;
+	}
+	
+	#center2 > .yui3-widget-content-expanded > .yui3-widget-hd {
+		border: 0px;
+	}
+	
 	#left > .yui3-widget-content-expanded {
+		height: 25px;
+	}
+	
+	#center2 > .yui3-widget-content-expanded {
+		height: 25px;
+	}
+	
+	#right > .yui3-widget-content-expanded {
 		height: 25px;
 	}
 
@@ -220,38 +295,69 @@ YUI().use('gallery-axo-layout', 'resize', function(Y)
 
 	var layout = new Y.Layout({orientation: 'vertical', sizeToWindow: true });
 
-	layout.add(new Y.LayoutChild({id:'top', height:80, resize: true }));
+	layout.add(new Y.LayoutChild({id:'top', height:40, resize: true }));
 
 	var centerLayout = new Y.Layout({fluid: true, orientation: 'horizontal' });
 	layout.add(centerLayout);
 
-	var bottomLayout = new Y.Layout({id:'bottom', height:80, orientation: 'horizontal', resize: true });
+	var bottomLayout = new Y.Layout({id:'bottom', height:40, orientation: 'horizontal', resize: true });
 	layout.add(bottomLayout);
 	
-	centerLayout.add(new Y.LayoutChildStd({id: 'left', width:150, resize: true, label: 'left'}));
-	centerLayout.add(new Y.LayoutChildStd({id: 'center1', width:550, resize: true, label: 'center1'}));
-	centerLayout.add(new Y.LayoutChildStd({id: 'center2', fluid: true, label: 'center2'}));
-	centerLayout.add(new Y.LayoutChildStd({id: 'right', width:100, resize: true, label: 'right'}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'left', width:150, resize: true, label: 'Workflow'}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'center1', width:550, resize: true, label: ' '}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'center2', fluid: true, label: ' '}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'right', width:100, resize: true, label: 'Trace'}));
 
 	bottomLayout.add(new Y.LayoutChild({id: 'bottom1'}));
 
 	layout.render();
 });
 
-YUI().use('node', function (Y) {
+YUI().use('node', 'tabview', function (Y) {
 	var center1 = Y.one('#center1');
 	var wfContainerHTML = '<div id="wfContainer"></div>';
 	center1.get('children').slice(-1).item(0).insert(wfContainerHTML, 'after');
+	var center2 = Y.one('#center2');
+	var traceContainerHTML = '<div id="traceContainer"></div>';
+	center2.get('children').slice(-1).item(0).insert(traceContainerHTML, 'after');
+	createButtons('left', Y);
+	createButtons('right', Y);
+	createTabs('left', Y);
+	createTabs('right', Y);
 });
 
-YUI().use('node', 'json-parse', 'event-base', function (Y) {
+YUI().use('node', 'json-parse', 'io-base', function (Y) {
 	var traceJSONStr = '{"edges":[{"endNodeId":"p0","edgeLabel":"u","startNodeId":"a0"},{"endNodeId":"p0","edgeLabel":"u","startNodeId":"a1"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a3"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a4"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a5"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a6"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a2"},{"endNodeId":"p2","edgeLabel":"u","startNodeId":"a8"},{"endNodeId":"p2","edgeLabel":"u","startNodeId":"a7"},{"endNodeId":"p3","edgeLabel":"u","startNodeId":"a10"},{"endNodeId":"p3","edgeLabel":"u","startNodeId":"a11"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a13"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a14"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a15"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a16"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a12"},{"endNodeId":"p5","edgeLabel":"u","startNodeId":"a18"},{"endNodeId":"p5","edgeLabel":"u","startNodeId":"a17"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a20"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p7","edgeLabel":"u","startNodeId":"a21"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a22"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a23"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a25"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a26"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a28"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a29"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a31"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a24"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a27"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a30"},{"endNodeId":"p12","edgeLabel":"u","startNodeId":"a33"},{"endNodeId":"p12","edgeLabel":"u","startNodeId":"a34"},{"endNodeId":"p13","edgeLabel":"u","startNodeId":"a32"},{"endNodeId":"p13","edgeLabel":"u","startNodeId":"a35"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a36"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a37"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a21"},{"endNodeId":"a2","edgeLabel":"g","startNodeId":"p0"},{"endNodeId":"a7","edgeLabel":"g","startNodeId":"p1"},{"endNodeId":"a9","edgeLabel":"g","startNodeId":"p2"},{"endNodeId":"a12","edgeLabel":"g","startNodeId":"p3"},{"endNodeId":"a17","edgeLabel":"g","startNodeId":"p4"},{"endNodeId":"a19","edgeLabel":"g","startNodeId":"p5"},{"endNodeId":"a21","edgeLabel":"g","startNodeId":"p6"},{"endNodeId":"a24","edgeLabel":"g","startNodeId":"p8"},{"endNodeId":"a27","edgeLabel":"g","startNodeId":"p9"},{"endNodeId":"a30","edgeLabel":"g","startNodeId":"p10"},{"endNodeId":"a32","edgeLabel":"g","startNodeId":"p11"},{"endNodeId":"a35","edgeLabel":"g","startNodeId":"p12"}],"nodes":[{"nodeId":"a17","nodeType":"d"},{"nodeId":"p7","nodeType":"i"},{"nodeId":"a3","nodeType":"d"},{"nodeId":"p0","nodeType":"i"},{"nodeId":"p11","nodeType":"i"},{"nodeId":"a35","nodeType":"d"},{"nodeId":"a24","nodeType":"d"},{"nodeId":"a36","nodeType":"d"},{"nodeId":"a9","nodeType":"d"},{"nodeId":"p14","nodeType":"i"},{"nodeId":"a16","nodeType":"d"},{"nodeId":"a10","nodeType":"d"},{"nodeId":"a14","nodeType":"d"},{"nodeId":"a23","nodeType":"d"},{"nodeId":"a22","nodeType":"d"},{"nodeId":"a8","nodeType":"d"},{"nodeId":"a25","nodeType":"d"},{"nodeId":"a37","nodeType":"d"},{"nodeId":"p3","nodeType":"i"},{"nodeId":"a27","nodeType":"d"},{"nodeId":"p10","nodeType":"i"},{"nodeId":"a21","nodeType":"d"},{"nodeId":"p8","nodeType":"i"},{"nodeId":"a34","nodeType":"d"},{"nodeId":"a7","nodeType":"d"},{"nodeId":"a20","nodeType":"d"},{"nodeId":"a1","nodeType":"d"},{"nodeId":"a2","nodeType":"d"},{"nodeId":"a11","nodeType":"d"},{"nodeId":"a29","nodeType":"d"},{"nodeId":"p2","nodeType":"i"},{"nodeId":"a33","nodeType":"d"},{"nodeId":"a18","nodeType":"d"},{"nodeId":"a26","nodeType":"d"},{"nodeId":"p12","nodeType":"i"},{"nodeId":"p9","nodeType":"i"},{"nodeId":"a13","nodeType":"d"},{"nodeId":"a28","nodeType":"d"},{"nodeId":"a30","nodeType":"d"},{"nodeId":"a4","nodeType":"d"},{"nodeId":"p4","nodeType":"i"},{"nodeId":"a31","nodeType":"d"},{"nodeId":"a19","nodeType":"d"},{"nodeId":"p1","nodeType":"i"},{"nodeId":"a15","nodeType":"d"},{"nodeId":"a6","nodeType":"d"},{"nodeId":"a12","nodeType":"d"},{"nodeId":"a0","nodeType":"d"},{"nodeId":"p6","nodeType":"i"},{"nodeId":"a5","nodeType":"d"},{"nodeId":"a32","nodeType":"d"},{"nodeId":"p5","nodeType":"i"},{"nodeId":"p13","nodeType":"i"}]}' ;     
 	var traceJSON = Y.JSON.parse(traceJSONStr);
-	var wfContainer1 = Y.one('#wfContainer');
+	//var wfContainer1 = Y.one('#wfContainer');
+	var url = 'webresources/graphexample';
 	var wfContainer2 = document.getElementById('wfContainer');
+	//callGraphRestfulWS(url, wfContainer2, 'left', Y);
 	//alert('wfContainer1: ' + wfContainer1 + '\n' + 'wfContainer2: ' + wfContainer2);
-	displayTraceJSON(wfContainer2, traceJSON, Y);
+	displayGraphJSON(wfContainer2, traceJSON, 'left', Y);
+	var traceContainer = document.getElementById('traceContainer');
+	displayGraphJSON(traceContainer, traceJSON, 'right', Y);
+	//callGraphRestfulWS(url, traceContainer, 'right', Y);
 });
+
+/*
+YUI().use('io-base', 'node-base', 'json-parse', function (Y) {
+	Y.io('webresources/graphexample', {
+		//data: 'suspect=butler',
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var json = Y.JSON.parse(response.responseText);
+					//alert(JSON.stringify(json, null, 4));
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
+	});
+});
+*/
 
 </script>
 
