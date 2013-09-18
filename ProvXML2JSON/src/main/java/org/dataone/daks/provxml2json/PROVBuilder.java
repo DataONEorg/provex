@@ -286,7 +286,7 @@ public class PROVBuilder {
 				out.println(module.id + " [shape=rectangle];");
 			for ( Edge edge: this.edges ) {
 				 if( edge.label.equals("connect") )
-					out.println(edge.startId + " -> " + edge.endId + ";");
+					out.println(edge.endId + " -> " + edge.startId + "[dir=back];");
 			}
 			out.println("}");
 			out.println("}");
