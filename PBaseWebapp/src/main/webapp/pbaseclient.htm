@@ -95,7 +95,7 @@
     	for(var i = 0; i < graphJSON.edges.length; i++) {
     		tuple = graphJSON.edges[i];
     		edge = graph.insertEdge(parent, null, tuple.edgeLabel, graphNodesArray[tuple.startNodeId], 
-    				graphNodesArray[tuple.endNodeId], "strokeColor=#000000");
+    				graphNodesArray[tuple.endNodeId], "strokeColor=#2E2E2E;startArrow=oval");
     		graphEdgesArray[tuple.startNodeId + "_" + tuple.endNodeId] = edge;
 		}
     }
@@ -122,7 +122,7 @@
     	for(var i = 0; i < graphJSON.edges.length; i++) {
     		tuple = graphJSON.edges[i];
     		edge = graph.insertEdge(parent, null, tuple.edgeLabel, graphNodesArray[tuple.endNodeId], 
-        			graphNodesArray[tuple.startNodeId], "strokeColor=#000000;fontColor=#000000");
+        			graphNodesArray[tuple.startNodeId], "strokeColor=#2E2E2E;fontColor=#000000;startArrow=classic;endArrow=oval");
     		graphEdgesArray[tuple.endNodeId + "_" + tuple.startNodeId] = edge;
 		}
     }
@@ -205,7 +205,7 @@
     }
     </script>
 
-    <title>Axosoft Layout Example</title>
+    <title>PBase Provenance Database</title>
 
 	<style>
 
