@@ -155,6 +155,28 @@ public class GraphDAO {
 	}
 	
 	
+	/**
+	 * Returns a String representation of a JSON array containing the runIDs associated with a given workflow.
+	 * 
+	 * @param wfID
+	 * @return
+	 */
+	public String getRunIDs(String wfID) {
+		ExecutionEngine engine = new ExecutionEngine(this.graphDB, StringLogger.SYSTEM); 
+		String query = "START n=node(*) WHERE HAS(n.wfID) AND HAS(n.runID) AND HAS(n.type) " +
+					   "AND n.wfID='" + wfID + "' " +
+					   "RETURN distinct n.runID;";
+		ExecutionResult result = engine.execute(query);
+		ResourceIterator<Node> it = result.columnAs("n");
+		JSONArray array = new JSONArray();
+		while (it.hasNext()) {
+			Node node = it.next();
+			array.put(node.getProperty("runID"));
+		}
+		return array.toString();
+	}
+	
+	
 }
 
 

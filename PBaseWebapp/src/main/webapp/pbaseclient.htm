@@ -14,7 +14,8 @@
 	
 	<script type="text/javascript">
 	
-	function displayGraphJSON(container, graphJSON, btnContainer, Y) {
+	function displayGraphJSON(container, graphJSON, btnContainer, isTrace, Y) {
+		
 		// Checks if the browser is supported
     	if (!mxClient.isBrowserSupported()) {
     		// Displays an error message if the browser is not supported.
@@ -48,10 +49,17 @@
     			var graphNodesArray = new Array();
     			var graphEdgesArray = new Array();
     			
-    			fillGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray);
+    			if( !isTrace )
+    				fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray);
+    			else
+    				fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray);
     			
-    			var layout = new mxHierarchicalLayout(graph);
-    			layout.execute(parent);
+    			var hierLayout = new mxHierarchicalLayout(graph);
+    			
+    			var orgLayout = new mxFastOrganicLayout(graph);
+    			orgLayout.forceConstant = 120;
+    			
+    			hierLayout.execute(parent);
     			
     		}
     		finally {
@@ -65,23 +73,20 @@
     		graph.view.setTranslate( (container.clientWidth/2) - (bounds.width/2), 
     				(container.clientHeight/2) - (bounds.height/2) );
     		
-    		activateButtons(graph, layout, parent, btnContainer, Y);
+    		activateButtons(graph, hierLayout, orgLayout, parent, btnContainer, Y);
     		
     	}
     }
     
     
-    function fillGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray) {
+    function fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray) {
     	var vertex = null;
     	var edge = null;
     	var tuple = null;
     	for(var i = 0; i < graphJSON.nodes.length; i++) {
     		tuple = graphJSON.nodes[i];
     		if( graphNodesArray[tuple.nodeId] == undefined ) {
-    			if(tuple.nodeType == "d")
-    				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 80, 30, "shape=ellipse");
-    			else
-    				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 80, 30);
+    			vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30);
     			graphNodesArray[tuple.nodeId] = vertex;
 			}
 		}
@@ -92,7 +97,31 @@
     		graphEdgesArray[tuple.startNodeId + "_" + tuple.endNodeId] = edge;
 		}
     }
+	
+	
+	function fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray) {
+    	var vertex = null;
+    	var edge = null;
+    	var tuple = null;
+    	for(var i = graphJSON.nodes.length-1; i >=0; i--) {
+    		tuple = graphJSON.nodes[i];
+    		if( graphNodesArray[tuple.nodeId] == undefined ) {
+    			if(tuple.nodeType == "d")
+    				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "shape=ellipse");
+    			else
+    				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30);
+    			graphNodesArray[tuple.nodeId] = vertex;
+			}
+    	}
+    	for(var i = 0; i < graphJSON.edges.length; i++) {
+    		tuple = graphJSON.edges[i];
+    		edge = graph.insertEdge(parent, null, tuple.edgeLabel, graphNodesArray[tuple.endNodeId], 
+        			graphNodesArray[tuple.startNodeId]);
+    		graphEdgesArray[tuple.endNodeId + "_" + tuple.startNodeId] = edge;
+		}
+    }
     
+	
     function createButtons(containerID, Y) {
     	var container = Y.one('#' + containerID);
     	var btnContainerHTML = '<div id="' + containerID + 'BtnContainer"></div>';
@@ -100,21 +129,25 @@
     	var btnContainer = Y.one('#' + containerID + 'BtnContainer');
 		var zoomInBtn = createButton(btnContainer, '+', containerID + 'ZoomInBtn');
     	var zoomOutBtn = createButton(btnContainer, '-', containerID + 'ZoomOutBtn');
-    	var layoutBtn = createButton(btnContainer, 'layout', containerID + 'LayoutBtn');
+    	var hierLayoutBtn = createButton(btnContainer, 'hierLayout', containerID + 'HierLayoutBtn');
+    	var orgLayoutBtn = createButton(btnContainer, 'orgLayout', containerID + 'OrgLayoutBtn');
     	//alert(JSON.stringify(zoomInBtn, null, 4));
     	//alert(zoomInBtn.toSource());
     }
     
-    function activateButtons(graph, layout, parent, containerID, Y) {
+    function activateButtons(graph, hierLayout, orgLayout, parent, containerID, Y) {
     	var zoomInBtn = Y.one('#' + containerID + 'ZoomInBtn');
     	var zoomInBtnFunc = function() { graph.zoomIn(); } ;
     	zoomInBtn.set('onclick', zoomInBtnFunc);
     	var zoomOutBtn = Y.one('#' + containerID + 'ZoomOutBtn');
     	var zoomOutBtnFunc = function() { graph.zoomOut(); } ;
     	zoomOutBtn.set('onclick', zoomOutBtnFunc);
-    	var layoutBtn = Y.one('#' + containerID + 'LayoutBtn');
-    	var layoutBtnFunc = function() { layout.execute(parent); } ;
-    	layoutBtn.set('onclick', layoutBtnFunc);	
+    	var hierLayoutBtn = Y.one('#' + containerID + 'HierLayoutBtn');
+    	var hierLayoutBtnFunc = function() { hierLayout.execute(parent); } ;
+    	hierLayoutBtn.set('onclick', hierLayoutBtnFunc);
+    	var orgLayoutBtn = Y.one('#' + containerID + 'OrgLayoutBtn');
+    	var orgLayoutBtnFunc = function() { orgLayout.execute(parent); } ;
+    	orgLayoutBtn.set('onclick', orgLayoutBtnFunc);
     }
     
     function createButton(container, label, btnId){
@@ -147,14 +180,14 @@
         tabview.render(tabsContainer);
     }
     
-    function callGraphRestfulWS(url, container, btnContainer, Y) {
+    function callGraphRestfulWS(url, container, btnContainer, isTrace, Y) {
     	Y.io(url, {
     		//data: 'suspect=butler',
     		on: {
     			complete: function (id, response) {
     				if (response.status >= 200 && response.status < 300) {
     					var json = Y.JSON.parse(response.responseText);
-    					displayGraphJSON(container, json, btnContainer, Y);
+    					displayGraphJSON(container, json, btnContainer, isTrace, Y);
     					//alert(JSON.stringify(json, null, 4));
     				}
     				else {
@@ -327,18 +360,21 @@ YUI().use('node', 'tabview', function (Y) {
 });
 
 YUI().use('node', 'json-parse', 'io-base', function (Y) {
-	var traceJSONStr = '{"edges":[{"endNodeId":"p0","edgeLabel":"u","startNodeId":"a0"},{"endNodeId":"p0","edgeLabel":"u","startNodeId":"a1"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a3"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a4"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a5"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a6"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a2"},{"endNodeId":"p2","edgeLabel":"u","startNodeId":"a8"},{"endNodeId":"p2","edgeLabel":"u","startNodeId":"a7"},{"endNodeId":"p3","edgeLabel":"u","startNodeId":"a10"},{"endNodeId":"p3","edgeLabel":"u","startNodeId":"a11"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a13"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a14"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a15"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a16"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a12"},{"endNodeId":"p5","edgeLabel":"u","startNodeId":"a18"},{"endNodeId":"p5","edgeLabel":"u","startNodeId":"a17"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a20"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p7","edgeLabel":"u","startNodeId":"a21"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a22"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a23"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a25"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a26"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a28"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a29"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a31"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a24"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a27"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a30"},{"endNodeId":"p12","edgeLabel":"u","startNodeId":"a33"},{"endNodeId":"p12","edgeLabel":"u","startNodeId":"a34"},{"endNodeId":"p13","edgeLabel":"u","startNodeId":"a32"},{"endNodeId":"p13","edgeLabel":"u","startNodeId":"a35"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a36"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a37"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a21"},{"endNodeId":"a2","edgeLabel":"g","startNodeId":"p0"},{"endNodeId":"a7","edgeLabel":"g","startNodeId":"p1"},{"endNodeId":"a9","edgeLabel":"g","startNodeId":"p2"},{"endNodeId":"a12","edgeLabel":"g","startNodeId":"p3"},{"endNodeId":"a17","edgeLabel":"g","startNodeId":"p4"},{"endNodeId":"a19","edgeLabel":"g","startNodeId":"p5"},{"endNodeId":"a21","edgeLabel":"g","startNodeId":"p6"},{"endNodeId":"a24","edgeLabel":"g","startNodeId":"p8"},{"endNodeId":"a27","edgeLabel":"g","startNodeId":"p9"},{"endNodeId":"a30","edgeLabel":"g","startNodeId":"p10"},{"endNodeId":"a32","edgeLabel":"g","startNodeId":"p11"},{"endNodeId":"a35","edgeLabel":"g","startNodeId":"p12"}],"nodes":[{"nodeId":"a17","nodeType":"d"},{"nodeId":"p7","nodeType":"i"},{"nodeId":"a3","nodeType":"d"},{"nodeId":"p0","nodeType":"i"},{"nodeId":"p11","nodeType":"i"},{"nodeId":"a35","nodeType":"d"},{"nodeId":"a24","nodeType":"d"},{"nodeId":"a36","nodeType":"d"},{"nodeId":"a9","nodeType":"d"},{"nodeId":"p14","nodeType":"i"},{"nodeId":"a16","nodeType":"d"},{"nodeId":"a10","nodeType":"d"},{"nodeId":"a14","nodeType":"d"},{"nodeId":"a23","nodeType":"d"},{"nodeId":"a22","nodeType":"d"},{"nodeId":"a8","nodeType":"d"},{"nodeId":"a25","nodeType":"d"},{"nodeId":"a37","nodeType":"d"},{"nodeId":"p3","nodeType":"i"},{"nodeId":"a27","nodeType":"d"},{"nodeId":"p10","nodeType":"i"},{"nodeId":"a21","nodeType":"d"},{"nodeId":"p8","nodeType":"i"},{"nodeId":"a34","nodeType":"d"},{"nodeId":"a7","nodeType":"d"},{"nodeId":"a20","nodeType":"d"},{"nodeId":"a1","nodeType":"d"},{"nodeId":"a2","nodeType":"d"},{"nodeId":"a11","nodeType":"d"},{"nodeId":"a29","nodeType":"d"},{"nodeId":"p2","nodeType":"i"},{"nodeId":"a33","nodeType":"d"},{"nodeId":"a18","nodeType":"d"},{"nodeId":"a26","nodeType":"d"},{"nodeId":"p12","nodeType":"i"},{"nodeId":"p9","nodeType":"i"},{"nodeId":"a13","nodeType":"d"},{"nodeId":"a28","nodeType":"d"},{"nodeId":"a30","nodeType":"d"},{"nodeId":"a4","nodeType":"d"},{"nodeId":"p4","nodeType":"i"},{"nodeId":"a31","nodeType":"d"},{"nodeId":"a19","nodeType":"d"},{"nodeId":"p1","nodeType":"i"},{"nodeId":"a15","nodeType":"d"},{"nodeId":"a6","nodeType":"d"},{"nodeId":"a12","nodeType":"d"},{"nodeId":"a0","nodeType":"d"},{"nodeId":"p6","nodeType":"i"},{"nodeId":"a5","nodeType":"d"},{"nodeId":"a32","nodeType":"d"},{"nodeId":"p5","nodeType":"i"},{"nodeId":"p13","nodeType":"i"}]}' ;     
+	var wfJSONStr = '{"edges":[{"endNodeId":"e15_StatisticsAlongSpatialAxis","edgeLabel":"","startNodeId":"e7_Regrid"},{"endNodeId":"e14_CDMSCell","edgeLabel":"","startNodeId":"e13_CDMSBoxfill"},{"endNodeId":"e13_CDMSBoxfill","edgeLabel":"","startNodeId":"e15_StatisticsAlongSpatialAxis"},{"endNodeId":"e11_TemporalAggregation","edgeLabel":"","startNodeId":"e7_Regrid"},{"endNodeId":"e7_Regrid","edgeLabel":"","startNodeId":"e1_CDMSVariable"},{"endNodeId":"e6_CDMSCell","edgeLabel":"","startNodeId":"e5_CDMSBoxfill"},{"endNodeId":"e5_CDMSBoxfill","edgeLabel":"","startNodeId":"e11_TemporalAggregation"}],"nodes":[{"nodeId":"e1_CDMSVariable"},{"nodeId":"e15_StatisticsAlongSpatialAxis"},{"nodeId":"e14_CDMSCell"},{"nodeId":"e13_CDMSBoxfill"},{"nodeId":"e11_TemporalAggregation"},{"nodeId":"e7_Regrid"},{"nodeId":"e6_CDMSCell"},{"nodeId":"e5_CDMSBoxfill"}]}';  
+	var wfJSON = Y.JSON.parse(wfJSONStr);
+	//var traceJSONStr = '{"edges":[{"endNodeId":"p0","edgeLabel":"u","startNodeId":"a0"},{"endNodeId":"p0","edgeLabel":"u","startNodeId":"a1"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a3"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a4"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a5"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a6"},{"endNodeId":"p1","edgeLabel":"u","startNodeId":"a2"},{"endNodeId":"p2","edgeLabel":"u","startNodeId":"a8"},{"endNodeId":"p2","edgeLabel":"u","startNodeId":"a7"},{"endNodeId":"p3","edgeLabel":"u","startNodeId":"a10"},{"endNodeId":"p3","edgeLabel":"u","startNodeId":"a11"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a13"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a14"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a15"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a16"},{"endNodeId":"p4","edgeLabel":"u","startNodeId":"a12"},{"endNodeId":"p5","edgeLabel":"u","startNodeId":"a18"},{"endNodeId":"p5","edgeLabel":"u","startNodeId":"a17"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a20"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p6","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p7","edgeLabel":"u","startNodeId":"a21"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a22"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a23"},{"endNodeId":"p8","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a25"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a26"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p9","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a28"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a29"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a9"},{"endNodeId":"p10","edgeLabel":"u","startNodeId":"a19"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a31"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a24"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a27"},{"endNodeId":"p11","edgeLabel":"u","startNodeId":"a30"},{"endNodeId":"p12","edgeLabel":"u","startNodeId":"a33"},{"endNodeId":"p12","edgeLabel":"u","startNodeId":"a34"},{"endNodeId":"p13","edgeLabel":"u","startNodeId":"a32"},{"endNodeId":"p13","edgeLabel":"u","startNodeId":"a35"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a36"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a37"},{"endNodeId":"p14","edgeLabel":"u","startNodeId":"a21"},{"endNodeId":"a2","edgeLabel":"g","startNodeId":"p0"},{"endNodeId":"a7","edgeLabel":"g","startNodeId":"p1"},{"endNodeId":"a9","edgeLabel":"g","startNodeId":"p2"},{"endNodeId":"a12","edgeLabel":"g","startNodeId":"p3"},{"endNodeId":"a17","edgeLabel":"g","startNodeId":"p4"},{"endNodeId":"a19","edgeLabel":"g","startNodeId":"p5"},{"endNodeId":"a21","edgeLabel":"g","startNodeId":"p6"},{"endNodeId":"a24","edgeLabel":"g","startNodeId":"p8"},{"endNodeId":"a27","edgeLabel":"g","startNodeId":"p9"},{"endNodeId":"a30","edgeLabel":"g","startNodeId":"p10"},{"endNodeId":"a32","edgeLabel":"g","startNodeId":"p11"},{"endNodeId":"a35","edgeLabel":"g","startNodeId":"p12"}],"nodes":[{"nodeId":"a17","nodeType":"d"},{"nodeId":"p7","nodeType":"i"},{"nodeId":"a3","nodeType":"d"},{"nodeId":"p0","nodeType":"i"},{"nodeId":"p11","nodeType":"i"},{"nodeId":"a35","nodeType":"d"},{"nodeId":"a24","nodeType":"d"},{"nodeId":"a36","nodeType":"d"},{"nodeId":"a9","nodeType":"d"},{"nodeId":"p14","nodeType":"i"},{"nodeId":"a16","nodeType":"d"},{"nodeId":"a10","nodeType":"d"},{"nodeId":"a14","nodeType":"d"},{"nodeId":"a23","nodeType":"d"},{"nodeId":"a22","nodeType":"d"},{"nodeId":"a8","nodeType":"d"},{"nodeId":"a25","nodeType":"d"},{"nodeId":"a37","nodeType":"d"},{"nodeId":"p3","nodeType":"i"},{"nodeId":"a27","nodeType":"d"},{"nodeId":"p10","nodeType":"i"},{"nodeId":"a21","nodeType":"d"},{"nodeId":"p8","nodeType":"i"},{"nodeId":"a34","nodeType":"d"},{"nodeId":"a7","nodeType":"d"},{"nodeId":"a20","nodeType":"d"},{"nodeId":"a1","nodeType":"d"},{"nodeId":"a2","nodeType":"d"},{"nodeId":"a11","nodeType":"d"},{"nodeId":"a29","nodeType":"d"},{"nodeId":"p2","nodeType":"i"},{"nodeId":"a33","nodeType":"d"},{"nodeId":"a18","nodeType":"d"},{"nodeId":"a26","nodeType":"d"},{"nodeId":"p12","nodeType":"i"},{"nodeId":"p9","nodeType":"i"},{"nodeId":"a13","nodeType":"d"},{"nodeId":"a28","nodeType":"d"},{"nodeId":"a30","nodeType":"d"},{"nodeId":"a4","nodeType":"d"},{"nodeId":"p4","nodeType":"i"},{"nodeId":"a31","nodeType":"d"},{"nodeId":"a19","nodeType":"d"},{"nodeId":"p1","nodeType":"i"},{"nodeId":"a15","nodeType":"d"},{"nodeId":"a6","nodeType":"d"},{"nodeId":"a12","nodeType":"d"},{"nodeId":"a0","nodeType":"d"},{"nodeId":"p6","nodeType":"i"},{"nodeId":"a5","nodeType":"d"},{"nodeId":"a32","nodeType":"d"},{"nodeId":"p5","nodeType":"i"},{"nodeId":"p13","nodeType":"i"}]}' ;     
+	var traceJSONStr = '{"edges":[{"endNodeId":"e19","edgeLabel":"used","startNodeId":"a7_CDMSBoxfill"},{"endNodeId":"e18","edgeLabel":"used","startNodeId":"a6_TemporalAggregation"},{"endNodeId":"e17","edgeLabel":"used","startNodeId":"a8_CDMSCell"},{"endNodeId":"e16_statistics","edgeLabel":"used","startNodeId":"a3_StatisticsAlongSpatialAxis"},{"endNodeId":"e22","edgeLabel":"used","startNodeId":"a4_CDMSBoxfill"},{"endNodeId":"e12_temporal_granularity","edgeLabel":"used","startNodeId":"a6_TemporalAggregation"},{"endNodeId":"e21","edgeLabel":"used","startNodeId":"a3_StatisticsAlongSpatialAxis"},{"endNodeId":"e9_latitude_interval","edgeLabel":"used","startNodeId":"a2_Regrid"},{"endNodeId":"e10_regrid_method","edgeLabel":"used","startNodeId":"a2_Regrid"},{"endNodeId":"e23","edgeLabel":"used","startNodeId":"a2_Regrid"},{"endNodeId":"e8_longitude_interval","edgeLabel":"used","startNodeId":"a2_Regrid"},{"endNodeId":"e20","edgeLabel":"used","startNodeId":"a5_CDMSCell"},{"endNodeId":"e3_name","edgeLabel":"used","startNodeId":"a1_CDMSVariable"},{"endNodeId":"e4_varNameInFile","edgeLabel":"used","startNodeId":"a1_CDMSVariable"},{"endNodeId":"e2_file","edgeLabel":"used","startNodeId":"a1_CDMSVariable"},{"endNodeId":"a1_CDMSVariable","edgeLabel":"wasGeneratedBy","startNodeId":"e23"},{"endNodeId":"a2_Regrid","edgeLabel":"wasGeneratedBy","startNodeId":"e21"},{"endNodeId":"a2_Regrid","edgeLabel":"wasGeneratedBy","startNodeId":"e18"},{"endNodeId":"a3_StatisticsAlongSpatialAxis","edgeLabel":"wasGeneratedBy","startNodeId":"e22"},{"endNodeId":"a4_CDMSBoxfill","edgeLabel":"wasGeneratedBy","startNodeId":"e20"},{"endNodeId":"a6_TemporalAggregation","edgeLabel":"wasGeneratedBy","startNodeId":"e19"},{"endNodeId":"a7_CDMSBoxfill","edgeLabel":"wasGeneratedBy","startNodeId":"e17"}],"nodes":[{"nodeId":"e19"},{"nodeId":"e18"},{"nodeId":"e17"},{"nodeId":"e16_statistics"},{"nodeId":"e22"},{"nodeId":"e12_temporal_granularity"},{"nodeId":"e21"},{"nodeId":"e9_latitude_interval"},{"nodeId":"e10_regrid_method"},{"nodeId":"e23"},{"nodeId":"e8_longitude_interval"},{"nodeId":"e20"},{"nodeId":"e3_name"},{"nodeId":"e4_varNameInFile"},{"nodeId":"e2_file"},{"nodeId":"a1_CDMSVariable"},{"nodeId":"a2_Regrid"},{"nodeId":"a3_StatisticsAlongSpatialAxis"},{"nodeId":"a4_CDMSBoxfill"},{"nodeId":"a5_CDMSCell"},{"nodeId":"a6_TemporalAggregation"},{"nodeId":"a7_CDMSBoxfill"},{"nodeId":"a8_CDMSCell"}]}';  
 	var traceJSON = Y.JSON.parse(traceJSONStr);
 	//var wfContainer1 = Y.one('#wfContainer');
 	var urlWF = 'webresources/exampledaoworkflow';
 	var wfContainer2 = document.getElementById('wfContainer');
-	callGraphRestfulWS(urlWF, wfContainer2, 'left', Y);
+	callGraphRestfulWS(urlWF, wfContainer2, 'left', false, Y);
 	//alert('wfContainer1: ' + wfContainer1 + '\n' + 'wfContainer2: ' + wfContainer2);
-	//displayGraphJSON(wfContainer2, traceJSON, 'left', Y);
+	//displayGraphJSON(wfContainer2, wfJSON, 'left', false, Y);
 	var urlTrace = 'webresources/exampledaotrace';
 	var traceContainer = document.getElementById('traceContainer');
-	//displayGraphJSON(traceContainer, traceJSON, 'right', Y);
-	callGraphRestfulWS(urlTrace, traceContainer, 'right', Y);
+	//displayGraphJSON(traceContainer, traceJSON, 'right', true, Y);
+	callGraphRestfulWS(urlTrace, traceContainer, 'right', true, Y);
 });
 
 /*
