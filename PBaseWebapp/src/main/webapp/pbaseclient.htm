@@ -83,17 +83,19 @@
     	var vertex = null;
     	var edge = null;
     	var tuple = null;
+    	// Workflow rectangle fill color #BAE3E4
+    	// Workflow rectangle stroke color #1AA4A7
     	for(var i = 0; i < graphJSON.nodes.length; i++) {
     		tuple = graphJSON.nodes[i];
     		if( graphNodesArray[tuple.nodeId] == undefined ) {
-    			vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30);
+    			vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#BAE3E4;fontColor=#000000");
     			graphNodesArray[tuple.nodeId] = vertex;
 			}
 		}
     	for(var i = 0; i < graphJSON.edges.length; i++) {
     		tuple = graphJSON.edges[i];
     		edge = graph.insertEdge(parent, null, tuple.edgeLabel, graphNodesArray[tuple.startNodeId], 
-    				graphNodesArray[tuple.endNodeId]);
+    				graphNodesArray[tuple.endNodeId], "strokeColor=#000000");
     		graphEdgesArray[tuple.startNodeId + "_" + tuple.endNodeId] = edge;
 		}
     }
@@ -103,20 +105,24 @@
     	var vertex = null;
     	var edge = null;
     	var tuple = null;
+    	// Trace rectangle fill color #DCF1F1
+    	// Trace rectangle stroke color #1AA4A7
+    	// Trace ellipse fill color #F6F6CC
+    	// Trace ellipse stroke color #CCCC00
     	for(var i = graphJSON.nodes.length-1; i >=0; i--) {
     		tuple = graphJSON.nodes[i];
     		if( graphNodesArray[tuple.nodeId] == undefined ) {
     			if(tuple.nodeType == "d")
     				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "shape=ellipse");
     			else
-    				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30);
+    				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#DCF1F1;fontColor=#000000");
     			graphNodesArray[tuple.nodeId] = vertex;
 			}
     	}
     	for(var i = 0; i < graphJSON.edges.length; i++) {
     		tuple = graphJSON.edges[i];
     		edge = graph.insertEdge(parent, null, tuple.edgeLabel, graphNodesArray[tuple.endNodeId], 
-        			graphNodesArray[tuple.startNodeId]);
+        			graphNodesArray[tuple.startNodeId], "strokeColor=#000000;fontColor=#000000");
     		graphEdgesArray[tuple.endNodeId + "_" + tuple.startNodeId] = edge;
 		}
     }
@@ -222,13 +228,14 @@
 	}
 
 	#top {
-		background:blue;
-		opacity:0.6;
+		/*background:blue;*/
+		background:#90A1CE;
+		opacity:1.0;
 	}
 
 	#bottom {
 		background:yellow;
-		opacity:0.6;
+		opacity:0.4;
 	}
 
 	#center1 {
@@ -368,13 +375,13 @@ YUI().use('node', 'json-parse', 'io-base', function (Y) {
 	//var wfContainer1 = Y.one('#wfContainer');
 	var urlWF = 'webresources/exampledaoworkflow';
 	var wfContainer2 = document.getElementById('wfContainer');
-	callGraphRestfulWS(urlWF, wfContainer2, 'left', false, Y);
+	//callGraphRestfulWS(urlWF, wfContainer2, 'left', false, Y);
 	//alert('wfContainer1: ' + wfContainer1 + '\n' + 'wfContainer2: ' + wfContainer2);
-	//displayGraphJSON(wfContainer2, wfJSON, 'left', false, Y);
+	displayGraphJSON(wfContainer2, wfJSON, 'left', false, Y);
 	var urlTrace = 'webresources/exampledaotrace';
 	var traceContainer = document.getElementById('traceContainer');
-	//displayGraphJSON(traceContainer, traceJSON, 'right', true, Y);
-	callGraphRestfulWS(urlTrace, traceContainer, 'right', true, Y);
+	displayGraphJSON(traceContainer, traceJSON, 'right', true, Y);
+	//callGraphRestfulWS(urlTrace, traceContainer, 'right', true, Y);
 });
 
 /*
