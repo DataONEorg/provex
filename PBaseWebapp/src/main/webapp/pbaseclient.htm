@@ -15,66 +15,50 @@
 	<script type="text/javascript">
 	
 	function displayGraphJSON(container, graphJSON, btnContainer, isTrace, Y) {
-		
 		// Checks if the browser is supported
     	if (!mxClient.isBrowserSupported()) {
     		// Displays an error message if the browser is not supported.
     		mxUtils.error('Browser is not supported!', 200, false);
     	}
     	else {
-    		
     		container.innerHTML = "";
-    		
     		mxEvent.disableContextMenu(document.body);
-    		
     		// Enables crisp rendering of rectangles in SVG
-    		mxRectangleShape.prototype.crisp = true;
-    				
+    		mxRectangleShape.prototype.crisp = true;	
     		// Creates the graph inside the given container
     		var graph = new mxGraph(container);
     		graph.graphHandler.scaleGrid = true;
     		graph.setPanning(true);
-
     		// Enables rubberband selection
     		new mxRubberband(graph);
-    		
     		// Gets the default parent for inserting new cells. This
     		// is normally the first child of the root (ie. layer 0).
-    		var parent = graph.getDefaultParent();
-    								
+    		var parent = graph.getDefaultParent();					
     		// Adds cells to the model in a single step
     		graph.getModel().beginUpdate();
     		try {
-    			
     			var graphNodesArray = new Array();
     			var graphEdgesArray = new Array();
-    			
     			if( !isTrace )
     				fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray);
     			else
     				fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray);
-    			
     			var hierLayout = new mxHierarchicalLayout(graph);
-    			
-    			var orgLayout = new mxFastOrganicLayout(graph);
-    			orgLayout.forceConstant = 120;
-    			
+    			//ORGANIC
+    			var orgLayout = null;
+    			//var orgLayout = new mxFastOrganicLayout(graph);
+    			//orgLayout.forceConstant = 120;
     			hierLayout.execute(parent);
-    			
     		}
     		finally {
     			// Updates the display
     			graph.getModel().endUpdate();
     		}
-
     		graph.centerZoom = false;
-    		
     		var bounds = graph.getGraphBounds();
     		graph.view.setTranslate( (container.clientWidth/2) - (bounds.width/2), 
     				(container.clientHeight/2) - (bounds.height/2) );
-    		
     		activateButtons(graph, hierLayout, orgLayout, parent, btnContainer, Y);
-    		
     	}
     }
     
@@ -133,10 +117,11 @@
     	var btnContainerHTML = '<div id="' + containerID + 'BtnContainer"></div>';
     	container.get('children').slice(-1).item(0).insert(btnContainerHTML, 'after');
     	var btnContainer = Y.one('#' + containerID + 'BtnContainer');
-		var zoomInBtn = createButton(btnContainer, '+', containerID + 'ZoomInBtn');
-    	var zoomOutBtn = createButton(btnContainer, '-', containerID + 'ZoomOutBtn');
-    	var hierLayoutBtn = createButton(btnContainer, 'hierLayout', containerID + 'HierLayoutBtn');
-    	var orgLayoutBtn = createButton(btnContainer, 'orgLayout', containerID + 'OrgLayoutBtn');
+		var zoomInBtn = createButton(btnContainer, ' + ', containerID + 'ZoomInBtn');
+    	var zoomOutBtn = createButton(btnContainer, ' - ', containerID + 'ZoomOutBtn');
+    	var hierLayoutBtn = createButton(btnContainer, 'layout', containerID + 'HierLayoutBtn');
+    	//ORGANIC
+    	//var orgLayoutBtn = createButton(btnContainer, 'orgLayout', containerID + 'OrgLayoutBtn');
     	//alert(JSON.stringify(zoomInBtn, null, 4));
     	//alert(zoomInBtn.toSource());
     }
@@ -151,9 +136,12 @@
     	var hierLayoutBtn = Y.one('#' + containerID + 'HierLayoutBtn');
     	var hierLayoutBtnFunc = function() { hierLayout.execute(parent); } ;
     	hierLayoutBtn.set('onclick', hierLayoutBtnFunc);
+    	//ORGANIC
+    	/*
     	var orgLayoutBtn = Y.one('#' + containerID + 'OrgLayoutBtn');
     	var orgLayoutBtnFunc = function() { orgLayout.execute(parent); } ;
     	orgLayoutBtn.set('onclick', orgLayoutBtnFunc);
+    	*/
     }
     
     function createButton(container, label, btnId){
@@ -165,24 +153,41 @@
         return button;
     }
     
-    function createTabs(containerID, Y) {
+    function createWFTabs(containerID, Y) {
     	var container = Y.one('#' + containerID);
     	var tabsContainerHTML = '<div id="' + containerID + 'tabsContainer"></div>';
     	container.get('children').slice(-1).item(0).insert(tabsContainerHTML, 'after');
     	var tabsContainer = Y.one('#' + containerID + 'tabsContainer');
+    	var loadWFTabContainerID = 'loadWFTabContainer';
+    	var queryWFTabContainerID = 'queryWFTabContainer';
     	var tabview = new Y.TabView({
             children: [{
-                label: 'foo',
-                content: '<p>foo content</p>'
+                label: 'Load',
+                content: '<div id="' + loadWFTabContainerID + '">Workflow name: <input type="text" name="wfnameTextfield" size="15"><br/><input type="button" id="wfnameLoadBtn" value="Load"></div>'
             }, {
-                label: 'bar',
-                content: '<p>bar content</p>'
-            }, {
-                label: 'baz',
-                content: '<p>baz content</p>'
+                label: 'Query',
+                content: '<div id="' + queryWFTabContainerID + '"></div>'
             }]
         });
-        //tabview.render('#demo');
+        tabview.render(tabsContainer);
+    }
+    
+    function createTraceTabs(containerID, Y) {
+    	var container = Y.one('#' + containerID);
+    	var tabsContainerHTML = '<div id="' + containerID + 'tabsContainer"></div>';
+    	container.get('children').slice(-1).item(0).insert(tabsContainerHTML, 'after');
+    	var tabsContainer = Y.one('#' + containerID + 'tabsContainer');
+    	var loadTraceTabContainerID = 'loadTraceTabContainer';
+    	var queryTraceTabContainerID = 'queryTraceTabContainer';
+    	var tabview = new Y.TabView({
+            children: [{
+                label: 'Load',
+                content: '<div id="' + loadTraceTabContainerID + '">Trace id:<br/><select><option value="volvo">Volvo</option></select></div>'
+            }, {
+                label: 'Query',
+                content: '<div id="' + queryTraceTabContainerID + '"></div>'
+            }]
+        });
         tabview.render(tabsContainer);
     }
     
@@ -234,8 +239,9 @@
 	}
 
 	#bottom {
-		background:yellow;
-		opacity:0.4;
+		background:#FFFFAD;
+		opacity:1.0;
+		/*z-index:100;*/
 	}
 
 	#center1 {
@@ -321,6 +327,12 @@
 	#right > .yui3-widget-content-expanded {
 		height: 25px;
 	}
+	
+	#loadWFTabContainer, #queryWFTabContainer, #loadTraceTabContainer, #queryTraceTabContainer {
+		height: 540px;
+		padding-top: 20px;
+		z-index: -1;
+	}
 
 	</style>
 
@@ -335,18 +347,18 @@ YUI().use('gallery-axo-layout', 'resize', function(Y)
 
 	var layout = new Y.Layout({orientation: 'vertical', sizeToWindow: true });
 
-	layout.add(new Y.LayoutChild({id:'top', height:40, resize: true }));
+	layout.add(new Y.LayoutChild({id:'top', height:30, resize: true }));
 
 	var centerLayout = new Y.Layout({fluid: true, orientation: 'horizontal' });
 	layout.add(centerLayout);
 
-	var bottomLayout = new Y.Layout({id:'bottom', height:40, orientation: 'horizontal', resize: true });
+	var bottomLayout = new Y.Layout({id:'bottom', height:35, orientation: 'horizontal', resize: true });
 	layout.add(bottomLayout);
 	
 	centerLayout.add(new Y.LayoutChildStd({id: 'left', width:150, resize: true, label: 'Workflow'}));
-	centerLayout.add(new Y.LayoutChildStd({id: 'center1', width:550, resize: true, label: ' '}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'center1', width:530, resize: true, label: ' '}));
 	centerLayout.add(new Y.LayoutChildStd({id: 'center2', fluid: true, label: ' '}));
-	centerLayout.add(new Y.LayoutChildStd({id: 'right', width:100, resize: true, label: 'Trace'}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'right', width:120, resize: true, label: 'Trace'}));
 
 	bottomLayout.add(new Y.LayoutChild({id: 'bottom1'}));
 
@@ -362,8 +374,8 @@ YUI().use('node', 'tabview', function (Y) {
 	center2.get('children').slice(-1).item(0).insert(traceContainerHTML, 'after');
 	createButtons('left', Y);
 	createButtons('right', Y);
-	createTabs('left', Y);
-	createTabs('right', Y);
+	createWFTabs('left', Y);
+	createTraceTabs('right', Y);
 });
 
 YUI().use('node', 'json-parse', 'io-base', function (Y) {

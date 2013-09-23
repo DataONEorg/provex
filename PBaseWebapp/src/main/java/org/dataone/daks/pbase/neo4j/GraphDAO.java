@@ -30,7 +30,7 @@ public class GraphDAO {
     }
 	
 	
-	public void init(String dbFile) {
+	public synchronized void init(String dbFile) {
 		if( this.graphDB == null ) {
 			GraphDatabaseFactory factory = new GraphDatabaseFactory();
 			GraphDatabaseBuilder builder = factory.newEmbeddedDatabaseBuilder(dbFile);
@@ -41,7 +41,7 @@ public class GraphDAO {
 	}
 	
 	
-	public void shutdownDB() {
+	public synchronized void shutdownDB() {
 		this.graphDB.shutdown();
 		this.graphDB = null;
 	}
@@ -167,11 +167,11 @@ public class GraphDAO {
 					   "AND n.wfID='" + wfID + "' " +
 					   "RETURN distinct n.runID;";
 		ExecutionResult result = engine.execute(query);
-		ResourceIterator<Node> it = result.columnAs("n");
+		ResourceIterator<Map<String,Object>> it = result.iterator();
 		JSONArray array = new JSONArray();
 		while (it.hasNext()) {
-			Node node = it.next();
-			array.put(node.getProperty("runID"));
+			Map<String,Object> map = it.next();
+			array.put(map.get("n.runID").toString());
 		}
 		return array.toString();
 	}
