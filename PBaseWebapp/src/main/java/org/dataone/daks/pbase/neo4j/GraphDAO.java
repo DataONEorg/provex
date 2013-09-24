@@ -17,6 +17,8 @@ public class GraphDAO {
 	
 	private GraphDatabaseService graphDB;
 	
+	private String dbFile;
+	
 	private static final GraphDAO instance = new GraphDAO();
 	
 	
@@ -31,12 +33,13 @@ public class GraphDAO {
 	
 	
 	public synchronized void init(String dbFile) {
-		if( this.graphDB == null ) {
+		if( this.graphDB == null || ( this.dbFile != null && ! this.dbFile.equals(dbFile) ) ) {
 			GraphDatabaseFactory factory = new GraphDatabaseFactory();
 			GraphDatabaseBuilder builder = factory.newEmbeddedDatabaseBuilder(dbFile);
 			builder.setConfig(GraphDatabaseSettings.read_only, "true");
 			GraphDatabaseService graphDB = builder.newGraphDatabase();
 			this.graphDB = graphDB;
+			this.dbFile = dbFile;
 		}
 	}
 	
@@ -172,6 +175,28 @@ public class GraphDAO {
 		while (it.hasNext()) {
 			Map<String,Object> map = it.next();
 			array.put(map.get("n.runID").toString());
+		}
+		return array.toString();
+	}
+	
+	
+	/**
+	 * Returns a String representation of a JSON array containing the wfIDs of the workflows in the database.
+	 * 
+	 * @param wfID
+	 * @return
+	 */
+	public String getWfIDs() {
+		ExecutionEngine engine = new ExecutionEngine(this.graphDB, StringLogger.SYSTEM); 
+		String query = "START n=node(*) WHERE HAS(n.wfID) AND HAS(n.type) " +
+					   "AND n.type='workflow' " +
+					   "RETURN distinct n.wfID;";
+		ExecutionResult result = engine.execute(query);
+		ResourceIterator<Map<String,Object>> it = result.iterator();
+		JSONArray array = new JSONArray();
+		while (it.hasNext()) {
+			Map<String,Object> map = it.next();
+			array.put(map.get("n.wfID").toString());
 		}
 		return array.toString();
 	}
