@@ -96,8 +96,8 @@
     	for(var i = graphJSON.nodes.length-1; i >=0; i--) {
     		tuple = graphJSON.nodes[i];
     		if( graphNodesArray[tuple.nodeId] == undefined ) {
-    			if(tuple.nodeType == "d")
-    				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "shape=ellipse");
+    			if(tuple.type == "data")
+    				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "shape=ellipse;strokeColor=#CCCC00;fillColor=#F6F6CC;fontColor=#000000");
     			else
     				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#DCF1F1;fontColor=#000000");
     			graphNodesArray[tuple.nodeId] = vertex;

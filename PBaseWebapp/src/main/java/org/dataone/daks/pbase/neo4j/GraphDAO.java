@@ -79,6 +79,9 @@ public class GraphDAO {
 			Node node = nodesIt.next();
 			JSONObject nodeObj = new JSONObject();
 			nodeObj.put("nodeId", node.getProperty("name"));
+			for (String propertyKey : node.getPropertyKeys())
+				if( ! (propertyKey.equals("wfID") || propertyKey.equals("name")) ) 
+					nodeObj.put(propertyKey, node.getProperty(propertyKey) );
 			nodesArray.put(nodeObj);
 		}
 		resultObj.put("nodes", nodesArray);
@@ -118,6 +121,9 @@ public class GraphDAO {
 			Node node = dataNodesIt.next();
 			JSONObject nodeObj = new JSONObject();
 			nodeObj.put("nodeId", node.getProperty("name"));
+			for (String propertyKey : node.getPropertyKeys())
+				if( ! (propertyKey.equals("wfID") || propertyKey.equals("name")) ) 
+					nodeObj.put(propertyKey, node.getProperty(propertyKey) );
 			nodesArray.put(nodeObj);
 			nodesHT.put(node.getProperty("name").toString(), new Boolean(true));
 		}
@@ -131,6 +137,9 @@ public class GraphDAO {
 			Node node = activityNodesIt.next();
 			JSONObject nodeObj = new JSONObject();
 			nodeObj.put("nodeId", node.getProperty("name"));
+			for (String propertyKey : node.getPropertyKeys())
+				if( ! (propertyKey.equals("wfID") || propertyKey.equals("name") || propertyKey.equals("runID")) ) 
+					nodeObj.put(propertyKey, node.getProperty(propertyKey) );
 			nodesArray.put(nodeObj);
 			nodesHT.put(node.getProperty("name").toString(), new Boolean(true));
 		}
