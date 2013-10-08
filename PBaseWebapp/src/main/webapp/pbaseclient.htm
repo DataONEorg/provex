@@ -93,7 +93,6 @@
     	// Trace rectangle stroke color #1AA4A7
     	// Trace ellipse fill color #F6F6CC
     	// Trace ellipse stroke color #CCCC00
-    	//for(var i = graphJSON.nodes.length-1; i >= 0; i--) {
     	for(var i = 0; i < graphJSON.nodes.length; i++) {
     		tuple = graphJSON.nodes[i];
     		if( graphNodesArray[tuple.nodeId] == undefined ) {
@@ -326,6 +325,9 @@
     						traceIdsSelect.get('options').item(i).set('text', i+1);
     						traceIdsSelect.get('options').item(i).set('value', jsonArray[i]);
     					}
+    					//Add event for loading traces
+    					var loadTraceFunc = function() { callTraceWS(Y); } ;
+    					traceIdsSelect.set('onchange', loadTraceFunc);
     					//CALL
     					callTraceWS(Y);
     				}
