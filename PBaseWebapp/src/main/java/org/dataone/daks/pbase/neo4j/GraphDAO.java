@@ -37,6 +37,8 @@ public class GraphDAO {
 	
 	public synchronized void init(String dbFile) {
 		if( this.graphDB == null || ( this.dbFile != null && ! this.dbFile.equals(dbFile) ) ) {
+			if( this.graphDB != null )
+				this.graphDB.shutdown();
 			GraphDatabaseFactory factory = new GraphDatabaseFactory();
 			GraphDatabaseBuilder builder = factory.newEmbeddedDatabaseBuilder(dbFile);
 			builder.setConfig(GraphDatabaseSettings.read_only, "true");
