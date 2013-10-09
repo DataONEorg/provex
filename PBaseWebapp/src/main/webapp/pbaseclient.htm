@@ -44,10 +44,6 @@
     			else
     				fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray);
     			var hierLayout = new mxHierarchicalLayout(graph);
-    			//ORGANIC
-    			var orgLayout = null;
-    			//var orgLayout = new mxFastOrganicLayout(graph);
-    			//orgLayout.forceConstant = 120;
     			hierLayout.execute(parent);
     		}
     		finally {
@@ -58,7 +54,18 @@
     		var bounds = graph.getGraphBounds();
     		graph.view.setTranslate( (container.clientWidth/2) - (bounds.width/2), 
     				(container.clientHeight/2) - (bounds.height/2) );
-    		activateButtons(graph, hierLayout, orgLayout, parent, btnContainer, Y);
+    		activateButtons(graph, hierLayout, parent, btnContainer, Y);
+    		
+    		//Add properties and encoding labels
+    		var propertiesLabel = 'propertiesLabel';
+    		var encodingLabel = 'encodingLabel';
+    		graph[propertiesLabel + 'Visible'] = true;
+			graph[encodingLabel + 'Visible'] = true;
+			prepareGraphForLabels(graph);
+			addLabel(graph, propertiesLabel, true);
+			addLabel(graph, encodingLabel, false);
+			activateLabelButton(graph, btnContainer, 'PropertiesBtn', propertiesLabel, Y);
+			activateLabelButton(graph, btnContainer, 'EncodingBtn', encodingLabel, Y);
     	}
     }
     
@@ -74,6 +81,7 @@
     		if( graphNodesArray[tuple.nodeId] == undefined ) {
     			vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#BAE3E4;fontColor=#000000");
     			graphNodesArray[tuple.nodeId] = vertex;
+    			vertex.testProp = i;
 			}
 		}
     	for(var i = 0; i < graphJSON.edges.length; i++) {
@@ -101,6 +109,7 @@
     			else
     				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#DCF1F1;fontColor=#000000");
     			graphNodesArray[tuple.nodeId] = vertex;
+    			vertex.testProp = i;
 			}
     	}
     	for(var i = 0; i < graphJSON.edges.length; i++) {
@@ -110,6 +119,94 @@
     		graphEdgesArray[tuple.endNodeId + "_" + tuple.startNodeId] = edge;
 		}
     }
+	
+	
+	function activateLabelButton(graph, containerID, btnName, labelName, Y) {
+		var mLabelName = labelName;
+		var btn = Y.one('#' + containerID + btnName);
+		var btnFunc = function(evt) {
+			graph[mLabelName + 'Visible'] = !graph[mLabelName + 'Visible'];
+			graph.refresh();
+		}
+		btn.set('onclick', btnFunc);
+	}
+	
+	
+	function prepareGraphForLabels(graph) {
+		// Overrides method to hide relative child vertices
+		graph.isCellVisible = function(cell) {
+			return !this.model.isVertex(cell) || cell.geometry == null ||
+				!cell.geometry.relative ;
+		};
+	}
+	
+	
+	function addLabel(graph, labelName, isTop) {
+		
+		var mLabelName = labelName;
+		
+		graph['get' + mLabelName] = function(cell) {
+			if (!this.model.isEdge(cell)) {
+				// Possible to return any string here
+				//return "ID=" + cell.id;
+				return "Test=" + cell.testProp;
+			}
+			return null;
+		};
+		
+		// Creates the shape for the shape number and puts it into the draw pane
+		var createShape = graph.cellRenderer.createShape;
+		graph.cellRenderer.createShape = function(state) {
+			createShape.apply(this, arguments);
+			if( graph[mLabelName + 'Visible'] && !state.cell.geometry.relative ) {
+				var secondLabel = graph['get' + mLabelName](state.cell);
+				if( secondLabel != null && state.shape != null && state[mLabelName] == null ) {
+					state[mLabelName] = new mxText(secondLabel, new mxRectangle(),
+							mxConstants.ALIGN_LEFT, mxConstants.ALIGN_BOTTOM);
+					// Styles the label
+					state[mLabelName].color = 'black';
+					state[mLabelName].family = 'Verdana';
+					state[mLabelName].size = 8;
+					state[mLabelName].fontStyle = mxConstants.FONT_ITALIC;
+					state[mLabelName].background = 'yellow';
+					state[mLabelName].border = 'black';
+					
+					state[mLabelName].dialect = state.shape.dialect;
+					state[mLabelName].init(state.view.getDrawPane());
+				}
+			}
+		};
+		
+		// Redraws the shape number after the cell has been moved/resized
+		var redraw = graph.cellRenderer.redraw;
+		graph.cellRenderer.redraw = function(state) {
+			redraw.apply(this, arguments);
+			if( state.shape != null && state[mLabelName] != null ) {
+				var scale = graph.getView().getScale();
+				var bounds = null;
+				if( isTop )
+					bounds = new mxRectangle(state.x + state.width - 8 * scale, state.y + 8 * scale, 0, 0);
+				else
+					bounds = new mxRectangle(state.x + state.width - 8 * scale, state.y + state.height + 8 * scale, 0, 0);
+				state[mLabelName].state = state;
+				state[mLabelName].value = graph['get' + mLabelName](state.cell);
+				state[mLabelName].scale = scale;
+				state[mLabelName].bounds = bounds;
+				state[mLabelName].redraw();
+			}
+		};
+		
+		// Destroys the shape number
+		var destroy = graph.cellRenderer.destroy;
+		graph.cellRenderer.destroy = function(state) {
+			destroy.apply(this, arguments);
+			if (state[mLabelName] != null) {
+				state[mLabelName].destroy();
+				state[mLabelName] = null;
+			}
+		};
+		
+	}
     
 	
     function createButtons(containerID, Y) {
@@ -120,13 +217,15 @@
 		var zoomInBtn = createButton(btnContainer, ' + ', containerID + 'ZoomInBtn');
     	var zoomOutBtn = createButton(btnContainer, ' - ', containerID + 'ZoomOutBtn');
     	var hierLayoutBtn = createButton(btnContainer, 'layout', containerID + 'HierLayoutBtn');
-    	//ORGANIC
-    	//var orgLayoutBtn = createButton(btnContainer, 'orgLayout', containerID + 'OrgLayoutBtn');
-    	//alert(JSON.stringify(zoomInBtn, null, 4));
-    	//alert(zoomInBtn.toSource());
+    	//Add a <br> to separate the two button groups
+    	//var brHTML = '<br/>';
+    	//btnContainer.insert(brHTML);
+    	//var propertiesBtn = createButton(btnContainer, 'properties', containerID + 'PropertiesBtn');
+    	//ENCODING
+    	//var encodingBtn = createButton(btnContainer, 'encoding', containerID + 'EncodingBtn');
     }
     
-    function activateButtons(graph, hierLayout, orgLayout, parent, containerID, Y) {
+    function activateButtons(graph, hierLayout, parent, containerID, Y) {
     	var zoomInBtn = Y.one('#' + containerID + 'ZoomInBtn');
     	var zoomInBtnFunc = function() { graph.zoomIn(); } ;
     	zoomInBtn.set('onclick', zoomInBtnFunc);
@@ -136,12 +235,6 @@
     	var hierLayoutBtn = Y.one('#' + containerID + 'HierLayoutBtn');
     	var hierLayoutBtnFunc = function() { hierLayout.execute(parent); } ;
     	hierLayoutBtn.set('onclick', hierLayoutBtnFunc);
-    	//ORGANIC
-    	/*
-    	var orgLayoutBtn = Y.one('#' + containerID + 'OrgLayoutBtn');
-    	var orgLayoutBtnFunc = function() { orgLayout.execute(parent); } ;
-    	orgLayoutBtn.set('onclick', orgLayoutBtnFunc);
-    	*/
     }
     
     function createButton(container, label, btnId){
@@ -160,10 +253,16 @@
     	var tabsContainer = Y.one('#' + containerID + 'tabsContainer');
     	var loadWFTabContainerID = 'loadWFTabContainer';
     	var queryWFTabContainerID = 'queryWFTabContainer';
+    	var loadTabContent = '<div id="' + loadWFTabContainerID + '">Database name: ' + 
+    		'<input type="text" id="dbnameTextfield" size="15"><br/>' +
+    		'<input type="button" id="dbnameLoadBtn" value="Load"><br/><br/>Workflow id:<br/>' +
+    		'<select id="wfIdsSelect"></select>' + 
+    		'<br/><br/><input id="' + containerID + 'PropertiesBtn" type="button" value="properties">' +
+    		'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
     	var tabview = new Y.TabView({
             children: [{
                 label: 'Load',
-                content: '<div id="' + loadWFTabContainerID + '">Database name: <input type="text" id="dbnameTextfield" size="15"><br/><input type="button" id="dbnameLoadBtn" value="Load"><br/><br/>Workflow id:<br/><select id="wfIdsSelect"></select></div>'
+                content: loadTabContent
             }, {
                 label: 'Query',
                 content: '<div id="' + queryWFTabContainerID + '"></div>'
@@ -179,10 +278,14 @@
     	var tabsContainer = Y.one('#' + containerID + 'tabsContainer');
     	var loadTraceTabContainerID = 'loadTraceTabContainer';
     	var queryTraceTabContainerID = 'queryTraceTabContainer';
+    	var loadTabContent = '<div id="' + loadTraceTabContainerID + '">Trace id:<br/>' +
+    	'<select id="traceIdsSelect"><option value=""></option></select>' + 
+    	'<br/><br/><input id="' + containerID + 'PropertiesBtn" type="button" value="properties">' +
+		'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
     	var tabview = new Y.TabView({
             children: [{
                 label: 'Load',
-                content: '<div id="' + loadTraceTabContainerID + '">Trace id:<br/><select id="traceIdsSelect"><option value=""></option></select></div>'
+                content: loadTabContent
             }, {
                 label: 'Query',
                 content: '<div id="' + queryTraceTabContainerID + '"></div>'
@@ -263,18 +366,6 @@
     
     function callWfIdsWS(Y) {
     	var url = 'webresources/wfidsresource';
-    	/*
-    	var jsonStr = '["1b2a1451-8401-41ef-9015-d1f64a7e5cda"]';
-		var jsonArray = Y.JSON.parse(jsonStr);
-		var wfIdsSelect = Y.one('#wfIdsSelect');
-		wfIdsSelect.get('childNodes').remove();
-		for(var i = 0; i < jsonArray.length; i++) {
-			var opt = Y.Node.create('<option value=""></option>');
-			wfIdsSelect.append(opt);
-			wfIdsSelect.get('options').item(i).set('text', i+1);
-			wfIdsSelect.get('options').item(i).set('value', jsonArray[i]);
-		}
-		*/
 		var dbnameTxtField = Y.one('#dbnameTextfield');
 		var dbnameParam = dbnameTxtField.get('value');
 		//alert('value: ' + dbnameParam);
@@ -472,11 +563,8 @@
 
 <script>
 
-YUI().use('gallery-axo-layout', 'resize', function(Y)
-{
-
+YUI().use('gallery-axo-layout', 'resize', function(Y) {
 	var layout = new Y.Layout({orientation: 'vertical', sizeToWindow: true });
-
 	layout.add(new Y.LayoutChild({id:'top', height:30, resize: true }));
 
 	var centerLayout = new Y.Layout({fluid: true, orientation: 'horizontal' });
@@ -485,7 +573,7 @@ YUI().use('gallery-axo-layout', 'resize', function(Y)
 	var bottomLayout = new Y.Layout({id:'bottom', height:35, orientation: 'horizontal', resize: true });
 	layout.add(bottomLayout);
 	
-	centerLayout.add(new Y.LayoutChildStd({id: 'left', width:150, resize: true, label: 'Workflow'}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'left', width:155, resize: true, label: 'Workflow'}));
 	centerLayout.add(new Y.LayoutChildStd({id: 'center1', width:530, resize: true, label: ' '}));
 	centerLayout.add(new Y.LayoutChildStd({id: 'center2', fluid: true, label: ' '}));
 	centerLayout.add(new Y.LayoutChildStd({id: 'right', width:120, resize: true, label: 'Trace'}));
@@ -515,6 +603,7 @@ YUI().use('node', 'json-parse', 'io-base', function (Y) {
 	dbnameLoadBtn.set('onclick', dbnameLoadBtnFunc);
 });
 
+/*
 YUI().use('node', 'json-parse', 'io-base', function (Y) {
 	var wfJSONStr = '{"edges":[{"endNodeId":"e15_StatisticsAlongSpatialAxis","edgeLabel":"","startNodeId":"e7_Regrid"},{"endNodeId":"e14_CDMSCell","edgeLabel":"","startNodeId":"e13_CDMSBoxfill"},{"endNodeId":"e13_CDMSBoxfill","edgeLabel":"","startNodeId":"e15_StatisticsAlongSpatialAxis"},{"endNodeId":"e11_TemporalAggregation","edgeLabel":"","startNodeId":"e7_Regrid"},{"endNodeId":"e7_Regrid","edgeLabel":"","startNodeId":"e1_CDMSVariable"},{"endNodeId":"e6_CDMSCell","edgeLabel":"","startNodeId":"e5_CDMSBoxfill"},{"endNodeId":"e5_CDMSBoxfill","edgeLabel":"","startNodeId":"e11_TemporalAggregation"}],"nodes":[{"nodeId":"e1_CDMSVariable"},{"nodeId":"e15_StatisticsAlongSpatialAxis"},{"nodeId":"e14_CDMSCell"},{"nodeId":"e13_CDMSBoxfill"},{"nodeId":"e11_TemporalAggregation"},{"nodeId":"e7_Regrid"},{"nodeId":"e6_CDMSCell"},{"nodeId":"e5_CDMSBoxfill"}]}';  
 	var wfJSON = Y.JSON.parse(wfJSONStr);
@@ -531,24 +620,6 @@ YUI().use('node', 'json-parse', 'io-base', function (Y) {
 	var traceContainer = document.getElementById('traceContainer');
 	//displayGraphJSON(traceContainer, traceJSON, 'right', true, Y);
 	//callGraphRestfulWS(urlTrace, traceContainer, 'right', true, Y);
-});
-
-/*
-YUI().use('io-base', 'node-base', 'json-parse', function (Y) {
-	Y.io('webresources/graphexample', {
-		//data: 'suspect=butler',
-		on: {
-			complete: function (id, response) {
-				if (response.status >= 200 && response.status < 300) {
-					var json = Y.JSON.parse(response.responseText);
-					//alert(JSON.stringify(json, null, 4));
-				}
-				else {
-					alert('ERROR');
-				}
-			}
-		}
-	});
 });
 */
 
