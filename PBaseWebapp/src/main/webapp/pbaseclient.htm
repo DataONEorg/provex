@@ -22,6 +22,8 @@
     	}
     	else {
     		container.innerHTML = "";
+    		var propertiesLabel = 'propertiesLabel';
+    		var encodingLabel = 'encodingLabel';
     		mxEvent.disableContextMenu(document.body);
     		// Enables crisp rendering of rectangles in SVG
     		mxRectangleShape.prototype.crisp = true;	
@@ -40,9 +42,11 @@
     			var graphNodesArray = new Array();
     			var graphEdgesArray = new Array();
     			if( !isTrace )
-    				fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray);
+    				fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray, 
+    						propertiesLabel, encodingLabel);
     			else
-    				fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray);
+    				fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray,
+    						propertiesLabel, encodingLabel);
     			var hierLayout = new mxHierarchicalLayout(graph);
     			hierLayout.execute(parent);
     		}
@@ -57,10 +61,8 @@
     		activateButtons(graph, hierLayout, parent, btnContainer, Y);
     		
     		//Add properties and encoding labels
-    		var propertiesLabel = 'propertiesLabel';
-    		var encodingLabel = 'encodingLabel';
-    		graph[propertiesLabel + 'Visible'] = true;
-			graph[encodingLabel + 'Visible'] = true;
+    		graph[propertiesLabel + 'Visible'] = false;
+			graph[encodingLabel + 'Visible'] = false;
 			prepareGraphForLabels(graph);
 			addLabel(graph, propertiesLabel, true);
 			addLabel(graph, encodingLabel, false);
@@ -70,7 +72,7 @@
     }
     
     
-    function fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray) {
+    function fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray, propertiesLabel, encodingLabel) {
     	var vertex = null;
     	var edge = null;
     	var tuple = null;
@@ -81,7 +83,8 @@
     		if( graphNodesArray[tuple.nodeId] == undefined ) {
     			vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#BAE3E4;fontColor=#000000");
     			graphNodesArray[tuple.nodeId] = vertex;
-    			vertex.testProp = i;
+    			vertex[propertiesLabel] = generateNodeText(tuple);
+    			vertex[encodingLabel] = '' + i;
 			}
 		}
     	for(var i = 0; i < graphJSON.edges.length; i++) {
@@ -93,7 +96,7 @@
     }
 	
 	
-	function fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray) {
+	function fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray, propertiesLabel, encodingLabel) {
     	var vertex = null;
     	var edge = null;
     	var tuple = null;
@@ -109,7 +112,8 @@
     			else
     				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#DCF1F1;fontColor=#000000");
     			graphNodesArray[tuple.nodeId] = vertex;
-    			vertex.testProp = i;
+    			vertex[propertiesLabel] = generateNodeText(tuple);
+    			vertex[encodingLabel] = '' + i;
 			}
     	}
     	for(var i = 0; i < graphJSON.edges.length; i++) {
@@ -119,6 +123,17 @@
     		graphEdgesArray[tuple.endNodeId + "_" + tuple.startNodeId] = edge;
 		}
     }
+	
+	
+	function generateNodeText(jsonObj) {
+		var nodeText = '';
+		for(var key in jsonObj) {
+			var propertyVal = jsonObj[key];
+			if( (key.length + propertyVal.length) <= 30 )
+				nodeText += key + ':' + propertyVal + '\n';
+		}
+		return nodeText.substring(0, nodeText.length-1);
+	}
 	
 	
 	function activateLabelButton(graph, containerID, btnName, labelName, Y) {
@@ -144,12 +159,13 @@
 	function addLabel(graph, labelName, isTop) {
 		
 		var mLabelName = labelName;
+		var mIsTop = isTop;
 		
 		graph['get' + mLabelName] = function(cell) {
 			if (!this.model.isEdge(cell)) {
 				// Possible to return any string here
-				//return "ID=" + cell.id;
-				return "Test=" + cell.testProp;
+				//return "ID=" + cell.id + ' mIsTop=' + mIsTop + ' mLabelName=' + mLabelName;
+				return cell[mLabelName];
 			}
 			return null;
 		};
@@ -159,9 +175,9 @@
 		graph.cellRenderer.createShape = function(state) {
 			createShape.apply(this, arguments);
 			if( graph[mLabelName + 'Visible'] && !state.cell.geometry.relative ) {
-				var secondLabel = graph['get' + mLabelName](state.cell);
-				if( secondLabel != null && state.shape != null && state[mLabelName] == null ) {
-					state[mLabelName] = new mxText(secondLabel, new mxRectangle(),
+				var label = graph['get' + mLabelName](state.cell);
+				if( label != null && state.shape != null && state[mLabelName] == null ) {
+					state[mLabelName] = new mxText(label, new mxRectangle(),
 							mxConstants.ALIGN_LEFT, mxConstants.ALIGN_BOTTOM);
 					// Styles the label
 					state[mLabelName].color = 'black';
@@ -184,7 +200,7 @@
 			if( state.shape != null && state[mLabelName] != null ) {
 				var scale = graph.getView().getScale();
 				var bounds = null;
-				if( isTop )
+				if( mIsTop )
 					bounds = new mxRectangle(state.x + state.width - 8 * scale, state.y + 8 * scale, 0, 0);
 				else
 					bounds = new mxRectangle(state.x + state.width - 8 * scale, state.y + state.height + 8 * scale, 0, 0);
