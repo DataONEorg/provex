@@ -113,7 +113,8 @@
     				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#DCF1F1;fontColor=#000000");
     			graphNodesArray[tuple.nodeId] = vertex;
     			vertex[propertiesLabel] = generateNodeText(tuple);
-    			vertex[encodingLabel] = '' + i;
+    			//vertex[encodingLabel] = '' + i;
+    			vertex[encodingLabel] = '' + tuple.treecover;
 			}
     	}
     	for(var i = 0; i < graphJSON.edges.length; i++) {

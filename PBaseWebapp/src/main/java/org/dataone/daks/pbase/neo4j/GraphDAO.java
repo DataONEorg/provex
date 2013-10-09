@@ -154,6 +154,7 @@ public class GraphDAO {
 		ResourceIterator<Map<String,Object>> edgesIt = edgesResult.iterator();
 		JSONArray edgesArray = new JSONArray();
 		Digraph digraph = new Digraph();
+		Digraph coverDigraph = new Digraph();
 		while (edgesIt.hasNext()) {
 			Map<String,Object> map = edgesIt.next();
 			JSONObject edgeObj = new JSONObject();
@@ -164,13 +165,19 @@ public class GraphDAO {
 					&& nodesHT.get(map.get("n.name").toString()) != null ) {
 				edgesArray.put(edgeObj);
 				digraph.addEdge(map.get("m.name").toString(), map.get("n.name").toString());
+				coverDigraph.addEdge(map.get("m.name").toString(), map.get("n.name").toString());
 			}
 		}
 		resultObj.put("edges", edgesArray);
 		JSONArray nodesArray = new JSONArray();
+		
+		TreeCover cover = new TreeCover();
+		cover.createCover(coverDigraph);
+		
 		List<String> revTopSortList = digraph.reverseTopSort();
 		for(String nodeStr : revTopSortList) {
 			JSONObject nodeObj = nodesHT.get(nodeStr);
+			nodeObj.put("treecover", cover.getPostorder(nodeStr) + ":" + cover.getCode(nodeStr).toString());
 			nodesArray.put(nodeObj);
 		}
 		resultObj.put("nodes", nodesArray);
