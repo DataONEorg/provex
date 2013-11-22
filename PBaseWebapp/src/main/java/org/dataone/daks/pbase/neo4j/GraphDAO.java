@@ -229,6 +229,72 @@ public class GraphDAO {
 	}
 	
 	
+	/**
+	 * Execute a cypher query provided as a String.
+	 * 
+	 * @param query
+	 * @return
+	 */
+	public String executeQuery(String query) {
+		ExecutionEngine engine = new ExecutionEngine(this.graphDB, StringLogger.SYSTEM); 
+		ExecutionResult result = engine.execute(query);
+		String retVal = null;
+		try {
+			JSONObject jsonResult = new JSONObject();
+			JSONArray columnsArray = new JSONArray();
+			List<String> columns = result.columns();
+			for(String s: columns) {
+				JSONObject colVal = new JSONObject();
+				colVal.put(s, "string");
+				columnsArray.put(colVal);
+			}
+			JSONArray dataArray = new JSONArray();
+			ResourceIterator<Map<String,Object>> it = result.iterator();
+			boolean first = true;
+			int counter = 0;
+			while (it.hasNext()) {
+				Map<String,Object> map = it.next();
+				JSONArray row = new JSONArray();
+				for(String key: columns) {
+					Object obj = map.get(key);
+					if ( obj instanceof Node ) {
+						row.put(this.generateNodeJSON((Node)obj));
+						if( first )
+							columnsArray.getJSONObject(counter).put(columns.get(counter), "node");
+					}
+					else
+						row.put(obj.toString());
+					counter++;
+				}
+				dataArray.put(row);
+				first = false;
+			}
+			jsonResult.put("columns", columnsArray);
+			jsonResult.put("data", dataArray);
+			retVal = jsonResult.toString(); 
+		}
+		catch(JSONException e) {
+			e.printStackTrace();
+		}
+		return retVal;
+	}
+	
+	
+	public JSONObject generateNodeJSON(Node node) {
+		JSONObject nodeObj = new JSONObject();
+		try {
+			nodeObj.put("nodeId", node.getProperty("name"));
+			for (String propertyKey : node.getPropertyKeys())
+				if( ! (propertyKey.equals("wfID") || propertyKey.equals("name")) ) 
+					nodeObj.put(propertyKey, node.getProperty(propertyKey) );
+		}
+		catch(JSONException e) {
+			e.printStackTrace();
+		}
+		return nodeObj;
+	}
+	
+	
 }
 
 
