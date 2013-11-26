@@ -11,442 +11,6 @@
 	<script type="text/javascript" src="http://yui.yahooapis.com/3.3.0pr3/build/yui/yui.js"></script>
 
 	<script type="text/javascript" src="http://axosoft.github.com/yui3-gallery/layout/build/gallery-axo-layout.js"></script>
-	
-	<script type="text/javascript">
-	
-	function displayGraphJSON(container, graphJSON, btnContainer, isTrace, Y) {
-		// Checks if the browser is supported
-    	if (!mxClient.isBrowserSupported()) {
-    		// Displays an error message if the browser is not supported.
-    		mxUtils.error('Browser is not supported!', 200, false);
-    	}
-    	else {
-    		container.innerHTML = "";
-    		var propertiesLabel = 'propertiesLabel';
-    		var encodingLabel = 'encodingLabel';
-    		mxEvent.disableContextMenu(document.body);
-    		// Enables crisp rendering of rectangles in SVG
-    		mxRectangleShape.prototype.crisp = true;	
-    		// Creates the graph inside the given container
-    		var graph = new mxGraph(container);
-    		graph.graphHandler.scaleGrid = true;
-    		graph.setPanning(true);
-    		// Enables rubberband selection
-    		new mxRubberband(graph);
-    		// Gets the default parent for inserting new cells. This
-    		// is normally the first child of the root (ie. layer 0).
-    		var parent = graph.getDefaultParent();					
-    		// Adds cells to the model in a single step
-    		graph.getModel().beginUpdate();
-    		try {
-    			var graphNodesArray = new Array();
-    			var graphEdgesArray = new Array();
-    			if( !isTrace )
-    				fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray, 
-    						propertiesLabel, encodingLabel);
-    			else
-    				fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray,
-    						propertiesLabel, encodingLabel);
-    			var hierLayout = new mxHierarchicalLayout(graph);
-    			hierLayout.execute(parent);
-    		}
-    		finally {
-    			// Updates the display
-    			graph.getModel().endUpdate();
-    		}
-    		graph.centerZoom = false;
-    		var bounds = graph.getGraphBounds();
-    		graph.view.setTranslate( (container.clientWidth/2) - (bounds.width/2), 
-    				(container.clientHeight/2) - (bounds.height/2) );
-    		activateButtons(graph, hierLayout, parent, btnContainer, Y);
-    		
-    		//Add properties and encoding labels
-    		graph[propertiesLabel + 'Visible'] = false;
-			graph[encodingLabel + 'Visible'] = false;
-			prepareGraphForLabels(graph);
-			addLabel(graph, propertiesLabel, true);
-			addLabel(graph, encodingLabel, false);
-			activateLabelButton(graph, btnContainer, 'PropertiesBtn', propertiesLabel, Y);
-			activateLabelButton(graph, btnContainer, 'EncodingBtn', encodingLabel, Y);
-    	}
-    }
-    
-    
-    function fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray, propertiesLabel, encodingLabel) {
-    	var vertex = null;
-    	var edge = null;
-    	var tuple = null;
-    	// Workflow rectangle fill color #BAE3E4
-    	// Workflow rectangle stroke color #1AA4A7
-    	for(var i = 0; i < graphJSON.nodes.length; i++) {
-    		tuple = graphJSON.nodes[i];
-    		if( graphNodesArray[tuple.nodeId] == undefined ) {
-    			vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#BAE3E4;fontColor=#000000");
-    			graphNodesArray[tuple.nodeId] = vertex;
-    			vertex[propertiesLabel] = generateNodeText(tuple);
-    			vertex[encodingLabel] = '' + i;
-			}
-		}
-    	for(var i = 0; i < graphJSON.edges.length; i++) {
-    		tuple = graphJSON.edges[i];
-    		edge = graph.insertEdge(parent, null, tuple.edgeLabel, graphNodesArray[tuple.startNodeId], 
-    				graphNodesArray[tuple.endNodeId], "strokeColor=#2E2E2E;startArrow=oval");
-    		graphEdgesArray[tuple.startNodeId + "_" + tuple.endNodeId] = edge;
-		}
-    }
-	
-	
-	function fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray, propertiesLabel, encodingLabel) {
-    	var vertex = null;
-    	var edge = null;
-    	var tuple = null;
-    	// Trace rectangle fill color #DCF1F1
-    	// Trace rectangle stroke color #1AA4A7
-    	// Trace ellipse fill color #F6F6CC
-    	// Trace ellipse stroke color #CCCC00
-    	for(var i = 0; i < graphJSON.nodes.length; i++) {
-    		tuple = graphJSON.nodes[i];
-    		if( graphNodesArray[tuple.nodeId] == undefined ) {
-    			if(tuple.type == "data")
-    				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "shape=ellipse;strokeColor=#CCCC00;fillColor=#F6F6CC;fontColor=#000000");
-    			else
-    				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#DCF1F1;fontColor=#000000");
-    			graphNodesArray[tuple.nodeId] = vertex;
-    			vertex[propertiesLabel] = generateNodeText(tuple);
-    			//vertex[encodingLabel] = '' + i;
-    			vertex[encodingLabel] = '' + tuple.treecover;
-			}
-    	}
-    	for(var i = 0; i < graphJSON.edges.length; i++) {
-    		tuple = graphJSON.edges[i];
-    		edge = graph.insertEdge(parent, null, tuple.edgeLabel, graphNodesArray[tuple.endNodeId], 
-        			graphNodesArray[tuple.startNodeId], "strokeColor=#2E2E2E;fontColor=#000000;startArrow=classic;endArrow=oval");
-    		graphEdgesArray[tuple.endNodeId + "_" + tuple.startNodeId] = edge;
-		}
-    }
-	
-	
-	function generateNodeText(jsonObj) {
-		var nodeText = '';
-		for(var key in jsonObj) {
-			var propertyVal = jsonObj[key];
-			if( (key.length + propertyVal.length) <= 30 )
-				nodeText += key + ':' + propertyVal + '\n';
-		}
-		return nodeText.substring(0, nodeText.length-1);
-	}
-	
-	
-	function activateLabelButton(graph, containerID, btnName, labelName, Y) {
-		var mLabelName = labelName;
-		var btn = Y.one('#' + containerID + btnName);
-		var btnFunc = function(evt) {
-			graph[mLabelName + 'Visible'] = !graph[mLabelName + 'Visible'];
-			graph.refresh();
-		}
-		btn.set('onclick', btnFunc);
-	}
-	
-	
-	function prepareGraphForLabels(graph) {
-		// Overrides method to hide relative child vertices
-		graph.isCellVisible = function(cell) {
-			return !this.model.isVertex(cell) || cell.geometry == null ||
-				!cell.geometry.relative ;
-		};
-	}
-	
-	
-	function addLabel(graph, labelName, isTop) {
-		
-		var mLabelName = labelName;
-		var mIsTop = isTop;
-		
-		graph['get' + mLabelName] = function(cell) {
-			if (!this.model.isEdge(cell)) {
-				// Possible to return any string here
-				//return "ID=" + cell.id + ' mIsTop=' + mIsTop + ' mLabelName=' + mLabelName;
-				return cell[mLabelName];
-			}
-			return null;
-		};
-		
-		// Creates the shape for the shape number and puts it into the draw pane
-		var createShape = graph.cellRenderer.createShape;
-		graph.cellRenderer.createShape = function(state) {
-			createShape.apply(this, arguments);
-			if( graph[mLabelName + 'Visible'] && !state.cell.geometry.relative ) {
-				var label = graph['get' + mLabelName](state.cell);
-				if( label != null && state.shape != null && state[mLabelName] == null ) {
-					state[mLabelName] = new mxText(label, new mxRectangle(),
-							mxConstants.ALIGN_LEFT, mxConstants.ALIGN_BOTTOM);
-					// Styles the label
-					state[mLabelName].color = 'black';
-					state[mLabelName].family = 'Verdana';
-					state[mLabelName].size = 8;
-					state[mLabelName].fontStyle = mxConstants.FONT_ITALIC;
-					state[mLabelName].background = 'yellow';
-					state[mLabelName].border = 'black';
-					
-					state[mLabelName].dialect = state.shape.dialect;
-					state[mLabelName].init(state.view.getDrawPane());
-				}
-			}
-		};
-		
-		// Redraws the shape number after the cell has been moved/resized
-		var redraw = graph.cellRenderer.redraw;
-		graph.cellRenderer.redraw = function(state) {
-			redraw.apply(this, arguments);
-			if( state.shape != null && state[mLabelName] != null ) {
-				var scale = graph.getView().getScale();
-				var bounds = null;
-				if( mIsTop )
-					bounds = new mxRectangle(state.x + state.width - 8 * scale, state.y + 8 * scale, 0, 0);
-				else
-					bounds = new mxRectangle(state.x + state.width - 8 * scale, state.y + state.height + 8 * scale, 0, 0);
-				state[mLabelName].state = state;
-				state[mLabelName].value = graph['get' + mLabelName](state.cell);
-				state[mLabelName].scale = scale;
-				state[mLabelName].bounds = bounds;
-				state[mLabelName].redraw();
-			}
-		};
-		
-		// Destroys the shape number
-		var destroy = graph.cellRenderer.destroy;
-		graph.cellRenderer.destroy = function(state) {
-			destroy.apply(this, arguments);
-			if (state[mLabelName] != null) {
-				state[mLabelName].destroy();
-				state[mLabelName] = null;
-			}
-		};
-		
-	}
-    
-	
-    function createButtons(containerID, Y) {
-    	var container = Y.one('#' + containerID);
-    	var btnContainerHTML = '<div id="' + containerID + 'BtnContainer"></div>';
-    	container.get('children').slice(-1).item(0).insert(btnContainerHTML, 'after');
-    	var btnContainer = Y.one('#' + containerID + 'BtnContainer');
-		var zoomInBtn = createButton(btnContainer, ' + ', containerID + 'ZoomInBtn');
-    	var zoomOutBtn = createButton(btnContainer, ' - ', containerID + 'ZoomOutBtn');
-    	var hierLayoutBtn = createButton(btnContainer, 'layout', containerID + 'HierLayoutBtn');
-    	//Add a <br> to separate the two button groups
-    	//var brHTML = '<br/>';
-    	//btnContainer.insert(brHTML);
-    	//var propertiesBtn = createButton(btnContainer, 'properties', containerID + 'PropertiesBtn');
-    	//ENCODING
-    	//var encodingBtn = createButton(btnContainer, 'encoding', containerID + 'EncodingBtn');
-    }
-    
-    function activateButtons(graph, hierLayout, parent, containerID, Y) {
-    	var zoomInBtn = Y.one('#' + containerID + 'ZoomInBtn');
-    	var zoomInBtnFunc = function() { graph.zoomIn(); } ;
-    	zoomInBtn.set('onclick', zoomInBtnFunc);
-    	var zoomOutBtn = Y.one('#' + containerID + 'ZoomOutBtn');
-    	var zoomOutBtnFunc = function() { graph.zoomOut(); } ;
-    	zoomOutBtn.set('onclick', zoomOutBtnFunc);
-    	var hierLayoutBtn = Y.one('#' + containerID + 'HierLayoutBtn');
-    	var hierLayoutBtnFunc = function() { hierLayout.execute(parent); } ;
-    	hierLayoutBtn.set('onclick', hierLayoutBtnFunc);
-    }
-    
-    function createButton(container, label, btnId){
-        var button = document.createElement("input");
-        button.id = btnId;
-        button.type = "button";
-        button.value = label;
-        container.insert(button);
-        return button;
-    }
-    
-    function createWFTabs(containerID, Y) {
-    	var container = Y.one('#' + containerID);
-    	var tabsContainerHTML = '<div id="' + containerID + 'tabsContainer"></div>';
-    	container.get('children').slice(-1).item(0).insert(tabsContainerHTML, 'after');
-    	var tabsContainer = Y.one('#' + containerID + 'tabsContainer');
-    	var loadWFTabContainerID = 'loadWFTabContainer';
-    	var queryWFTabContainerID = 'queryWFTabContainer';
-    	var loadTabContent = '<div id="' + loadWFTabContainerID + '">Database name: ' + 
-    		'<input type="text" id="dbnameTextfield" size="15"><br/>' +
-    		'<input type="button" id="dbnameLoadBtn" value="Load"><br/><br/>Workflow id:<br/>' +
-    		'<select id="wfIdsSelect"></select>' + 
-    		'<br/><br/><input id="' + containerID + 'PropertiesBtn" type="button" value="properties">' +
-    		'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
-    	var tabview = new Y.TabView({
-            children: [{
-                label: 'Load',
-                content: loadTabContent
-            }, {
-                label: 'Query',
-                content: '<div id="' + queryWFTabContainerID + '"></div>'
-            }]
-        });
-        tabview.render(tabsContainer);
-    }
-    
-    function createTraceTabs(containerID, Y) {
-    	var container = Y.one('#' + containerID);
-    	var tabsContainerHTML = '<div id="' + containerID + 'tabsContainer"></div>';
-    	container.get('children').slice(-1).item(0).insert(tabsContainerHTML, 'after');
-    	var tabsContainer = Y.one('#' + containerID + 'tabsContainer');
-    	var loadTraceTabContainerID = 'loadTraceTabContainer';
-    	var queryTraceTabContainerID = 'queryTraceTabContainer';
-    	var loadTabContent = '<div id="' + loadTraceTabContainerID + '">Trace id:<br/>' +
-    	'<select id="traceIdsSelect"><option value=""></option></select>' + 
-    	'<br/><br/><input id="' + containerID + 'PropertiesBtn" type="button" value="properties">' +
-		'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
-    	var tabview = new Y.TabView({
-            children: [{
-                label: 'Load',
-                content: loadTabContent
-            }, {
-                label: 'Query',
-                content: '<div id="' + queryTraceTabContainerID + '"></div>'
-            }]
-        });
-        tabview.render(tabsContainer);
-    }
-    
-    function callGraphRestfulWS(url, container, btnContainer, isTrace, Y) {
-    	Y.io(url, {
-    		//data: 'suspect=butler',
-    		on: {
-    			complete: function (id, response) {
-    				if (response.status >= 200 && response.status < 300) {
-    					var json = Y.JSON.parse(response.responseText);
-    					displayGraphJSON(container, json, btnContainer, isTrace, Y);
-    					//alert(JSON.stringify(json, null, 4));
-    				}
-    				else {
-    					alert('ERROR');
-    				}
-    			}
-    		}
-    	});
-    }
-    
-    function callWfWS(Y) {
-    	var url = 'webresources/wfresource';
-    	var container = document.getElementById('wfContainer');
-    	var btnContainer = 'left';
-    	var isTrace = false;
-    	var dbnameTxtField = Y.one('#dbnameTextfield');
-		var dbnameParam = dbnameTxtField.get('value');
-    	var wfIdsSelect = Y.one('#wfIdsSelect');
-		var wfIdParam = wfIdsSelect.get('value');
-    	Y.io(url, {
-    		data: 'dbname=' + dbnameParam + '&wfid=' + wfIdParam,
-    		on: {
-    			complete: function (id, response) {
-    				if (response.status >= 200 && response.status < 300) {
-    					var json = Y.JSON.parse(response.responseText);
-    					displayGraphJSON(container, json, btnContainer, isTrace, Y);
-    				}
-    				else {
-    					alert('ERROR');
-    				}
-    			}
-    		}
-    	});
-    }
-    
-    function callTraceWS(Y) {
-    	var url = 'webresources/traceresource';
-    	var container = document.getElementById('traceContainer');
-    	var btnContainer = 'right';
-    	var isTrace = true;
-    	var dbnameTxtField = Y.one('#dbnameTextfield');
-		var dbnameParam = dbnameTxtField.get('value');
-    	var wfIdsSelect = Y.one('#wfIdsSelect');
-		var wfIdParam = wfIdsSelect.get('value');
-		var traceIdsSelect = Y.one('#traceIdsSelect');
-		var traceIdParam = traceIdsSelect.get('value');
-    	Y.io(url, {
-    		data: 'dbname=' + dbnameParam + '&wfid=' + wfIdParam + '&traceid=' + traceIdParam,
-    		on: {
-    			complete: function (id, response) {
-    				if (response.status >= 200 && response.status < 300) {
-    					var json = Y.JSON.parse(response.responseText);
-    					displayGraphJSON(container, json, btnContainer, isTrace, Y);
-    				}
-    				else {
-    					alert('ERROR');
-    				}
-    			}
-    		}
-    	});
-    }
-    
-    function callWfIdsWS(Y) {
-    	var url = 'webresources/wfidsresource';
-		var dbnameTxtField = Y.one('#dbnameTextfield');
-		var dbnameParam = dbnameTxtField.get('value');
-		//alert('value: ' + dbnameParam);
-    	Y.io(url, {
-    		data: 'dbname=' + dbnameParam,
-    		on: {
-    			complete: function (id, response) {
-    				if (response.status >= 200 && response.status < 300) {
-    					var jsonArray = Y.JSON.parse(response.responseText);
-    					var wfIdsSelect = Y.one('#wfIdsSelect');
-    					wfIdsSelect.get('childNodes').remove();
-    					for(var i = 0; i < jsonArray.length; i++) {
-    						var opt = Y.Node.create('<option value=""></option>');
-    						wfIdsSelect.append(opt);
-    						wfIdsSelect.get('options').item(i).set('text', i+1);
-    						wfIdsSelect.get('options').item(i).set('value', jsonArray[i]);
-    					}
-    					//CALL
-    					callWfWS(Y);
-    					callTraceIdsWS(Y);
-    				}
-    				else {
-    					alert('ERROR');
-    				}
-    			}
-    		}
-    	});
-    }
-    
-    function callTraceIdsWS(Y) {
-    	var url = 'webresources/traceidsresource';
-    	var dbnameTxtField = Y.one('#dbnameTextfield');
-		var dbnameParam = dbnameTxtField.get('value');
-		var wfIdsSelect = Y.one('#wfIdsSelect');
-		var wfIdParam = wfIdsSelect.get('value');
-		//alert('the wfIdParam: ' + wfIdParam);
-    	Y.io(url, {
-    		data: 'dbname=' + dbnameParam + '&wfid=' + wfIdParam,
-    		on: {
-    			complete: function (id, response) {
-    				if (response.status >= 200 && response.status < 300) {
-    					var jsonArray = Y.JSON.parse(response.responseText);
-    					var traceIdsSelect = Y.one('#traceIdsSelect');
-    					traceIdsSelect.get('childNodes').remove();
-    					for(var i = 0; i < jsonArray.length; i++) {
-    						var opt = Y.Node.create('<option value=""></option>');
-    						traceIdsSelect.append(opt);
-    						traceIdsSelect.get('options').item(i).set('text', i+1);
-    						traceIdsSelect.get('options').item(i).set('value', jsonArray[i]);
-    					}
-    					//Add event for loading traces
-    					var loadTraceFunc = function() { callTraceWS(Y); } ;
-    					traceIdsSelect.set('onchange', loadTraceFunc);
-    					//CALL
-    					callTraceWS(Y);
-    				}
-    				else {
-    					alert('ERROR');
-    				}
-    			}
-    		}
-    	});
-    }
-    </script>
 
     <title>PBase Provenance Database</title>
 
@@ -580,6 +144,481 @@
 
 <script>
 
+function displayGraphJSON(container, graphJSON, btnContainer, isTrace, Y) {
+	// Checks if the browser is supported
+	if (!mxClient.isBrowserSupported()) {
+		// Displays an error message if the browser is not supported.
+		mxUtils.error('Browser is not supported!', 200, false);
+	}
+	else {
+		container.innerHTML = "";
+		var propertiesLabel = 'propertiesLabel';
+		var encodingLabel = 'encodingLabel';
+		mxEvent.disableContextMenu(document.body);
+		// Enables crisp rendering of rectangles in SVG
+		mxRectangleShape.prototype.crisp = true;	
+		// Creates the graph inside the given container
+		var graph = new mxGraph(container);
+		graph.graphHandler.scaleGrid = true;
+		graph.setPanning(true);
+		// Enables rubberband selection
+		new mxRubberband(graph);
+		// Gets the default parent for inserting new cells. This
+		// is normally the first child of the root (ie. layer 0).
+		var parent = graph.getDefaultParent();					
+		// Adds cells to the model in a single step
+		graph.getModel().beginUpdate();
+		try {
+			var graphNodesArray = new Array();
+			var graphEdgesArray = new Array();
+			if( !isTrace )
+				fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray, 
+						propertiesLabel, encodingLabel);
+			else
+				fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray,
+						propertiesLabel, encodingLabel);
+			var hierLayout = new mxHierarchicalLayout(graph);
+			hierLayout.execute(parent);
+		}
+		finally {
+			// Updates the display
+			graph.getModel().endUpdate();
+		}
+		graph.centerZoom = false;
+		var bounds = graph.getGraphBounds();
+		graph.view.setTranslate( (container.clientWidth/2) - (bounds.width/2), 
+				(container.clientHeight/2) - (bounds.height/2) );
+		activateButtons(graph, hierLayout, parent, btnContainer, Y);
+		
+		//Add properties and encoding labels
+		graph[propertiesLabel + 'Visible'] = false;
+		graph[encodingLabel + 'Visible'] = false;
+		prepareGraphForLabels(graph);
+		addLabel(graph, propertiesLabel, true);
+		addLabel(graph, encodingLabel, false);
+		activateLabelButton(graph, btnContainer, 'PropertiesBtn', propertiesLabel, Y);
+		activateLabelButton(graph, btnContainer, 'EncodingBtn', encodingLabel, Y);
+	}
+}
+
+
+function fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray, propertiesLabel, encodingLabel) {
+	var vertex = null;
+	var edge = null;
+	var tuple = null;
+	// Workflow rectangle fill color #BAE3E4 (#7FB4B5 darker)
+	// Workflow rectangle stroke color #1AA4A7
+	for(var i = 0; i < graphJSON.nodes.length; i++) {
+		tuple = graphJSON.nodes[i];
+		if( graphNodesArray[tuple.nodeId] == undefined ) {
+			//vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#BAE3E4;fontColor=#000000");
+			vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#7FB4B5;fontColor=#000000");
+			graphNodesArray[tuple.nodeId] = vertex;
+			vertex[propertiesLabel] = generateNodeText(tuple);
+			vertex[encodingLabel] = '' + i;
+		}
+	}
+	for(var i = 0; i < graphJSON.edges.length; i++) {
+		tuple = graphJSON.edges[i];
+		edge = graph.insertEdge(parent, null, tuple.edgeLabel, graphNodesArray[tuple.startNodeId], 
+				graphNodesArray[tuple.endNodeId], "strokeColor=#2E2E2E;startArrow=oval");
+		graphEdgesArray[tuple.startNodeId + "_" + tuple.endNodeId] = edge;
+	}
+}
+
+
+function fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray, propertiesLabel, encodingLabel) {
+	var vertex = null;
+	var edge = null;
+	var tuple = null;
+	// Trace rectangle fill color #DCF1F1 (#7FB4B5 darker)
+	// Trace rectangle stroke color #1AA4A7
+	// Trace ellipse fill color #F6F6CC (#C4C489 darker)
+	// Trace ellipse stroke color #CCCC00
+	for(var i = 0; i < graphJSON.nodes.length; i++) {
+		tuple = graphJSON.nodes[i];
+		if( graphNodesArray[tuple.nodeId] == undefined ) {
+			if(tuple.type == "data")
+				//vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "shape=ellipse;strokeColor=#CCCC00;fillColor=#F6F6CC;fontColor=#000000");
+				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "shape=ellipse;strokeColor=#CCCC00;fillColor=#C4C489;fontColor=#000000");
+			else
+				//vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#DCF1F1;fontColor=#000000");
+				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#7FB4B5;fontColor=#000000");
+			graphNodesArray[tuple.nodeId] = vertex;
+			vertex[propertiesLabel] = generateNodeText(tuple);
+			//vertex[encodingLabel] = '' + i;
+			vertex[encodingLabel] = '' + tuple.treecover;
+		}
+	}
+	for(var i = 0; i < graphJSON.edges.length; i++) {
+		tuple = graphJSON.edges[i];
+		edge = graph.insertEdge(parent, null, tuple.edgeLabel, graphNodesArray[tuple.endNodeId], 
+    			graphNodesArray[tuple.startNodeId], "strokeColor=#2E2E2E;fontColor=#000000;startArrow=classic;endArrow=oval");
+		graphEdgesArray[tuple.endNodeId + "_" + tuple.startNodeId] = edge;
+	}
+}
+
+
+function generateNodeText(jsonObj) {
+	var nodeText = '';
+	for(var key in jsonObj) {
+		var propertyVal = jsonObj[key];
+		if( (key.length + propertyVal.length) <= 30 )
+			nodeText += key + ':' + propertyVal + '\n';
+	}
+	return nodeText.substring(0, nodeText.length-1);
+}
+
+
+function activateLabelButton(graph, containerID, btnName, labelName, Y) {
+	var mLabelName = labelName;
+	var btn = Y.one('#' + containerID + btnName);
+	var btnFunc = function(evt) {
+		graph[mLabelName + 'Visible'] = !graph[mLabelName + 'Visible'];
+		graph.refresh();
+	}
+	btn.set('onclick', btnFunc);
+}
+
+
+function prepareGraphForLabels(graph) {
+	// Overrides method to hide relative child vertices
+	graph.isCellVisible = function(cell) {
+		return !this.model.isVertex(cell) || cell.geometry == null ||
+			!cell.geometry.relative ;
+	};
+}
+
+
+function addLabel(graph, labelName, isTop) {
+	
+	var mLabelName = labelName;
+	var mIsTop = isTop;
+	
+	graph['get' + mLabelName] = function(cell) {
+		if (!this.model.isEdge(cell)) {
+			// Possible to return any string here
+			//return "ID=" + cell.id + ' mIsTop=' + mIsTop + ' mLabelName=' + mLabelName;
+			return cell[mLabelName];
+		}
+		return null;
+	};
+	
+	// Creates the shape for the shape number and puts it into the draw pane
+	var createShape = graph.cellRenderer.createShape;
+	graph.cellRenderer.createShape = function(state) {
+		createShape.apply(this, arguments);
+		if( graph[mLabelName + 'Visible'] && !state.cell.geometry.relative ) {
+			var label = graph['get' + mLabelName](state.cell);
+			if( label != null && state.shape != null && state[mLabelName] == null ) {
+				state[mLabelName] = new mxText(label, new mxRectangle(),
+						mxConstants.ALIGN_LEFT, mxConstants.ALIGN_BOTTOM);
+				// Styles the label
+				state[mLabelName].color = 'black';
+				state[mLabelName].family = 'Verdana';
+				state[mLabelName].size = 8;
+				state[mLabelName].fontStyle = mxConstants.FONT_ITALIC;
+				state[mLabelName].background = 'yellow';
+				state[mLabelName].border = 'black';
+				
+				state[mLabelName].dialect = state.shape.dialect;
+				state[mLabelName].init(state.view.getDrawPane());
+			}
+		}
+	};
+	
+	// Redraws the shape number after the cell has been moved/resized
+	var redraw = graph.cellRenderer.redraw;
+	graph.cellRenderer.redraw = function(state) {
+		redraw.apply(this, arguments);
+		if( state.shape != null && state[mLabelName] != null ) {
+			var scale = graph.getView().getScale();
+			var bounds = null;
+			if( mIsTop )
+				bounds = new mxRectangle(state.x + state.width - 8 * scale, state.y + 8 * scale, 0, 0);
+			else
+				bounds = new mxRectangle(state.x + state.width - 8 * scale, state.y + state.height + 8 * scale, 0, 0);
+			state[mLabelName].state = state;
+			state[mLabelName].value = graph['get' + mLabelName](state.cell);
+			state[mLabelName].scale = scale;
+			state[mLabelName].bounds = bounds;
+			state[mLabelName].redraw();
+		}
+	};
+	
+	// Destroys the shape number
+	var destroy = graph.cellRenderer.destroy;
+	graph.cellRenderer.destroy = function(state) {
+		destroy.apply(this, arguments);
+		if (state[mLabelName] != null) {
+			state[mLabelName].destroy();
+			state[mLabelName] = null;
+		}
+	};
+	
+}
+
+
+function createButtons(containerID, Y) {
+	var container = Y.one('#' + containerID);
+	var btnContainerHTML = '<div id="' + containerID + 'BtnContainer"></div>';
+	container.get('children').slice(-1).item(0).insert(btnContainerHTML, 'after');
+	var btnContainer = Y.one('#' + containerID + 'BtnContainer');
+	var zoomInBtn = createButton(btnContainer, ' + ', containerID + 'ZoomInBtn');
+	var zoomOutBtn = createButton(btnContainer, ' - ', containerID + 'ZoomOutBtn');
+	var hierLayoutBtn = createButton(btnContainer, 'layout', containerID + 'HierLayoutBtn');
+	//Add a <br> to separate the two button groups
+	//var brHTML = '<br/>';
+	//btnContainer.insert(brHTML);
+	//var propertiesBtn = createButton(btnContainer, 'properties', containerID + 'PropertiesBtn');
+	//ENCODING
+	//var encodingBtn = createButton(btnContainer, 'encoding', containerID + 'EncodingBtn');
+}
+
+function activateButtons(graph, hierLayout, parent, containerID, Y) {
+	var zoomInBtn = Y.one('#' + containerID + 'ZoomInBtn');
+	var zoomInBtnFunc = function() { graph.zoomIn(); } ;
+	zoomInBtn.set('onclick', zoomInBtnFunc);
+	var zoomOutBtn = Y.one('#' + containerID + 'ZoomOutBtn');
+	var zoomOutBtnFunc = function() { graph.zoomOut(); } ;
+	zoomOutBtn.set('onclick', zoomOutBtnFunc);
+	var hierLayoutBtn = Y.one('#' + containerID + 'HierLayoutBtn');
+	var hierLayoutBtnFunc = function() { hierLayout.execute(parent); } ;
+	hierLayoutBtn.set('onclick', hierLayoutBtnFunc);
+}
+
+function createButton(container, label, btnId){
+    var button = document.createElement("input");
+    button.id = btnId;
+    button.type = "button";
+    button.value = label;
+    container.insert(button);
+    return button;
+}
+
+function createWFTabs(containerID, Y) {
+	var container = Y.one('#' + containerID);
+	var tabsContainerHTML = '<div id="' + containerID + 'tabsContainer"></div>';
+	container.get('children').slice(-1).item(0).insert(tabsContainerHTML, 'after');
+	var tabsContainer = Y.one('#' + containerID + 'tabsContainer');
+	var loadWFTabContainerID = 'loadWFTabContainer';
+	var queryWFTabContainerID = 'queryWFTabContainer';
+	var loadTabContent = '<div id="' + loadWFTabContainerID + '">Database name: ' + 
+		'<input type="text" id="dbnameTextfield" size="15"><br/>' +
+		'<input type="button" id="dbnameLoadBtn" value="Load"><br/><br/>Workflow id:<br/>' +
+		'<select id="wfIdsSelect"></select>' + 
+		'<br/><br/><input id="' + containerID + 'PropertiesBtn" type="button" value="properties">' +
+		'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
+	var queryTabContent = '<div id="' + queryWFTabContainerID + '">' +
+		'<select id="wfQuerySelect"></select>' + '<br/><br/>' + 
+		'<textarea id="wfQueryText" rows="6" cols="50">Query text.</textarea>' + '<br/><br/>' +
+		'<input id="wfQueryExecuteBtn" type="button" value="Execute">' +
+		'<input id="wfQueryClearBtn" type="button" value="Clear">' +
+		'</div>';
+	var tabview = new Y.TabView({
+        children: [{
+            label: 'Load',
+            content: loadTabContent
+        }, {
+            label: 'Query',
+            content: queryTabContent
+        }]
+    });
+    tabview.render(tabsContainer);
+    createWFQueriesMenu(Y);
+}
+
+function createWFQueriesMenu(Y) {
+	var wfQdescs =['Compute number of invocations of a workflow task',
+	               'Find all inputs of a workflow across runs',
+	               'Find the modules of tasks that were not completed',
+	                ];
+	var wfQueries =['START n = node:node_auto_index(name="e30_vtkCamera") \n MATCH m-[:wasAssociatedWith]-n \n RETURN count(m)',
+	                'START n=node(*) \n MATCH (n)<-[:used]-() \n WHERE not ((n)-[:wasGeneratedBy]->()) \n AND (n.wfID="72ff0f9f-1892-49e0-b472-fb99e9a3870d") \n RETURN DISTINCT n.name;',      
+	                'START n=node(*) \n MATCH n<-[:wasAssociatedWith]-m \n WHERE HAS(n.vtType) AND HAS(n.wfID) AND HAS(n.runID) \n AND n.vtType="vt:module_exec" AND n.completed="-1" \n AND n.wfID="b64b7cf9-5561-4cac-b89c-1ed8c49ba654" \n AND n.runID="a0" \n RETURN m.name',     
+	                ];
+	var wfQuerySelect = Y.one('#wfQuerySelect');
+	var wfQueryText = Y.one('#wfQueryText');
+	for(var i = 0; i < wfQdescs.length; i++) {
+		var opt = Y.Node.create('<option value=""></option>');
+		wfQuerySelect.append(opt);
+		wfQuerySelect.get('options').item(i).set('text', wfQdescs[i]);
+		wfQuerySelect.get('options').item(i).set('value', i);
+	}
+	wfQueryText.set('value', wfQueries[0]);
+	var changeQueryFunc = function() { 
+			var idx = wfQuerySelect.get('value');
+			wfQueryText.set('value', wfQueries[idx]);
+		} ;
+	wfQuerySelect.set('onchange', changeQueryFunc);
+}
+
+function createTraceTabs(containerID, Y) {
+	var container = Y.one('#' + containerID);
+	var tabsContainerHTML = '<div id="' + containerID + 'tabsContainer"></div>';
+	container.get('children').slice(-1).item(0).insert(tabsContainerHTML, 'after');
+	var tabsContainer = Y.one('#' + containerID + 'tabsContainer');
+	var loadTraceTabContainerID = 'loadTraceTabContainer';
+	var queryTraceTabContainerID = 'queryTraceTabContainer';
+	var loadTabContent = '<div id="' + loadTraceTabContainerID + '">Trace id:<br/>' +
+	'<select id="traceIdsSelect"><option value=""></option></select>' + 
+	'<br/><br/><input id="' + containerID + 'PropertiesBtn" type="button" value="properties">' +
+	'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
+	var queryTabContent = '<div id="' + queryTraceTabContainerID + '">' +
+	'<select id="wfQuerySelect"></select>' + '<br/><br/>' + 
+	'<textarea id="wfQueryText" rows="4" cols="30">Query text.</textarea>' + '<br/><br/>' +
+	'<input id="wfQueryExecuteBtn" type="button" value="Execute">' +
+	'<input id="wfQueryClearBtn" type="button" value="Clear">' +
+	'</div>';
+	var tabview = new Y.TabView({
+        children: [{
+            label: 'Load',
+            content: loadTabContent
+        }, {
+            label: 'Query',
+            content: queryTabContent
+        }]
+    });
+    tabview.render(tabsContainer);
+}
+
+function callGraphRestfulWS(url, container, btnContainer, isTrace, Y) {
+	Y.io(url, {
+		//data: 'suspect=butler',
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var json = Y.JSON.parse(response.responseText);
+					displayGraphJSON(container, json, btnContainer, isTrace, Y);
+					//alert(JSON.stringify(json, null, 4));
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
+	});
+}
+
+function callWfWS(Y) {
+	var url = 'webresources/wfresource';
+	var container = document.getElementById('wfContainer');
+	var btnContainer = 'left';
+	var isTrace = false;
+	var dbnameTxtField = Y.one('#dbnameTextfield');
+	var dbnameParam = dbnameTxtField.get('value');
+	var wfIdsSelect = Y.one('#wfIdsSelect');
+	var wfIdParam = wfIdsSelect.get('value');
+	Y.io(url, {
+		data: 'dbname=' + dbnameParam + '&wfid=' + wfIdParam,
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var json = Y.JSON.parse(response.responseText);
+					displayGraphJSON(container, json, btnContainer, isTrace, Y);
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
+	});
+}
+
+function callTraceWS(Y) {
+	var url = 'webresources/traceresource';
+	var container = document.getElementById('traceContainer');
+	var btnContainer = 'right';
+	var isTrace = true;
+	var dbnameTxtField = Y.one('#dbnameTextfield');
+	var dbnameParam = dbnameTxtField.get('value');
+	var wfIdsSelect = Y.one('#wfIdsSelect');
+	var wfIdParam = wfIdsSelect.get('value');
+	var traceIdsSelect = Y.one('#traceIdsSelect');
+	var traceIdParam = traceIdsSelect.get('value');
+	Y.io(url, {
+		data: 'dbname=' + dbnameParam + '&wfid=' + wfIdParam + '&traceid=' + traceIdParam,
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var json = Y.JSON.parse(response.responseText);
+					displayGraphJSON(container, json, btnContainer, isTrace, Y);
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
+	});
+}
+
+function callWfIdsWS(Y) {
+	var url = 'webresources/wfidsresource';
+	var dbnameTxtField = Y.one('#dbnameTextfield');
+	var dbnameParam = dbnameTxtField.get('value');
+	//alert('value: ' + dbnameParam);
+	Y.io(url, {
+		data: 'dbname=' + dbnameParam,
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var jsonArray = Y.JSON.parse(response.responseText);
+					var wfIdsSelect = Y.one('#wfIdsSelect');
+					wfIdsSelect.get('childNodes').remove();
+					for(var i = 0; i < jsonArray.length; i++) {
+						var opt = Y.Node.create('<option value=""></option>');
+						wfIdsSelect.append(opt);
+						wfIdsSelect.get('options').item(i).set('text', i+1);
+						wfIdsSelect.get('options').item(i).set('value', jsonArray[i]);
+					}
+					//CALL
+					callWfWS(Y);
+					callTraceIdsWS(Y);
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
+	});
+}
+
+function callTraceIdsWS(Y) {
+	var url = 'webresources/traceidsresource';
+	var dbnameTxtField = Y.one('#dbnameTextfield');
+	var dbnameParam = dbnameTxtField.get('value');
+	var wfIdsSelect = Y.one('#wfIdsSelect');
+	var wfIdParam = wfIdsSelect.get('value');
+	//alert('the wfIdParam: ' + wfIdParam);
+	Y.io(url, {
+		data: 'dbname=' + dbnameParam + '&wfid=' + wfIdParam,
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var jsonArray = Y.JSON.parse(response.responseText);
+					var traceIdsSelect = Y.one('#traceIdsSelect');
+					traceIdsSelect.get('childNodes').remove();
+					for(var i = 0; i < jsonArray.length; i++) {
+						var opt = Y.Node.create('<option value=""></option>');
+						traceIdsSelect.append(opt);
+						traceIdsSelect.get('options').item(i).set('text', i+1);
+						traceIdsSelect.get('options').item(i).set('value', jsonArray[i]);
+					}
+					//Add event for loading traces
+					var loadTraceFunc = function() { callTraceWS(Y); } ;
+					traceIdsSelect.set('onchange', loadTraceFunc);
+					//CALL
+					callTraceWS(Y);
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
+	});
+}
+
+
 YUI().use('gallery-axo-layout', 'resize', function(Y) {
 	var layout = new Y.Layout({orientation: 'vertical', sizeToWindow: true });
 	layout.add(new Y.LayoutChild({id:'top', height:30, resize: true }));
@@ -614,7 +653,6 @@ YUI().use('node', 'tabview', function (Y) {
 });
 
 YUI().use('node', 'json-parse', 'io-base', function (Y) {
-	
 	var dbnameLoadBtn = Y.one('#dbnameLoadBtn');
 	var dbnameLoadBtnFunc = function() { callWfIdsWS(Y); } ;
 	dbnameLoadBtn.set('onclick', dbnameLoadBtnFunc);
