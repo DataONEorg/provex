@@ -425,17 +425,24 @@ function createWFTabs(containerID, Y) {
         }]
     });
     tabview.render(tabsContainer);
-    createWFQueriesMenu(Y);
 }
 
 function createWFQueriesMenu(Y) {
-	var wfQdescs =['Compute number of invocations of a workflow task',
+	//wfId: 72ff0f9f-1892-49e0-b472-fb99e9a3870d
+	//runId: a0
+	var wfIdsSelect = Y.one('#wfIdsSelect');
+	var wfIdParam = wfIdsSelect.get('value');
+	var traceIdsSelect = Y.one('#traceIdsSelect');
+	var traceIdParam = traceIdsSelect.get('value');
+	var wfQdescs =['Select a predefined query:',
+	               'Compute number of invocations of a workflow task',
 	               'Find all inputs of a workflow across runs',
 	               'Find the modules of tasks that were not completed',
 	                ];
-	var wfQueries =['START n = node:node_auto_index(name="e30_vtkCamera") \n MATCH m-[:wasAssociatedWith]-n \n RETURN count(m)',
-	                'START n=node(*) \n MATCH (n)<-[:used]-() \n WHERE not ((n)-[:wasGeneratedBy]->()) \n AND (n.wfID="72ff0f9f-1892-49e0-b472-fb99e9a3870d") \n RETURN DISTINCT n.name;',      
-	                'START n=node(*) \n MATCH n<-[:wasAssociatedWith]-m \n WHERE HAS(n.vtType) AND HAS(n.wfID) AND HAS(n.runID) \n AND n.vtType="vt:module_exec" AND n.completed="-1" \n AND n.wfID="b64b7cf9-5561-4cac-b89c-1ed8c49ba654" \n AND n.runID="a0" \n RETURN m.name',     
+	var wfQueries =['START n = node(*) \nMATCH \nWHERE \nRETURN ',
+	                'START n = node:node_auto_index(name="e7_Regrid") \n MATCH m-[:wasAssociatedWith]-n \n RETURN count(m)',
+	                'START n=node(*) \n MATCH (n)<-[:used]-() \n WHERE not ((n)-[:wasGeneratedBy]->()) \n AND HAS(n.wfID) AND (n.wfID="' + wfIdParam + '") \n RETURN DISTINCT n.name;',      
+	                'START n=node(*) \n MATCH n<-[:wasAssociatedWith]-m \n WHERE HAS(n.vtType) AND HAS(n.wfID) AND HAS(n.runID) \n AND n.vtType="vt:module_exec" AND n.completed="-1" \n AND n.wfID="' + wfIdParam + '" \n AND n.runID="' + traceIdParam + '" \n RETURN m.name',     
 	                ];
 	var wfQuerySelect = Y.one('#wfQuerySelect');
 	var wfQueryText = Y.one('#wfQueryText');
@@ -451,6 +458,19 @@ function createWFQueriesMenu(Y) {
 			wfQueryText.set('value', wfQueries[idx]);
 		} ;
 	wfQuerySelect.set('onchange', changeQueryFunc);
+	//Set action for the Clear button
+	var clearBtn = Y.one('#wfQueryClearBtn');
+	var clearBtnFunc = function() { 
+			var wfQueryText = Y.one('#wfQueryText');
+			wfQueryText.set('value', "");
+		} ;
+	clearBtn.set('onclick', clearBtnFunc);
+	//Set action for the Execute button
+	var executeBtn = Y.one('#wfQueryExecuteBtn');
+	var executeBtnFunc = function() { 
+			callQueryWS(Y);
+		} ;
+	executeBtn.set('onclick', executeBtnFunc);
 }
 
 function createTraceTabs(containerID, Y) {
@@ -608,7 +628,68 @@ function callTraceIdsWS(Y) {
 					var loadTraceFunc = function() { callTraceWS(Y); } ;
 					traceIdsSelect.set('onchange', loadTraceFunc);
 					//CALL
+					createWFQueriesMenu(Y);
 					callTraceWS(Y);
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
+	});
+}
+
+
+function callQueryWS(Y) {
+	var url = 'webresources/queryresource';
+	var dbnameTxtField = Y.one('#dbnameTextfield');
+	var dbnameParam = dbnameTxtField.get('value');
+	var queryText = Y.one('#wfQueryText');
+	var query = queryText.get('value');
+	Y.io(url, {
+		data: 'dbname=' + dbnameParam + '&query=' + query,
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var json = Y.JSON.parse(response.responseText);
+					var results_window = window.open("", "results_window", "menubar=1,resizable=1,width=500,height=600,scrollbars=1");
+					results_window.document['writeln']('<head></head><body class="yui3-skin-sam"><h3>Results</h3><br/><div id="table_content"></div></body>');
+					var cols = [];
+					var colsTypes = [];
+				    var data = [];
+					var colNames = json.columns;
+					for(var i = 0; i < colNames.length; i++) {
+						var cName = colNames[i];
+						for(var key in cName) {
+							if( cName.hasOwnProperty(key) ) {
+								cols[i] = key;
+								colsTypes[i] = cName[key];
+								break;
+							}
+						}
+					}
+					var dataVals = json.data;
+					for(var i = 0; i < dataVals.length; i++) {
+						data[i] = {};
+						for(var j = 0; j < dataVals[i].length; j++) {
+							if( colsTypes[j] == 'string' ) {
+								data[i][cols[j]] = dataVals[i][j];
+							}
+							else if( colsTypes[j] == 'node' ) {
+								temp = dataVals[i][j];
+								data[i][cols[j]] = temp['nodeId'];
+							}
+						}
+					}
+					YUI({win: results_window, doc: results_window.document, fetchCSS: true}).use('datatable-base', 'widget-base', function (childY) {
+						var table = new childY.DataTable.Base({
+					        columnset: cols,
+					        recordset: data
+					    });
+						table.render(childY.one('#table_content'));
+				    });
+					//results_window.document['writeln']('<head></head><body><h3>Results</h3><br/><p>' + response.responseText + '</p></body>');
+					//alert(response.responseText);
 				}
 				else {
 					alert('ERROR');
@@ -652,7 +733,7 @@ YUI().use('node', 'tabview', function (Y) {
 	createTraceTabs('right', Y);
 });
 
-YUI().use('node', 'json-parse', 'io-base', function (Y) {
+YUI({ fetchCSS: false }).use('node', 'json-parse', 'io-base', 'datatable-base', 'widget-base', function (Y) {
 	var dbnameLoadBtn = Y.one('#dbnameLoadBtn');
 	var dbnameLoadBtnFunc = function() { callWfIdsWS(Y); } ;
 	dbnameLoadBtn.set('onclick', dbnameLoadBtnFunc);
