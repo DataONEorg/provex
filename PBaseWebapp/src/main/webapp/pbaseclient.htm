@@ -653,7 +653,7 @@ function callQueryWS(Y) {
 				if (response.status >= 200 && response.status < 300) {
 					var json = Y.JSON.parse(response.responseText);
 					var results_window = window.open("", "results_window", "menubar=1,resizable=1,width=500,height=600,scrollbars=1");
-					results_window.document['writeln']('<head></head><body class="yui3-skin-sam"><h3>Results</h3><br/><div id="table_content"></div></body>');
+					results_window.document['writeln']('<head><link charset="utf-8" href="css/combo.css" rel="stylesheet" type="text/css"></head><body class="yui3-skin-sam"><h3>Results</h3><br/><div id="table_content"></div></body>');
 					var cols = [];
 					var colsTypes = [];
 				    var data = [];
@@ -681,15 +681,13 @@ function callQueryWS(Y) {
 							}
 						}
 					}
-					YUI({win: results_window, doc: results_window.document, fetchCSS: true}).use('datatable-base', 'widget-base', function (childY) {
+					YUI({win: results_window, doc: results_window.document, fetchCSS: false}).use('datatable-base', 'widget-base', function (childY) {
 						var table = new childY.DataTable.Base({
 					        columnset: cols,
 					        recordset: data
 					    });
 						table.render(childY.one('#table_content'));
 				    });
-					//results_window.document['writeln']('<head></head><body><h3>Results</h3><br/><p>' + response.responseText + '</p></body>');
-					//alert(response.responseText);
 				}
 				else {
 					alert('ERROR');
@@ -733,7 +731,7 @@ YUI().use('node', 'tabview', function (Y) {
 	createTraceTabs('right', Y);
 });
 
-YUI({ fetchCSS: false }).use('node', 'json-parse', 'io-base', 'datatable-base', 'widget-base', function (Y) {
+YUI().use('node', 'json-parse', 'io-base', 'datatable-base', 'widget-base', function (Y) {
 	var dbnameLoadBtn = Y.one('#dbnameLoadBtn');
 	var dbnameLoadBtnFunc = function() { callWfIdsWS(Y); } ;
 	dbnameLoadBtn.set('onclick', dbnameLoadBtnFunc);
