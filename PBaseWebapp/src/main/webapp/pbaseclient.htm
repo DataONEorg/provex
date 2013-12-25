@@ -165,12 +165,12 @@ function displayGraphJSON(container, graphJSON, btnContainer, isTrace, Y) {
 		new mxRubberband(graph);
 		// Gets the default parent for inserting new cells. This
 		// is normally the first child of the root (ie. layer 0).
-		var parent = graph.getDefaultParent();					
+		var parent = graph.getDefaultParent();
+		var graphNodesArray = new Array();
+		var graphEdgesArray = new Array();
 		// Adds cells to the model in a single step
 		graph.getModel().beginUpdate();
 		try {
-			var graphNodesArray = new Array();
-			var graphEdgesArray = new Array();
 			if( !isTrace )
 				fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray, 
 						propertiesLabel, encodingLabel);
@@ -198,6 +198,15 @@ function displayGraphJSON(container, graphJSON, btnContainer, isTrace, Y) {
 		addLabel(graph, encodingLabel, false);
 		activateLabelButton(graph, btnContainer, 'PropertiesBtn', propertiesLabel, Y);
 		activateLabelButton(graph, btnContainer, 'EncodingBtn', encodingLabel, Y);
+		//Set global variables on MYAPP
+		if( isTrace ) {
+			MYAPP.traceGraph = graph;
+			MYAPP.traceGraphNodesArray = graphNodesArray;
+		}
+		else {
+			MYAPP.wfGraph = graph;
+			MYAPP.wfGraphNodesArray = graphNodesArray;
+		}
 	}
 }
 
@@ -653,10 +662,11 @@ function callQueryWS(Y) {
 				if (response.status >= 200 && response.status < 300) {
 					var json = Y.JSON.parse(response.responseText);
 					var results_window = window.open("", "results_window", "menubar=1,resizable=1,width=500,height=600,scrollbars=1");
-					results_window.document['writeln']('<head><link charset="utf-8" href="css/combo.css" rel="stylesheet" type="text/css"></head><body class="yui3-skin-sam"><h3>Results</h3><br/><div id="table_content"></div></body>');
+					results_window.document['writeln']('<head><link charset="utf-8" href="css/combo.css" rel="stylesheet" type="text/css"></head><body class="yui3-skin-sam"><h3>Results</h3><input id="showResultsBtn" type="button" value="Highlight nodes"><br/><div id="table_content"></div></body>');
 					var cols = [];
 					var colsTypes = [];
 				    var data = [];
+				    var nodeIds = [];
 					var colNames = json.columns;
 					for(var i = 0; i < colNames.length; i++) {
 						var cName = colNames[i];
@@ -678,6 +688,7 @@ function callQueryWS(Y) {
 							else if( colsTypes[j] == 'node' ) {
 								temp = dataVals[i][j];
 								data[i][cols[j]] = temp['nodeId'];
+								nodeIds.push(temp['nodeId']);
 							}
 						}
 					}
@@ -687,6 +698,34 @@ function callQueryWS(Y) {
 					        recordset: data
 					    });
 						table.render(childY.one('#table_content'));
+						var showResultsBtn = childY.one('#showResultsBtn');
+						var updateNodesColor = function(graph, graphNodesArray, nodeIds, updateColor) {
+							graph.getModel().beginUpdate();
+						    try {
+						    	for(var i = 0; i < nodeIds.length; i++) {
+						    		var nodeId = nodeIds[i];
+						    		for(var key in graphNodesArray) {
+						    			if( graphNodesArray.hasOwnProperty(key) ) {
+						    				var vtx = graphNodesArray[key];
+						    				if( vtx.value == nodeId ) {
+												graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, updateColor, [vtx]);
+												break;
+						    				}
+						    			}
+									}
+						    	}
+						    }
+						    finally {
+								// Updates the display
+								graph.getModel().endUpdate();
+							}
+						}
+						var showResultsFunc = function() {
+								var updateColor = '#91D89F';
+								updateNodesColor(MYAPP.wfGraph, MYAPP.wfGraphNodesArray, nodeIds, updateColor);
+								updateNodesColor(MYAPP.traceGraph, MYAPP.traceGraphNodesArray, nodeIds, updateColor);
+							} ;
+						showResultsBtn.set('onclick', showResultsFunc);
 				    });
 				}
 				else {
@@ -730,6 +769,12 @@ YUI().use('node', 'tabview', function (Y) {
 	createWFTabs('left', Y);
 	createTraceTabs('right', Y);
 });
+
+var MYAPP = {};
+MYAPP.wfGraph = null;
+MYAPP.traceGraph = null;
+MYAPP.wfGraphNodesArray = null;
+MYAPP.traceGraphNodesArray = null;
 
 YUI().use('node', 'json-parse', 'io-base', 'datatable-base', 'widget-base', function (Y) {
 	var dbnameLoadBtn = Y.one('#dbnameLoadBtn');
