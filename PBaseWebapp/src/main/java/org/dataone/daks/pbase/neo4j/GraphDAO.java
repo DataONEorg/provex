@@ -70,6 +70,7 @@ public class GraphDAO {
 	}
 	
 	
+	/*
 	public String getWorkflow(String wfID) throws JSONException {
 		ExecutionEngine engine = new ExecutionEngine(graphDB, StringLogger.SYSTEM); 
 		//Get the modules
@@ -107,6 +108,57 @@ public class GraphDAO {
 			edgesArray.put(edgeObj);
 		}
 		resultObj.put("edges", edgesArray);
+        return resultObj.toString();
+	}
+	*/
+	
+	
+	public String getWorkflow(String wfID) throws JSONException {
+		ExecutionEngine engine = new ExecutionEngine(graphDB, StringLogger.SYSTEM); 
+		//Get the modules
+		String modulesQuery = "START n=node(*) WHERE HAS(n.name) AND HAS(n.type) AND HAS(n.wfID) " +
+					   "AND n.type='module' AND n.wfID='" + wfID + "' " +
+					   "RETURN distinct n;";
+		ExecutionResult nodesResult = engine.execute(modulesQuery);
+		ResourceIterator<Node> nodesIt = nodesResult.columnAs("n");
+		JSONObject resultObj = new JSONObject();
+		JSONArray nodesArray = new JSONArray();
+		while (nodesIt.hasNext()) {
+			Node node = nodesIt.next();
+			JSONObject nodeObj = new JSONObject();
+			nodeObj.put("nodeId", node.getProperty("name"));
+			for (String propertyKey : node.getPropertyKeys())
+				if( ! (propertyKey.equals("wfID") || propertyKey.equals("name")) ) 
+					nodeObj.put(propertyKey, node.getProperty(propertyKey) );
+			nodesArray.put(nodeObj);
+		}
+		//Get the modules edges
+		String edgesQuery = "START n=node(*) " +
+							"MATCH m-[:isConnectedWith]->n " +
+							"WHERE HAS(m.name) AND HAS(n.name) " +
+							"RETURN distinct m.name, n.name;";
+		ExecutionResult edgesResult = engine.execute(edgesQuery);
+		ResourceIterator<Map<String,Object>> edgesIt = edgesResult.iterator();
+		JSONArray edgesArray = new JSONArray();
+		Digraph coverDigraph = new Digraph();
+		while (edgesIt.hasNext()) {
+			Map<String,Object> map = edgesIt.next();
+			JSONObject edgeObj = new JSONObject();
+			edgeObj.put("startNodeId", map.get("m.name").toString());
+			edgeObj.put("edgeLabel", "");
+			edgeObj.put("endNodeId", map.get("n.name").toString());
+			edgesArray.put(edgeObj);
+			coverDigraph.addEdge(map.get("m.name").toString(), map.get("n.name").toString());
+		}
+		resultObj.put("edges", edgesArray);
+		TreeCover cover = new TreeCover();
+		cover.createCover(coverDigraph);
+		for(int i = 0; i < nodesArray.length(); i++) {
+			JSONObject nodeObj = nodesArray.getJSONObject(i);
+			String nodeIdStr = nodeObj.getString("nodeId");
+			nodeObj.put("treecover", cover.getPostorder(nodeIdStr) + ":" + cover.getCode(nodeIdStr).toString());
+		}
+		resultObj.put("nodes", nodesArray);
         return resultObj.toString();
 	}
 	

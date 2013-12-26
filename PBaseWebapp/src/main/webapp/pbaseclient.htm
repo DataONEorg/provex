@@ -226,7 +226,8 @@ function fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray,
 			graphNodesArray[tuple.nodeId] = vertex;
 			vertex[propertiesLabel] = generateNodeText(tuple);
 			//Must use a string, otherwise an error occurs
-			vertex[encodingLabel] = '' + i;
+			//vertex[encodingLabel] = '' + i;
+			vertex[encodingLabel] = '' + tuple.treecover;
 		}
 	}
 	for(var i = 0; i < graphJSON.edges.length; i++) {
