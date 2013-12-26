@@ -198,6 +198,8 @@ function displayGraphJSON(container, graphJSON, btnContainer, isTrace, Y) {
 		addLabel(graph, encodingLabel, false);
 		activateLabelButton(graph, btnContainer, 'PropertiesBtn', propertiesLabel, Y);
 		activateLabelButton(graph, btnContainer, 'EncodingBtn', encodingLabel, Y);
+		//Set the flag for node highlighting on query results
+		graph['highlighted'] = false;
 		//Set global variables on MYAPP
 		if( isTrace ) {
 			MYAPP.traceGraph = graph;
@@ -215,13 +217,12 @@ function fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray,
 	var vertex = null;
 	var edge = null;
 	var tuple = null;
-	// Workflow rectangle fill color #BAE3E4 (#7FB4B5 darker)
-	// Workflow rectangle stroke color #1AA4A7
 	for(var i = 0; i < graphJSON.nodes.length; i++) {
 		tuple = graphJSON.nodes[i];
 		if( graphNodesArray[tuple.nodeId] == undefined ) {
-			//vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#BAE3E4;fontColor=#000000");
-			vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#7FB4B5;fontColor=#000000");
+			vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, 'strokeColor=' + MYAPP.wfRectStrokeColor + 
+					';fillColor=' + MYAPP.wfRectFillColor + ';fontColor=#000000');
+			vertex['defFillColor'] = MYAPP.wfRectFillColor;
 			graphNodesArray[tuple.nodeId] = vertex;
 			vertex[propertiesLabel] = generateNodeText(tuple);
 			//Must use a string, otherwise an error occurs
@@ -241,19 +242,19 @@ function fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArr
 	var vertex = null;
 	var edge = null;
 	var tuple = null;
-	// Trace rectangle fill color #DCF1F1 (#7FB4B5 darker)
-	// Trace rectangle stroke color #1AA4A7
-	// Trace ellipse fill color #F6F6CC (#C4C489 darker)
-	// Trace ellipse stroke color #CCCC00
 	for(var i = 0; i < graphJSON.nodes.length; i++) {
 		tuple = graphJSON.nodes[i];
 		if( graphNodesArray[tuple.nodeId] == undefined ) {
-			if(tuple.type == "data")
-				//vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "shape=ellipse;strokeColor=#CCCC00;fillColor=#F6F6CC;fontColor=#000000");
-				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "shape=ellipse;strokeColor=#CCCC00;fillColor=#C4C489;fontColor=#000000");
-			else
-				//vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#DCF1F1;fontColor=#000000");
-				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, "strokeColor=#1AA4A7;fillColor=#7FB4B5;fontColor=#000000");
+			if(tuple.type == "data") {
+				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, 'shape=ellipse;strokeColor=' + 
+						MYAPP.traceEllipseStrokeColor + ';fillColor=' + MYAPP.traceEllipseFillColor + ';fontColor=#000000');
+				vertex['defFillColor'] = MYAPP.traceEllipseFillColor;
+			}
+			else {
+				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, 'strokeColor=' + MYAPP.traceRectStrokeColor
+						+ ';fillColor=' + MYAPP.traceRectFillColor + ';fontColor=#000000');
+				vertex['defFillColor'] = MYAPP.traceRectFillColor;
+			}
 			graphNodesArray[tuple.nodeId] = vertex;
 			vertex[propertiesLabel] = generateNodeText(tuple);
 			//vertex[encodingLabel] = '' + i;
@@ -688,26 +689,29 @@ function callQueryWS(Y) {
 					    });
 						table.render(childY.one('#table_content'));
 						var showResultsBtn = childY.one('#showResultsBtn');
-						var updateNodesColor = function(graph, graphNodesArray, nodeIds, updateColor) {
+						var updateNodesColor = function(graph, graphNodesArray, nodeIds, highlightColor) {
 							graph.getModel().beginUpdate();
 						    try {
 						    	for(var i = 0; i < nodeIds.length; i++) {
 						    		var nodeId = nodeIds[i];
 						    		if( graphNodesArray.hasOwnProperty(nodeId) ) {
 						    			var vtx = graphNodesArray[nodeId];
-						    			graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, updateColor, [vtx]);
+						    			if( ! graph['highlighted'] )
+						    				graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, highlightColor, [vtx]);
+						    			else
+						    				graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, vtx['defFillColor'], [vtx]);
 						    		}
 						    	}
 						    }
 						    finally {
 								// Updates the display
+								graph['highlighted'] = !graph['highlighted'];
 								graph.getModel().endUpdate();
 							}
 						}
 						var showResultsFunc = function() {
-								var updateColor = '#91D89F';
-								updateNodesColor(MYAPP.wfGraph, MYAPP.wfGraphNodesArray, nodeIds, updateColor);
-								updateNodesColor(MYAPP.traceGraph, MYAPP.traceGraphNodesArray, nodeIds, updateColor);
+								updateNodesColor(MYAPP.wfGraph, MYAPP.wfGraphNodesArray, nodeIds, MYAPP.highlightFillColor);
+								updateNodesColor(MYAPP.traceGraph, MYAPP.traceGraphNodesArray, nodeIds, MYAPP.highlightFillColor);
 							} ;
 						showResultsBtn.set('onclick', showResultsFunc);
 				    });
@@ -759,6 +763,21 @@ MYAPP.wfGraph = null;
 MYAPP.traceGraph = null;
 MYAPP.wfGraphNodesArray = null;
 MYAPP.traceGraphNodesArray = null;
+//Workflow rectangle fill color #BAE3E4 (#7FB4B5 darker)
+//Workflow rectangle stroke color #1AA4A7
+MYAPP.wfRectFillColor = '#7FB4B5';
+MYAPP.wfRectStrokeColor = '##1AA4A7';
+//Trace rectangle fill color #DCF1F1 (#7FB4B5 darker)
+//Trace rectangle stroke color #1AA4A7
+//Trace ellipse fill color #F6F6CC (#C4C489 darker)
+//Trace ellipse stroke color #CCCC00
+MYAPP.traceRectFillColor = '#7FB4B5';
+MYAPP.traceRectStrokeColor = '#1AA4A7';
+MYAPP.traceEllipseFillColor = '#C4C489';
+MYAPP.traceEllipseStrokeColor = '#CCCC00';
+//Highlight fill color (rectangles and ellipses) '#91D89F' 
+MYAPP.highlightFillColor = '#91D89F';
+
 
 YUI().use('node', 'json-parse', 'io-base', 'datatable-base', 'widget-base', function (Y) {
 	var dbnameLoadBtn = Y.one('#dbnameLoadBtn');
