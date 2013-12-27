@@ -156,7 +156,9 @@ public class GraphDAO {
 		for(int i = 0; i < nodesArray.length(); i++) {
 			JSONObject nodeObj = nodesArray.getJSONObject(i);
 			String nodeIdStr = nodeObj.getString("nodeId");
-			nodeObj.put("treecover", cover.getPostorder(nodeIdStr) + ":" + cover.getCode(nodeIdStr).toString());
+			//nodeObj.put("treecover", cover.getPostorder(nodeIdStr) + ":" + cover.getCode(nodeIdStr).toString());
+			nodeObj.put("intervals", "[" + cover.getCode(nodeIdStr).toString() + "]");
+			nodeObj.put("postorder", cover.getPostorder(nodeIdStr));
 		}
 		resultObj.put("nodes", nodesArray);
         return resultObj.toString();
@@ -229,7 +231,9 @@ public class GraphDAO {
 		List<String> revTopSortList = digraph.reverseTopSort();
 		for(String nodeStr : revTopSortList) {
 			JSONObject nodeObj = nodesHT.get(nodeStr);
-			nodeObj.put("treecover", cover.getPostorder(nodeStr) + ":" + cover.getCode(nodeStr).toString());
+			//nodeObj.put("treecover", cover.getPostorder(nodeStr) + ":" + cover.getCode(nodeStr).toString());
+			nodeObj.put("intervals", "[" + cover.getCode(nodeStr).toString() + "]");
+			nodeObj.put("postorder", cover.getPostorder(nodeStr));
 			nodesArray.put(nodeObj);
 		}
 		resultObj.put("nodes", nodesArray);

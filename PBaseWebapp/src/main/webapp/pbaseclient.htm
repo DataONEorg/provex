@@ -198,8 +198,12 @@ function displayGraphJSON(container, graphJSON, btnContainer, isTrace, Y) {
 		addLabel(graph, encodingLabel, false);
 		activateLabelButton(graph, btnContainer, 'PropertiesBtn', propertiesLabel, Y);
 		activateLabelButton(graph, btnContainer, 'EncodingBtn', encodingLabel, Y);
+		//Activate reachability button
+		activateReachabilityButton(isTrace, Y);
 		//Set the flag for node highlighting on query results
 		graph['highlighted'] = false;
+		//Set the flag for node highlighting for reachability
+		graph['reachHighlighted'] = false;
 		//Set global variables on MYAPP
 		if( isTrace ) {
 			MYAPP.traceGraph = graph;
@@ -227,7 +231,10 @@ function fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray,
 			vertex[propertiesLabel] = generateNodeText(tuple);
 			//Must use a string, otherwise an error occurs
 			//vertex[encodingLabel] = '' + i;
-			vertex[encodingLabel] = '' + tuple.treecover;
+			//vertex[encodingLabel] = '' + tuple.treecover;
+			vertex['intervals'] = '' + tuple.intervals.replace(":", ",");
+			vertex['postorder'] = '' + tuple.postorder;
+			vertex[encodingLabel] = '' + tuple.postorder + ':' + tuple.intervals.substring(1, tuple.intervals.length-1);
 		}
 	}
 	for(var i = 0; i < graphJSON.edges.length; i++) {
@@ -259,7 +266,10 @@ function fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArr
 			graphNodesArray[tuple.nodeId] = vertex;
 			vertex[propertiesLabel] = generateNodeText(tuple);
 			//vertex[encodingLabel] = '' + i;
-			vertex[encodingLabel] = '' + tuple.treecover;
+			//vertex[encodingLabel] = '' + tuple.treecover;
+			vertex['intervals'] = '' + tuple.intervals.replace(":", ",");
+			vertex['postorder'] = '' + tuple.postorder;
+			vertex[encodingLabel] = '' + tuple.postorder + ':' + tuple.intervals.substring(1, tuple.intervals.length-1);
 		}
 	}
 	for(var i = 0; i < graphJSON.edges.length; i++) {
@@ -288,6 +298,31 @@ function activateLabelButton(graph, containerID, btnName, labelName, Y) {
 	var btnFunc = function(evt) {
 		graph[mLabelName + 'Visible'] = !graph[mLabelName + 'Visible'];
 		graph.refresh();
+	}
+	btn.set('onclick', btnFunc);
+}
+
+
+function activateReachabilityButton(isTrace, Y) {
+	var btnPrefix = null;
+	var graph = null;
+	var graphNodesArray = null;
+	if( isTrace ) {
+		btnPrefix = 'wf';
+		graph = MYAPP.wfGraph;
+		graphNodesArray = MYAPP.wfGraphNodesArray;
+	}
+	else {
+		btnPrefix = 'trace';
+		graph = MYAPP.traceGraph;
+		graphNodesArray = MYAPP.traceGraphNodesArray;
+	}
+	var btn = Y.one('#' + btnPrefix + 'ReachabilityBtn');
+	//TODO remove this line when the trace reachability button is added
+	if( btn == null )
+		return;
+	var btnFunc = function(evt) {
+		highlightReachability(graph, graphNodesArray);	
 	}
 	btn.set('onclick', btnFunc);
 }
@@ -420,6 +455,8 @@ function createWFTabs(containerID, Y) {
 		'<textarea id="wfQueryText" rows="6" cols="50">Query text.</textarea>' + '<br/><br/>' +
 		'<input id="wfQueryExecuteBtn" type="button" value="Execute">' +
 		'<input id="wfQueryClearBtn" type="button" value="Clear">' +
+		'<br/><br/>' +
+		'<input id="wfReachabilityBtn" type="button" value="View reachability">' +
 		'</div>';
 	var tabview = new Y.TabView({
         children: [{
@@ -726,6 +763,76 @@ function callQueryWS(Y) {
 }
 
 
+function highlightReachability(graph, graphNodesArray) {
+	var cells = graph.getSelectionCells();
+	if( cells.length > 1 ) {
+		alert('Only one node should be selected.');
+		return;
+	}
+	else if( cells.length == 0 ) {
+		alert('No node is selected.');
+		return;
+	}
+	graph.getModel().beginUpdate();
+	try {
+		var selectedNodeId = cells[0].value;
+		var selectedVtx = graphNodesArray[selectedNodeId];
+		for(var key in graphNodesArray) {
+			if( graphNodesArray.hasOwnProperty(key) && (key != selectedNodeId) ) {
+				var vtx = graphNodesArray[key];
+				//Set the default colors back if the graph is already highlighted for reachability
+				if( graph['reachHighlighted'] )
+					graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, vtx['defFillColor'], [vtx]);
+				//Check if each node is a descendant, ancestor or neither and color accordingly
+				//Let the postorder number of a node n be j, and let the index associated with n be i.
+				//There exists a direct path from node n to some other node m with the postorder number
+				//k iff i <= k < j
+				//Note: change to i <= k <= j, even if in the original paper it is as stated above
+				else {
+					var desc = false;
+					var nIntervalsArray = JSON.parse(selectedVtx['intervals']);
+					var k = parseInt(vtx['postorder']);
+					for(var i = 0; i < nIntervalsArray.length; i++) {
+						var interval = nIntervalsArray[i];
+						if( interval[0] <= k && k <= interval[1] ) {
+							desc = true;
+							break;
+						}
+					}
+					//The vertex is a descendant
+					if( desc )
+						graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, MYAPP.descFillColor, [vtx]);
+					//Check if the vertex is an ancestor instead
+					else {
+						var anc = false;
+						var nIntervalsArray = JSON.parse(vtx['intervals']);
+						var k = parseInt(selectedVtx['postorder']);
+						for(var i = 0; i < nIntervalsArray.length; i++) {
+							var interval = nIntervalsArray[i];
+							if( interval[0] <= k && k <= interval[1] ) {
+								anc = true;
+								break;
+							}
+						}
+						//The vertex is an ancestor
+						if( anc )
+							graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, MYAPP.ancFillColor, [vtx]);
+						//The vertex is neither a descendant or an ancestor
+						else
+							graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, vtx['defFillColor'], [vtx]);
+					}
+				}
+			}
+		}
+	}
+	finally {
+		// Updates the display
+		graph['reachHighlighted'] = !graph['reachHighlighted'];
+		graph.getModel().endUpdate();
+	}
+}
+
+
 YUI().use('gallery-axo-layout', 'resize', function(Y) {
 	var layout = new Y.Layout({orientation: 'vertical', sizeToWindow: true });
 	layout.add(new Y.LayoutChild({id:'top', height:30, resize: true }));
@@ -778,6 +885,9 @@ MYAPP.traceEllipseFillColor = '#C4C489';
 MYAPP.traceEllipseStrokeColor = '#CCCC00';
 //Highlight fill color (rectangles and ellipses) '#91D89F' 
 MYAPP.highlightFillColor = '#91D89F';
+//Hightlight fill colors for the descendants and ancestors
+MYAPP.descFillColor = '#91D89F';
+MYAPP.ancFillColor = '#A67B97';
 
 
 YUI().use('node', 'json-parse', 'io-base', 'datatable-base', 'widget-base', function (Y) {
