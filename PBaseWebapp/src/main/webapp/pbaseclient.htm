@@ -478,85 +478,6 @@ function createTabs(containerID, isTrace, Y) {
 }
 
 
-function createWFTabs(containerID, Y) {
-	var container = Y.one('#' + containerID);
-	var tabsContainerHTML = '<div id="' + containerID + 'tabsContainer"></div>';
-	container.get('children').slice(-1).item(0).insert(tabsContainerHTML, 'after');
-	var tabsContainer = Y.one('#' + containerID + 'tabsContainer');
-	var loadWFTabContainerID = 'loadWFTabContainer';
-	var queryWFTabContainerID = 'queryWFTabContainer';
-	var loadTabContent = '<div id="' + loadWFTabContainerID + '">Database name: ' + 
-		'<input type="text" id="dbnameTextfield" size="15"><br/>' +
-		'<input type="button" id="dbnameLoadBtn" value="Load"><br/><br/>Workflow id:<br/>' +
-		'<select id="wfIdsSelect"></select>' + 
-		'<br/><br/><input id="' + containerID + 'PropertiesBtn" type="button" value="properties">' +
-		'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
-	var queryTabContent = '<div id="' + queryWFTabContainerID + '">' +
-		'<select id="wfQuerySelect"></select>' + '<br/><br/>' + 
-		'<textarea id="wfQueryText" rows="6" cols="50">Query text.</textarea>' + '<br/><br/>' +
-		'<input id="wfQueryExecuteBtn" type="button" value="Execute">' +
-		'<input id="wfQueryClearBtn" type="button" value="Clear">' +
-		'<br/><br/>' +
-		'<input id="wfReachabilityBtn" type="button" value="View reachability">' +
-		'</div>';
-	var tabview = new Y.TabView({
-        children: [{
-            label: 'Load',
-            content: loadTabContent
-        }, {
-            label: 'Query',
-            content: queryTabContent
-        }]
-    });
-    tabview.render(tabsContainer);
-}
-
-
-function createWFQueriesMenu(Y) {
-	var wfIdsSelect = Y.one('#wfIdsSelect');
-	var wfIdParam = wfIdsSelect.get('value');
-	var traceIdsSelect = Y.one('#traceIdsSelect');
-	var traceIdParam = traceIdsSelect.get('value');
-	var wfQdescs =['Select a predefined query:',
-	               'Compute number of invocations of a workflow task',
-	               'Find all inputs of a workflow across runs',
-	               'Find the modules of tasks that were not completed',
-	                ];
-	var wfQueries =['START n = node(*) \nMATCH \nWHERE \nRETURN ',
-	                'START n = node:node_auto_index(name="e7_Regrid") \n MATCH m-[:wasAssociatedWith]-n \n RETURN count(m)',
-	                'START n=node(*) \n MATCH (n)<-[:used]-() \n WHERE not ((n)-[:wasGeneratedBy]->()) \n AND HAS(n.wfID) AND (n.wfID="' + wfIdParam + '") \n RETURN DISTINCT n.name;',      
-	                'START n=node(*) \n MATCH n<-[:wasAssociatedWith]-m \n WHERE HAS(n.vtType) AND HAS(n.wfID) AND HAS(n.runID) \n AND n.vtType="vt:module_exec" AND n.completed="-1" \n AND n.wfID="' + wfIdParam + '" \n AND n.runID="' + traceIdParam + '" \n RETURN m.name',     
-	                ];
-	var wfQuerySelect = Y.one('#wfQuerySelect');
-	var wfQueryText = Y.one('#wfQueryText');
-	for(var i = 0; i < wfQdescs.length; i++) {
-		var opt = Y.Node.create('<option value=""></option>');
-		wfQuerySelect.append(opt);
-		wfQuerySelect.get('options').item(i).set('text', wfQdescs[i]);
-		wfQuerySelect.get('options').item(i).set('value', i);
-	}
-	wfQueryText.set('value', wfQueries[0]);
-	var changeQueryFunc = function() { 
-			var idx = wfQuerySelect.get('value');
-			wfQueryText.set('value', wfQueries[idx]);
-		} ;
-	wfQuerySelect.set('onchange', changeQueryFunc);
-	//Set action for the Clear button
-	var clearBtn = Y.one('#wfQueryClearBtn');
-	var clearBtnFunc = function() { 
-			var wfQueryText = Y.one('#wfQueryText');
-			wfQueryText.set('value', "");
-		} ;
-	clearBtn.set('onclick', clearBtnFunc);
-	//Set action for the Execute button
-	var executeBtn = Y.one('#wfQueryExecuteBtn');
-	var executeBtnFunc = function() { 
-			callQueryWS(Y);
-		} ;
-	executeBtn.set('onclick', executeBtnFunc);
-}
-
-
 function createQueriesMenu(isTrace, Y) {
 	var wfIdsSelect = Y.one('#wfIdsSelect');
 	var wfIdParam = wfIdsSelect.get('value');
@@ -600,38 +521,6 @@ function createQueriesMenu(isTrace, Y) {
 			callQueryWS(isTrace, Y);
 		} ;
 	executeBtn.set('onclick', executeBtnFunc);
-}
-
-
-function createTraceTabs(containerID, Y) {
-	var container = Y.one('#' + containerID);
-	var tabsContainerHTML = '<div id="' + containerID + 'tabsContainer"></div>';
-	container.get('children').slice(-1).item(0).insert(tabsContainerHTML, 'after');
-	var tabsContainer = Y.one('#' + containerID + 'tabsContainer');
-	var loadTraceTabContainerID = 'loadTraceTabContainer';
-	var queryTraceTabContainerID = 'queryTraceTabContainer';
-	var loadTabContent = '<div id="' + loadTraceTabContainerID + '">Trace id:<br/>' +
-	'<select id="traceIdsSelect"><option value=""></option></select>' + 
-	'<br/><br/><input id="' + containerID + 'PropertiesBtn" type="button" value="properties">' +
-	'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
-	var queryTabContent = '<div id="' + queryTraceTabContainerID + '">' +
-	'<select id="wfQuerySelect"></select>' + '<br/><br/>' + 
-	'<textarea id="wfQueryText" rows="4" cols="30">Query text.</textarea>' + '<br/><br/>' +
-	'<input id="wfQueryExecuteBtn" type="button" value="Execute">' +
-	'<input id="wfQueryClearBtn" type="button" value="Clear">' +
-	'<br/><br/>' +
-	'<input id="traceReachabilityBtn" type="button" value="View reachability">' +
-	'</div>';
-	var tabview = new Y.TabView({
-        children: [{
-            label: 'Load',
-            content: loadTabContent
-        }, {
-            label: 'Query',
-            content: queryTabContent
-        }]
-    });
-    tabview.render(tabsContainer);
 }
 
 
@@ -761,96 +650,9 @@ function callTraceIdsWS(Y) {
 					var loadTraceFunc = function() { callTraceWS(Y); } ;
 					traceIdsSelect.set('onchange', loadTraceFunc);
 					//CALL
-					//createWFQueriesMenu(Y);
 					createQueriesMenu(false, Y);
 					createQueriesMenu(true, Y);
 					callTraceWS(Y);
-				}
-				else {
-					alert('ERROR');
-				}
-			}
-		}
-	});
-}
-
-
-function callQueryWS(Y) {
-	var url = 'webresources/queryresource';
-	var dbnameTxtField = Y.one('#dbnameTextfield');
-	var dbnameParam = dbnameTxtField.get('value');
-	var queryText = Y.one('#wfQueryText');
-	var query = queryText.get('value');
-	Y.io(url, {
-		data: 'dbname=' + dbnameParam + '&query=' + query,
-		on: {
-			complete: function (id, response) {
-				if (response.status >= 200 && response.status < 300) {
-					var json = Y.JSON.parse(response.responseText);
-					var results_window = window.open("", "results_window", "menubar=1,resizable=1,width=500,height=600,scrollbars=1");
-					results_window.document['writeln']('<head><link charset="utf-8" href="css/combo.css" rel="stylesheet" type="text/css"></head><body class="yui3-skin-sam"><h3>Results</h3><input id="showResultsBtn" type="button" value="Highlight nodes"><br/><div id="table_content"></div></body>');
-					var cols = [];
-					var colsTypes = [];
-				    var data = [];
-				    var nodeIds = [];
-					var colNames = json.columns;
-					for(var i = 0; i < colNames.length; i++) {
-						var cName = colNames[i];
-						for(var key in cName) {
-							if( cName.hasOwnProperty(key) ) {
-								cols[i] = key;
-								colsTypes[i] = cName[key];
-								break;
-							}
-						}
-					}
-					var dataVals = json.data;
-					for(var i = 0; i < dataVals.length; i++) {
-						data[i] = {};
-						for(var j = 0; j < dataVals[i].length; j++) {
-							if( colsTypes[j] == 'string' ) {
-								data[i][cols[j]] = dataVals[i][j];
-							}
-							else if( colsTypes[j] == 'node' ) {
-								temp = dataVals[i][j];
-								data[i][cols[j]] = temp['nodeId'];
-								nodeIds.push(temp['nodeId']);
-							}
-						}
-					}
-					YUI({win: results_window, doc: results_window.document, fetchCSS: false}).use('datatable-base', 'widget-base', function (childY) {
-						var table = new childY.DataTable.Base({
-					        columnset: cols,
-					        recordset: data
-					    });
-						table.render(childY.one('#table_content'));
-						var showResultsBtn = childY.one('#showResultsBtn');
-						var updateNodesColor = function(graph, graphNodesArray, nodeIds, highlightColor) {
-							graph.getModel().beginUpdate();
-						    try {
-						    	for(var i = 0; i < nodeIds.length; i++) {
-						    		var nodeId = nodeIds[i];
-						    		if( graphNodesArray.hasOwnProperty(nodeId) ) {
-						    			var vtx = graphNodesArray[nodeId];
-						    			if( ! graph['highlighted'] )
-						    				graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, highlightColor, [vtx]);
-						    			else
-						    				graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, vtx['defFillColor'], [vtx]);
-						    		}
-						    	}
-						    }
-						    finally {
-								// Updates the display
-								graph['highlighted'] = !graph['highlighted'];
-								graph.getModel().endUpdate();
-							}
-						}
-						var showResultsFunc = function() {
-								updateNodesColor(MYAPP.wfGraph, MYAPP.wfGraphNodesArray, nodeIds, MYAPP.highlightFillColor);
-								updateNodesColor(MYAPP.traceGraph, MYAPP.traceGraphNodesArray, nodeIds, MYAPP.highlightFillColor);
-							} ;
-						showResultsBtn.set('onclick', showResultsFunc);
-				    });
 				}
 				else {
 					alert('ERROR');
@@ -1048,8 +850,6 @@ YUI().use('node', 'tabview', function (Y) {
 	center2.get('children').slice(-1).item(0).insert(traceContainerHTML, 'after');
 	createButtons('left', Y);
 	createButtons('right', Y);
-	//createWFTabs('left', Y);
-	//createTraceTabs('right', Y);
 	createTabs('left', false, Y);
 	createTabs('right', true, Y);
 });
