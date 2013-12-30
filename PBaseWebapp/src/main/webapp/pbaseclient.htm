@@ -282,9 +282,13 @@ function fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArr
 function generateNodeText(jsonObj) {
 	var nodeText = '';
 	for(var key in jsonObj) {
-		var propertyVal = jsonObj[key];
-		if( (key.length + propertyVal.length) <= 30 )
-			nodeText += key + ':' + propertyVal + '\n';
+		if( jsonObj.hasOwnProperty(key) ) {
+			if( key == 'postorder' || key == 'intervals' || key == 'encodingLabel' )
+				continue;
+			var propertyVal = jsonObj[key];
+			if( (key.length + propertyVal.length) <= 35 )
+				nodeText += key + ':' + propertyVal + '\n';
+		}
 	}
 	return nodeText.substring(0, nodeText.length-1);
 }
