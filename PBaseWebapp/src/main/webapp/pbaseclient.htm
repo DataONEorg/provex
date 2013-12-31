@@ -487,16 +487,32 @@ function createQueriesMenu(isTrace, Y) {
 	var wfIdParam = wfIdsSelect.get('value');
 	var traceIdsSelect = Y.one('#traceIdsSelect');
 	var traceIdParam = traceIdsSelect.get('value');
-	var qDescs =['Select a predefined query:',
+	var qDescs = null;
+	var queries = null;
+	if( isTrace ) {
+		qDescs =['Select a predefined query:',
+		           'Find the activities that were not completed',
+	               'Find the actors that used data item e10_regrid_method',
+	               'Find the data products influenced by module e7_Regrid'
+	                ];
+		queries =['START n = node(*) \nMATCH \nWHERE \nRETURN ',
+		            'START n=node(*) \n WHERE HAS(n.completed) AND n.completed=-1 AND HAS(n.wfID) AND n.wfID="' + wfIdParam + '" \n RETURN DISTINCT n.name;',
+	                'START n = node:node_auto_index(name="e10_regrid_method") \n MATCH n<-[:used]-a \n RETURN distinct a.name;',
+	                'START n=node(*) \n MATCH n-[*]->a \n WHERE n-[:wasGeneratedBy]->() \n AND HAS(n.wfID) AND n.wfID="' + wfIdParam + '" AND HAS(a.module) AND a.module="e7_Regrid" \n RETURN DISTINCT n.name;'        
+	                ];
+	}
+	else {
+		qDescs =['Select a predefined query:',
 	               'Compute number of invocations of a workflow task',
 	               'Find all inputs of a workflow across runs',
 	               'Find the modules of tasks that were not completed',
 	                ];
-	var queries =['START n = node(*) \nMATCH \nWHERE \nRETURN ',
-	                'START n = node:node_auto_index(name="e7_Regrid") \n MATCH m-[:wasAssociatedWith]-n \n RETURN count(m)',
+		queries =['START n = node(*) \nMATCH \nWHERE \nRETURN ',
+	                'START n = node:node_auto_index(name="e7_Regrid") \n MATCH m-[:wasAssociatedWith]-n \n RETURN count(m);',
 	                'START n=node(*) \n MATCH (n)<-[:used]-() \n WHERE not ((n)-[:wasGeneratedBy]->()) \n AND HAS(n.wfID) AND (n.wfID="' + wfIdParam + '") \n RETURN DISTINCT n.name;',      
-	                'START n=node(*) \n MATCH n<-[:wasAssociatedWith]-m \n WHERE HAS(n.vtType) AND HAS(n.wfID) AND HAS(n.runID) \n AND n.vtType="vt:module_exec" AND n.completed="-1" \n AND n.wfID="' + wfIdParam + '" \n AND n.runID="' + traceIdParam + '" \n RETURN m.name',     
+	                'START n=node(*) \n MATCH n<-[:wasAssociatedWith]-m \n WHERE HAS(n.vtType) AND HAS(n.wfID) AND HAS(n.runID) \n AND n.vtType="vt:module_exec" AND n.completed="-1" \n AND n.wfID="' + wfIdParam + '" \n AND n.runID="' + traceIdParam + '" \n RETURN m.name;',     
 	                ];
+	}
 	var prefix = isTrace ? 'trace' : 'wf';
 	var querySelect = Y.one('#' + prefix + 'QuerySelect');
 	var queryText = Y.one('#' + prefix + 'QueryText');
