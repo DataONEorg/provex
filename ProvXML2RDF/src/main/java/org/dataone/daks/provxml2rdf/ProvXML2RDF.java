@@ -26,7 +26,7 @@ public class ProvXML2RDF {
 		this.provBuilder.processDocument(provRoot);
 		//remove the .xml suffix from the filePath
 		this.filePath = this.filePath.substring(0, this.filePath.length()-4);
-		this.provBuilder.createTextCypherFile(this.filePath + ".cql");
+		this.provBuilder.generateRDFTurtleFile(this.filePath + ".ttl");
 	}
 	
 	

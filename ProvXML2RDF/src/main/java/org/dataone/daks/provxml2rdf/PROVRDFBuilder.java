@@ -5,7 +5,11 @@ import java.util.*;
 
 import org.dom4j.*;
 
+import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
+import com.hp.hpl.jena.ontology.*;
 import com.hp.hpl.jena.rdf.model.*;
+import com.hp.hpl.jena.util.FileManager;
+
 import org.apache.jena.riot.*;
 
 
@@ -27,6 +31,7 @@ public class PROVRDFBuilder {
 	private HashMap<String, String> activityCompleted;
 	private HashMap<String, String> moduleVersion;
 	private HashMap<String, String> modulePackage;
+	private HashMap<String, String> moduleName;
 	private HashMap<String, String> actorModule;
 
 	
@@ -43,6 +48,13 @@ public class PROVRDFBuilder {
 	
 	UUID wfID;
 	String wfVersion;
+	
+	String PROVONE_NS = "http://purl.org/provone";
+	String DCTERMS_NS = "http://purl.org/dc/terms/";
+	String EXAMPLE_NS = "http://example.com/";
+	String WFMS_NS = "http://www.vistrails.org/registry.xsd";
+	String SOURCE_URL = "http://purl.org/provone/ontology";
+	String SOURCE_FILE = "./provone.owl";
 
 	
 	public PROVRDFBuilder() {
@@ -61,6 +73,7 @@ public class PROVRDFBuilder {
 	    this.activityCache = new HashMap<String, String>();
 		this.moduleVersion = new HashMap<String, String>();
 		this.modulePackage = new HashMap<String, String>();
+		this.moduleName = new HashMap<String, String>();
 		this.actorModule = new HashMap<String, String>();
 		
 		this.runIDs = new HashSet<String>();
@@ -110,8 +123,11 @@ public class PROVRDFBuilder {
              		if( elemVtType != null ) {
             			if( elemVtType.getText().equals("vt:module") || elemVtType.getText().equals("vt:workflow")  )
             				this.planEntities.put(entityId, entityElem);
-            			if( elemVtType.getText().equals("vt:module") )
+            			if( elemVtType.getText().equals("vt:module") ) {
             				this.modules.put(entityId, entityElem);
+            				if( elemProvLabel != null )
+            					this.moduleName.put(entityId, elemProvLabel.getText());
+            			}
             			if( elemProvLabel != null )
                 			this.dataEntityFullName.put(entityId, entityId + "_" + elemProvLabel.getText());
                 		else
@@ -225,6 +241,7 @@ public class PROVRDFBuilder {
 			actor.module = this.actorModule.get(key);
 			actor.runID = this.dataRunID.get(key);
 		    actor.wfID = this.wfID;
+		    actor.activityId = key;
 			this.actors.add(actor);
 		}
 	}
@@ -258,6 +275,8 @@ public class PROVRDFBuilder {
             module.version = this.moduleVersion.get(key);
             module.cache = this.activityCache.get(key);
 		    module.wfID = this.wfID;
+		    module.entityId = key;
+		    module.name = moduleName.get(key);
 			moduleObjs.add(module);
 		}
 	}
@@ -449,24 +468,42 @@ public class PROVRDFBuilder {
        		START n=node:node_auto_index(name='name1'), m=node:node_auto_index(name='name2') CREATE n-[r:USED/WASGENBY]-m
        		...
 		*/
-		Model model = ModelFactory.createDefaultModel();
+		OntModel m = this.createOntModel();
+		
 		StringBuilder sb = new StringBuilder();
 		// Iterate over the data items and actors
-		for( Data data: this.dataObjs ) {
+		int i = 1;
+		for( Module module: this.moduleObjs) {
+			
+			OntClass processClass = m.getOntClass( SOURCE_URL + "#" + "Process" );
+			Individual processInd = m.createIndividual( EXAMPLE_NS + "process_" + i, processClass );
+			Property identifierP = m.createProperty(DCTERMS_NS + "identifier");
+			processInd.addProperty(identifierP, module.entityId, XSDDatatype.XSDstring);
+			Property titleP = m.createProperty(DCTERMS_NS + "title");
+			processInd.addProperty(titleP, module.name, XSDDatatype.XSDstring);
+			//Property packageP = m.createProperty(WFMS_NS + "package");
+			//processInd.addProperty(packageP, module.vtPackage, XSDDatatype.XSDstring);
+			i++;
+			
+			/*
 			sb.append("CREATE n={");
-			sb.append("name:\""+ data.id + "\"," );
-			if (data.vtType!=null)
-				sb.append("vtType:\""+ data.vtType + "\"," );
-			if (data.desc!=null)
-				sb.append("description:\""+ data.desc + "\"," );
-			if (data.value!=null)
-				sb.append("value:\""+ data.value + "\"," );
-			if (data.runID!=null)
-				sb.append("runID:\""+ data.runID + "\"," );		
-			sb.append("wfID:\""+ data.wfID + "\"," );
-			sb.append("type:\""+ "data" + "\"" );		
+			sb.append("name:\""+ module.id + "\"," );
+		    if (module.vtType!=null)
+		    	sb.append("vtType:\""+ module.vtType + "\"," );
+		    if (module.cache!=null)
+		    	sb.append("cache:\""+ module.cache + "\"," );
+		    if (module.desc!=null)
+		    	sb.append("description:\""+ module.desc + "\"," );
+		    if (module.vtPackage!=null)
+		    	sb.append("package:\""+ module.vtPackage + "\"," );
+		    if (module.version!=null)
+		    	sb.append("version:\""+ module.version + "\"," );
+			sb.append("wfID:\""+ module.wfID + "\"," );	
+			sb.append("type:\""+ "module" + "\"" );		
 			sb.append("};"+"\n" );
+			*/
 		}
+		/*
 		for( Actor actor: this.actors) {
 			sb.append("CREATE n={");
 			sb.append("name:\""+ actor.id + "\"," );
@@ -483,21 +520,19 @@ public class PROVRDFBuilder {
 			sb.append("type:\""+ "activity" + "\"" );		
 			sb.append("};"+"\n" );
 		}
-		for( Module module: this.moduleObjs) {
+		for( Data data: this.dataObjs ) {
 			sb.append("CREATE n={");
-			sb.append("name:\""+ module.id + "\"," );
-		    if (module.vtType!=null)
-		    	sb.append("vtType:\""+ module.vtType + "\"," );
-		    if (module.cache!=null)
-		    	sb.append("cache:\""+ module.cache + "\"," );
-		    if (module.desc!=null)
-		    	sb.append("description:\""+ module.desc + "\"," );
-		    if (module.vtPackage!=null)
-		    	sb.append("package:\""+ module.vtPackage + "\"," );
-		    if (module.version!=null)
-		    	sb.append("version:\""+ module.version + "\"," );
-			sb.append("wfID:\""+ module.wfID + "\"," );	
-			sb.append("type:\""+ "module" + "\"" );		
+			sb.append("name:\""+ data.id + "\"," );
+			if (data.vtType!=null)
+				sb.append("vtType:\""+ data.vtType + "\"," );
+			if (data.desc!=null)
+				sb.append("description:\""+ data.desc + "\"," );
+			if (data.value!=null)
+				sb.append("value:\""+ data.value + "\"," );
+			if (data.runID!=null)
+				sb.append("runID:\""+ data.runID + "\"," );		
+			sb.append("wfID:\""+ data.wfID + "\"," );
+			sb.append("type:\""+ "data" + "\"" );		
 			sb.append("};"+"\n" );
 		}
 		//Add an extra node representing the workflow to the graph
@@ -532,19 +567,31 @@ public class PROVRDFBuilder {
 		    //out.print("m=node:node_auto_index(name='" + edge.endId + "') ");
 		    //out.println("CREATE n-[r:" + reqLabel + "]->m;");
 		}
+		*/
 		
 		
 		try {
 			FileOutputStream fos = new FileOutputStream(new File("tempTrace.xml"));
-			model.write(fos, "RDF/XML");
+			m.write(fos, "RDF/XML");
+			FileOutputStream out = new FileOutputStream(new File(filename));
+			Model model = RDFDataMgr.loadModel("tempTrace.xml");
+	        RDFDataMgr.write(out, model, RDFFormat.TURTLE_PRETTY);
 		}
 		catch (IOException e) {
 			e.printStackTrace();
 	    }
-		
-		model = RDFDataMgr.loadModel("wf.xml");
-        RDFDataMgr.write(System.out, model, RDFFormat.TURTLE_PRETTY);
-        
+	}
+	
+	
+	private OntModel createOntModel() {
+		Model model = ModelFactory.createDefaultModel();
+		OntModel m = ModelFactory.createOntologyModel( OntModelSpec.OWL_MEM );
+		//Uncomment to use file instead of the URL
+		FileManager.get().getLocationMapper().addAltEntry( SOURCE_URL, SOURCE_FILE );
+		Model baseOntology = FileManager.get().loadModel( SOURCE_URL );
+		m.addSubModel( baseOntology );
+		m.setNsPrefix( "provone", SOURCE_URL + "#" );
+		return m;
 	}
 	
 	
