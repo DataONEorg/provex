@@ -27,6 +27,7 @@ public class PROVRDFBuilder {
 	private HashMap<String, String> dataDesc;
 	private HashMap<String, String> dataValue;
 	private HashMap<String, String> dataRunID;
+	private HashMap<String, String> dataLabel;
 	private HashMap<String, String> activityCache;
 	private HashMap<String, String> activityCompleted;
 	private HashMap<String, String> moduleVersion;
@@ -40,7 +41,7 @@ public class PROVRDFBuilder {
 	private ArrayList<Module> moduleObjs;
 	private ArrayList<Edge> edges;
 	private Set<String> runIDs;
-    
+    private HashMap<String, Module> moduleHM;
 	
 	private Namespace provNS;
 	private Namespace vtNS;
@@ -50,6 +51,7 @@ public class PROVRDFBuilder {
 	String wfVersion;
 	
 	String PROVONE_NS = "http://purl.org/provone";
+	String PROV_NS = "http://www.w3.org/ns/prov#";
 	String DCTERMS_NS = "http://purl.org/dc/terms/";
 	String EXAMPLE_NS = "http://example.com/";
 	String WFMS_NS = "http://www.vistrails.org/registry.xsd";
@@ -69,12 +71,15 @@ public class PROVRDFBuilder {
 		this.dataDesc = new HashMap<String, String>();
 		this.dataValue = new HashMap<String, String>();
 		this.dataRunID = new HashMap<String, String>();
+		this.dataLabel = new HashMap<String, String>();
 		this.activityCompleted = new HashMap<String, String>();
 	    this.activityCache = new HashMap<String, String>();
 		this.moduleVersion = new HashMap<String, String>();
 		this.modulePackage = new HashMap<String, String>();
 		this.moduleName = new HashMap<String, String>();
 		this.actorModule = new HashMap<String, String>();
+		
+		this.moduleHM = new HashMap<String, Module>();
 		
 		this.runIDs = new HashSet<String>();
 		this.wfID = UUID.randomUUID();
@@ -90,10 +95,12 @@ public class PROVRDFBuilder {
 		this.createActivitiesHT(root);
 		this.createWasAssociatedWithHT(root);
 		this.createActivityFullNames(root);
-		this.createEdges(root);
+		
 		this.createActorsList();
 		this.createDataObjsList();
 		this.createModuleObjsList();
+		
+		this.createEdges(root);
 	}
 	
 	// Create a dictionary for the entities
@@ -149,8 +156,10 @@ public class PROVRDFBuilder {
             				this.dataDesc.put(entityId, elementVtDesc.getText());
             			if( elementVtValue != null )
                         	this.dataValue.put(entityId, elementVtValue.getText());
-            			if( elemProvLabel != null )
+            			if( elemProvLabel != null ) {
             				this.dataEntityFullName.put(entityId, entityId + "_" + elemProvLabel.getText());
+            				this.dataLabel.put(entityId, elemProvLabel.getText());
+            			}
             			else
             				this.dataEntityFullName.put(entityId, entityId);
             		}
@@ -211,6 +220,7 @@ public class PROVRDFBuilder {
 		}
 	}	
 
+	
 	private void createActivityFullNames(Element root) {
 		for (String key : this.activities.keySet()) {
 			String planRef = this.wasAssociatedWith.get(key);
@@ -258,6 +268,8 @@ public class PROVRDFBuilder {
 		    data.value = this.dataValue.get(key);
 		    data.runID = this.dataRunID.get(key);
 		    data.wfID = this.wfID;
+		    data.entityId = key;
+		    data.label = this.dataLabel.get(key);
 			dataObjs.add(data);
 		}
 	}
@@ -277,7 +289,8 @@ public class PROVRDFBuilder {
 		    module.wfID = this.wfID;
 		    module.entityId = key;
 		    module.name = moduleName.get(key);
-			moduleObjs.add(module);
+			this.moduleObjs.add(module);
+			this.moduleHM.put(key, module);
 		}
 	}
 	
@@ -316,12 +329,18 @@ public class PROVRDFBuilder {
 		}
 		for ( Iterator i = root.elementIterator("connection"); i.hasNext(); ) {
 			Element elemconnect = (Element) i.next();
-            QName vtSourceName = new QName("source", this.vtNS);
-			Element elemSource = elemconnect.element(vtSourceName);
+			Element elemSource = elemconnect.element(new QName("source", this.vtNS));
 			String source = elemSource.getText();
-            QName vtDestName = new QName("dest", this.vtNS);
-			Element elemDest = elemconnect.element(vtDestName);
+			Element elemDest = elemconnect.element(new QName("dest", this.vtNS));
 			String dest = elemDest.getText();
+			Element elemSourcePort = elemconnect.element(new QName("source_port", this.vtNS));
+			String sourcePort = elemSourcePort.getText();
+			Element elemDestPort = elemconnect.element(new QName("dest_port", this.vtNS));
+			String destPort = elemDestPort.getText();
+			Element elemSourceSignature = elemconnect.element(new QName("source_signature", this.vtNS));
+			String sourceSignature = elemSourceSignature.getText();
+			Element elemDestSignature = elemconnect.element(new QName("dest_signature", this.vtNS));
+			String destSignature = elemDestSignature.getText();
 			String startNodeId = this.dataEntityFullName.get(source);
 			String endNodeId = this.dataEntityFullName.get(dest);
 			Edge edge = new Edge();
@@ -329,6 +348,8 @@ public class PROVRDFBuilder {
 			edge.startId = startNodeId;
 			edge.endId = endNodeId;
 			this.edges.add(edge);
+			this.moduleHM.get(source).outputPorts.put(sourcePort, sourceSignature);
+			this.moduleHM.get(dest).inputPorts.put(destPort, destSignature);
 		}
 		for ( Iterator i = root.elementIterator("wasAssociatedWith"); i.hasNext(); ) {
 			Element elemassociatedWith= (Element) i.next();
@@ -352,8 +373,7 @@ public class PROVRDFBuilder {
 			edge.startId = this.wfID.toString();
 			edge.endId = runIDNode;
 			edge.label = "belongsTo";
-			this.edges.add(edge);
-			
+			this.edges.add(edge);	
 		}
 
 	}
@@ -462,46 +482,69 @@ public class PROVRDFBuilder {
 	
 	
 	protected void generateRDFTurtleFile(String filename) {
-		/*
-       		CREATE n={name:"name_val"}
-       		...
-       		START n=node:node_auto_index(name='name1'), m=node:node_auto_index(name='name2') CREATE n-[r:USED/WASGENBY]-m
-       		...
-		*/
+		
 		OntModel m = this.createOntModel();
 		
 		StringBuilder sb = new StringBuilder();
-		// Iterate over the data items and actors
+		// Iterate over the modules to generate Process entities
 		int i = 1;
+		int ip = 1;
+		int op = 1;
 		for( Module module: this.moduleObjs) {
-			
 			OntClass processClass = m.getOntClass( SOURCE_URL + "#" + "Process" );
 			Individual processInd = m.createIndividual( EXAMPLE_NS + "process_" + i, processClass );
 			Property identifierP = m.createProperty(DCTERMS_NS + "identifier");
 			processInd.addProperty(identifierP, module.entityId, XSDDatatype.XSDstring);
 			Property titleP = m.createProperty(DCTERMS_NS + "title");
 			processInd.addProperty(titleP, module.name, XSDDatatype.XSDstring);
+			//Uncomment to ad the package property
 			//Property packageP = m.createProperty(WFMS_NS + "package");
 			//processInd.addProperty(packageP, module.vtPackage, XSDDatatype.XSDstring);
+			// Iterate over the modules to generate InputPort and OutputPort entities
+			OntClass inputPortClass = m.getOntClass( SOURCE_URL + "#" + "InputPort" );
+			OntClass outputPortClass = m.getOntClass( SOURCE_URL + "#" + "OutputPort" );
+			ip = 1;
+			for( String ipKey : module.inputPorts.keySet()) {
+				Individual inputPortInd = m.createIndividual( EXAMPLE_NS + "p" + i + "_ip" + ip, inputPortClass );
+				Property ipIdentifierP = m.createProperty(DCTERMS_NS + "identifier");
+				inputPortInd.addProperty(ipIdentifierP, module.entityId + "_" + ipKey, XSDDatatype.XSDstring);
+				Property ipTitleP = m.createProperty(DCTERMS_NS + "title");
+				inputPortInd.addProperty(ipTitleP, ipKey, XSDDatatype.XSDstring);
+				//Property signatureP = m.createProperty(WFMS_NS + "signature");
+				//inputPortInd.addProperty(signatureP, module.inputPorts.get(ipKey), XSDDatatype.XSDstring);
+				ip++;
+			}
+			op = 1;
+			for( String opKey : module.outputPorts.keySet()) {
+				Individual outputPortInd = m.createIndividual( EXAMPLE_NS + "p" + i + "_op" + op, outputPortClass );
+				Property opIdentifierP = m.createProperty(DCTERMS_NS + "identifier");
+				outputPortInd.addProperty(opIdentifierP, module.entityId + "_" + opKey, XSDDatatype.XSDstring);
+				Property opTitleP = m.createProperty(DCTERMS_NS + "title");
+				outputPortInd.addProperty(opTitleP, opKey, XSDDatatype.XSDstring);
+				//Property signatureP = m.createProperty(WFMS_NS + "signature");
+				//outputPortInd.addProperty(signatureP, module.outputPorts.get(opKey), XSDDatatype.XSDstring);
+				op++;
+			}
 			i++;
-			
-			/*
-			sb.append("CREATE n={");
-			sb.append("name:\""+ module.id + "\"," );
-		    if (module.vtType!=null)
-		    	sb.append("vtType:\""+ module.vtType + "\"," );
-		    if (module.cache!=null)
-		    	sb.append("cache:\""+ module.cache + "\"," );
-		    if (module.desc!=null)
-		    	sb.append("description:\""+ module.desc + "\"," );
-		    if (module.vtPackage!=null)
-		    	sb.append("package:\""+ module.vtPackage + "\"," );
-		    if (module.version!=null)
-		    	sb.append("version:\""+ module.version + "\"," );
-			sb.append("wfID:\""+ module.wfID + "\"," );	
-			sb.append("type:\""+ "module" + "\"" );		
-			sb.append("};"+"\n" );
-			*/
+		}
+		// Iterate over the data objects to generate Data entities
+		i = 1;
+		for( Data data: this.dataObjs ) {
+			OntClass dataClass = m.getOntClass( SOURCE_URL + "#" + "Data" );
+			Individual dataInd = m.createIndividual( EXAMPLE_NS + "data_" + i, dataClass );
+			Property identifierP = m.createProperty(DCTERMS_NS + "identifier");
+			dataInd.addProperty(identifierP, data.entityId, XSDDatatype.XSDstring);
+			Property labelP = m.createProperty(DCTERMS_NS + "label");
+			if( data.label != null )
+				dataInd.addProperty(labelP, data.label, XSDDatatype.XSDstring);
+			Property valueP = m.createProperty(PROV_NS + "value");
+			if( data.value != null )
+				dataInd.addProperty(valueP, data.value, XSDDatatype.XSDstring);
+			//Uncomment to ad the type property
+			//Property typeP = m.createProperty(WFMS_NS + "type");
+			//if( data.vtType != null )
+			//	dataInd.addProperty(typeP, data.vtType, XSDDatatype.XSDstring);
+			i++;
 		}
 		/*
 		for( Actor actor: this.actors) {
@@ -518,21 +561,6 @@ public class PROVRDFBuilder {
 			sb.append("module:\""+ actor.module + "\"," );
 			sb.append("wfID:\""+ actor.wfID + "\"," );
 			sb.append("type:\""+ "activity" + "\"" );		
-			sb.append("};"+"\n" );
-		}
-		for( Data data: this.dataObjs ) {
-			sb.append("CREATE n={");
-			sb.append("name:\""+ data.id + "\"," );
-			if (data.vtType!=null)
-				sb.append("vtType:\""+ data.vtType + "\"," );
-			if (data.desc!=null)
-				sb.append("description:\""+ data.desc + "\"," );
-			if (data.value!=null)
-				sb.append("value:\""+ data.value + "\"," );
-			if (data.runID!=null)
-				sb.append("runID:\""+ data.runID + "\"," );		
-			sb.append("wfID:\""+ data.wfID + "\"," );
-			sb.append("type:\""+ "data" + "\"" );		
 			sb.append("};"+"\n" );
 		}
 		//Add an extra node representing the workflow to the graph
@@ -568,7 +596,6 @@ public class PROVRDFBuilder {
 		    //out.println("CREATE n-[r:" + reqLabel + "]->m;");
 		}
 		*/
-		
 		
 		try {
 			FileOutputStream fos = new FileOutputStream(new File("tempTrace.xml"));
