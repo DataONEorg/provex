@@ -34,7 +34,6 @@ public class PROVRDFBuilder {
 	private HashMap<String, String> modulePackage;
 	private HashMap<String, String> moduleName;
 	private HashMap<String, String> actorModule;
-
 	
 	private ArrayList<Actor> actors;
 	private ArrayList<Data> dataObjs;
@@ -42,6 +41,7 @@ public class PROVRDFBuilder {
 	private ArrayList<Edge> edges;
 	private Set<String> runIDs;
     private HashMap<String, Module> moduleHM;
+    private HashMap<String, String> personHM;
 	
 	private Namespace provNS;
 	private Namespace vtNS;
@@ -49,6 +49,8 @@ public class PROVRDFBuilder {
 	
 	UUID wfID;
 	String wfVersion;
+	String wfEntityId;
+	String wfLabel;
 	
 	String PROVONE_NS = "http://purl.org/provone";
 	String PROV_NS = "http://www.w3.org/ns/prov#";
@@ -80,6 +82,7 @@ public class PROVRDFBuilder {
 		this.actorModule = new HashMap<String, String>();
 		
 		this.moduleHM = new HashMap<String, Module>();
+		this.personHM = new HashMap<String, String>();
 		
 		this.runIDs = new HashSet<String>();
 		this.wfID = UUID.randomUUID();
@@ -96,12 +99,15 @@ public class PROVRDFBuilder {
 		this.createWasAssociatedWithHT(root);
 		this.createActivityFullNames(root);
 		
+		this.createPersonHM(root);
+		
 		this.createActorsList();
 		this.createDataObjsList();
 		this.createModuleObjsList();
 		
 		this.createEdges(root);
 	}
+	
 	
 	// Create a dictionary for the entities
 	private void createEntitiesHT(Element root) {
@@ -134,6 +140,11 @@ public class PROVRDFBuilder {
             				this.modules.put(entityId, entityElem);
             				if( elemProvLabel != null )
             					this.moduleName.put(entityId, elemProvLabel.getText());
+            			}
+            			if( elemVtType.getText().equals("vt:workflow") ) {
+            				this.wfEntityId = entityId;
+            				if( elemProvLabel != null )
+            					this.wfLabel = elemProvLabel.getText();
             			}
             			if( elemProvLabel != null )
                 			this.dataEntityFullName.put(entityId, entityId + "_" + elemProvLabel.getText());
@@ -206,6 +217,20 @@ public class PROVRDFBuilder {
 		}
 	}
 
+	
+	// Create a dictionary for the persons (agents)
+	private void createPersonHM(Element root) {
+		for ( Iterator i = root.elementIterator("agent"); i.hasNext(); ) {
+			Element agentElem = (Element) i.next();
+			String agentId = agentElem.attributeValue(new QName("id", this.provNS));
+			Element elemProvType = agentElem.element(new QName("type", this.provNS));
+			if( elemProvType.getText().equals("prov:Person") ) {
+				Element elemProvLabel = agentElem.element(new QName("label", this.provNS));
+				String label = elemProvLabel.getText();
+				this.personHM.put(agentId, label);
+			}
+		}
+	}
 	
 	
 	// Create a dictionary for the 'wasAssociatedWith' elements
@@ -347,6 +372,8 @@ public class PROVRDFBuilder {
 			edge.label = "connect";
 			edge.startId = startNodeId;
 			edge.endId = endNodeId;
+			edge.source = source;
+			edge.dest = dest;
 			this.edges.add(edge);
 			this.moduleHM.get(source).outputPorts.put(sourcePort, sourceSignature);
 			this.moduleHM.get(dest).inputPorts.put(destPort, destSignature);
@@ -484,8 +511,13 @@ public class PROVRDFBuilder {
 	protected void generateRDFTurtleFile(String filename) {
 		
 		OntModel m = this.createOntModel();
-		
-		StringBuilder sb = new StringBuilder();
+		//Generate the Workflow entity
+		OntClass workflowClass = m.getOntClass( SOURCE_URL + "#" + "Workflow" );
+		Individual workflowInd = m.createIndividual( EXAMPLE_NS + "wf", workflowClass );
+		Property wfIdentifierP = m.createProperty(DCTERMS_NS + "identifier");
+		workflowInd.addProperty(wfIdentifierP, this.wfEntityId, XSDDatatype.XSDstring);
+		Property wfTitleP = m.createProperty(DCTERMS_NS + "title");
+		workflowInd.addProperty(wfTitleP, this.wfLabel, XSDDatatype.XSDstring);
 		// Iterate over the modules to generate Process entities
 		int i = 1;
 		int ip = 1;
@@ -527,6 +559,26 @@ public class PROVRDFBuilder {
 			}
 			i++;
 		}
+		// Iterate over the edges to generate DataLink entities
+		int dl = 1;
+		for ( Edge edge: this.edges ) {
+			if( edge.label.equals("connect") ) {
+				OntClass dataLinkClass = m.getOntClass( SOURCE_URL + "#" + "DataLink" );
+				Individual dataLinkInd = m.createIndividual( EXAMPLE_NS + "dl" + dl, dataLinkClass );
+				Property identifierP = m.createProperty(DCTERMS_NS + "identifier");
+				dataLinkInd.addProperty(identifierP, edge.source + "_" + edge.dest + "DL", XSDDatatype.XSDstring);
+				dl++;
+			}
+		}
+		//Iterate over the person objects to generate User entities
+		i = 1;
+		for( String personKey : this.personHM.keySet()) {
+			OntClass userClass = m.getOntClass( SOURCE_URL + "#" + "User" );
+			Individual userInd = m.createIndividual( EXAMPLE_NS + "user" + i, userClass );
+			Property userIdentifierP = m.createProperty(DCTERMS_NS + "identifier");
+			userInd.addProperty(userIdentifierP, this.personHM.get(personKey), XSDDatatype.XSDstring);
+			i++;
+		}
 		// Iterate over the data objects to generate Data entities
 		i = 1;
 		for( Data data: this.dataObjs ) {
@@ -543,7 +595,7 @@ public class PROVRDFBuilder {
 			//Uncomment to ad the type property
 			//Property typeP = m.createProperty(WFMS_NS + "type");
 			//if( data.vtType != null )
-			//	dataInd.addProperty(typeP, data.vtType, XSDDatatype.XSDstring);
+			//dataInd.addProperty(typeP, data.vtType, XSDDatatype.XSDstring);
 			i++;
 		}
 		/*
