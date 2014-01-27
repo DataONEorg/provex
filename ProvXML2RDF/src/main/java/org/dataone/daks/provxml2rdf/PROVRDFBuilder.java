@@ -34,6 +34,7 @@ public class PROVRDFBuilder {
 	private HashMap<String, String> modulePackage;
 	private HashMap<String, String> moduleName;
 	private HashMap<String, String> actorModule;
+	private HashMap<String, String> isPartOf;
 	
 	private ArrayList<Actor> actors;
 	private ArrayList<Data> dataObjs;
@@ -75,11 +76,12 @@ public class PROVRDFBuilder {
 		this.dataRunID = new HashMap<String, String>();
 		this.dataLabel = new HashMap<String, String>();
 		this.activityCompleted = new HashMap<String, String>();
-	    this.activityCache = new HashMap<String, String>();
+		this.activityCache = new HashMap<String, String>();
 		this.moduleVersion = new HashMap<String, String>();
 		this.modulePackage = new HashMap<String, String>();
 		this.moduleName = new HashMap<String, String>();
 		this.actorModule = new HashMap<String, String>();
+		this.isPartOf = new HashMap<String, String>();
 		
 		this.moduleHM = new HashMap<String, Module>();
 		this.personHM = new HashMap<String, String>();
@@ -112,108 +114,109 @@ public class PROVRDFBuilder {
 	// Create a dictionary for the entities
 	private void createEntitiesHT(Element root) {
 		for ( Iterator i = root.elementIterator("entity"); i.hasNext(); ) {
+			Element entityElem = (Element) i.next();
+			String entityId = entityElem.attributeValue("id");
+			Element elemProvType = entityElem.element(new QName("type", this.provNS));
+			Element elemProvLabel = entityElem.element("label");
+			Element elemVtType = entityElem.element(new QName("type", this.vtNS));
+			Element elemVtDesc = entityElem.element(new QName("desc", this.vtNS));
+			Element elemVtValue = entityElem.element(new QName("value", this.provNS));
+			Element elemRunID = entityElem.element(new QName("isPartOf", this.dcterms));
+			Element elemCache = entityElem.element(new QName("cache", this.vtNS));
+			Element elemVersion = entityElem.element(new QName("version", this.vtNS));
+			Element elemPackage = entityElem.element(new QName("package", this.vtNS));
+			Element elemId = entityElem.element(new QName("id", this.vtNS));
             
-			Element entityElem = (Element) i.next();           
-            String entityId = entityElem.attributeValue("id");
-            Element elemProvType = entityElem.element(new QName("type", this.provNS));
-            Element elemProvLabel = entityElem.element("label");
-            Element elemVtType = entityElem.element(new QName("type", this.vtNS));
-            Element elementVtDesc = entityElem.element(new QName("desc", this.vtNS));
-            Element elementVtValue = entityElem.element(new QName("value", this.provNS));
-            Element elementRunID = entityElem.element(new QName("isPartOf", this.dcterms));
-            Element elementCache = entityElem.element(new QName("cache", this.vtNS));
-            Element elementVersion = entityElem.element(new QName("version", this.vtNS));
-            Element elementPackage = entityElem.element(new QName("package", this.vtNS));
-            Element elementId = entityElem.element(new QName("id", this.vtNS));
-            
-            if (elemVtType != null)
-            	this.dataType.put(entityId, elemVtType.getText());
-            
-            if( elemProvType != null ) {
-            	if( elemProvType.getText().equals("prov:Plan") ) {
-            		if (elementId != null)
-            			 this.wfVersion = elementId.getText();
-             		if( elemVtType != null ) {
-            			if( elemVtType.getText().equals("vt:module") || elemVtType.getText().equals("vt:workflow")  )
-            				this.planEntities.put(entityId, entityElem);
-            			if( elemVtType.getText().equals("vt:module") ) {
-            				this.modules.put(entityId, entityElem);
-            				if( elemProvLabel != null )
-            					this.moduleName.put(entityId, elemProvLabel.getText());
-            			}
-            			if( elemVtType.getText().equals("vt:workflow") ) {
-            				this.wfEntityId = entityId;
-            				if( elemProvLabel != null )
-            					this.wfLabel = elemProvLabel.getText();
-            			}
-            			if( elemProvLabel != null )
-                			this.dataEntityFullName.put(entityId, entityId + "_" + elemProvLabel.getText());
-                		else
-                			this.dataEntityFullName.put(entityId, entityId);
-            			if ( elementCache != null )
-            				this.activityCache.put(entityId, elementCache.getText());
-            			if (elementVersion != null)
-                            this.moduleVersion.put(entityId, elementVersion.getText());
-            			if (elementPackage != null)
-            				this.modulePackage.put(entityId, elementPackage.getText());
-            			if (elementVtDesc != null)
-            				this.dataDesc.put(entityId, elementVtDesc.getText());
-            		}
-            	}
-            	else {
-            		if( elemProvType.getText().equals("vt:data") ) {
-            			this.dataEntities.put(entityId, entityElem);
-            			if( elementVtDesc != null )
-            				this.dataDesc.put(entityId, elementVtDesc.getText());
-            			if( elementVtValue != null )
-                        	this.dataValue.put(entityId, elementVtValue.getText());
-            			if( elemProvLabel != null ) {
-            				this.dataEntityFullName.put(entityId, entityId + "_" + elemProvLabel.getText());
-            				this.dataLabel.put(entityId, elemProvLabel.getText());
-            			}
-            			else
-            				this.dataEntityFullName.put(entityId, entityId);
-            		}
-            	}	
-            }
-            if( elementRunID != null )
-            	this.dataRunID.put(entityId, elementRunID.attributeValue("ref"));
-        }
+			if (elemVtType != null)
+				this.dataType.put(entityId, elemVtType.getText());
+			
+			if( elemProvType != null ) {
+				if( elemProvType.getText().equals("prov:Plan") ) {
+					if (elemId != null)
+						this.wfVersion = elemId.getText();
+					if( elemVtType != null ) {
+						if( elemVtType.getText().equals("vt:module") || elemVtType.getText().equals("vt:workflow")  )
+							this.planEntities.put(entityId, entityElem);
+						if( elemVtType.getText().equals("vt:module") ) {
+							this.modules.put(entityId, entityElem);
+							if( elemProvLabel != null )
+								this.moduleName.put(entityId, elemProvLabel.getText());
+							if( elemRunID != null )
+								this.isPartOf.put(entityId, elemRunID.attributeValue(new QName("ref", this.provNS)));
+						}
+						if( elemVtType.getText().equals("vt:workflow") ) {
+							this.wfEntityId = entityId;
+							if( elemProvLabel != null )
+								this.wfLabel = elemProvLabel.getText();
+						}
+						if( elemProvLabel != null )
+							this.dataEntityFullName.put(entityId, entityId + "_" + elemProvLabel.getText());
+						else
+							this.dataEntityFullName.put(entityId, entityId);
+						if ( elemCache != null )
+							this.activityCache.put(entityId, elemCache.getText());
+						if (elemVersion != null)
+							this.moduleVersion.put(entityId, elemVersion.getText());
+						if (elemPackage != null)
+							this.modulePackage.put(entityId, elemPackage.getText());
+						if (elemVtDesc != null)
+							this.dataDesc.put(entityId, elemVtDesc.getText());
+					}
+				}
+				else {
+					if( elemProvType.getText().equals("vt:data") ) {
+						this.dataEntities.put(entityId, entityElem);
+						if( elemVtDesc != null )
+							this.dataDesc.put(entityId, elemVtDesc.getText());
+						if( elemVtValue != null )
+							this.dataValue.put(entityId, elemVtValue.getText());
+						if( elemProvLabel != null ) {
+							this.dataEntityFullName.put(entityId, entityId + "_" + elemProvLabel.getText());
+							this.dataLabel.put(entityId, elemProvLabel.getText());
+						}
+						else
+							this.dataEntityFullName.put(entityId, entityId);
+					}
+				}
+			}
+			if( elemRunID != null )
+				this.dataRunID.put(entityId, elemRunID.attributeValue("ref"));
+		}
 	}
 	
 	
 	// Create a dictionary for the activities
 	private void createActivitiesHT(Element root) {
 		for ( Iterator i = root.elementIterator("activity"); i.hasNext(); ) {
-            Element activityElem = (Element) i.next();
-            String activityId = activityElem.attributeValue("id");
-            
-            Element elemVtType = activityElem.element(new QName("type", this.vtNS));
-            Element elementVtDesc=activityElem.element(new QName("desc", this.vtNS));
-            Element elementVtCache=activityElem.element(new QName("cached", this.vtNS));
-            Element elementVtCompleted=activityElem.element(new QName("completed", this.vtNS));
-            Element elemDcterms = activityElem.element(new QName("isPartOf", this.dcterms));        
-
-            this.dataType.put(activityId, elemVtType.getText());  
-            if( ! elemVtType.getText().equals("vt:wf_exec") )
-            	this.activities.put(activityId, activityElem);
-            if( elementVtDesc != null )
-            	this.activityCache.put(activityId, elementVtCache.getText());
-            if( elementVtCompleted != null )
-            	this.activityCompleted.put(activityId, elementVtCompleted.getText());
-            String refType = null;
-            if( elemDcterms != null ) {
-            	refType = this.dataType.get(elemDcterms.attributeValue("ref"));
-            	if ( refType.equals("vt:wf_exec") ) {
-            		this.dataRunID.put(activityId, elemDcterms.attributeValue("ref"));
-            		// add this runID to the list of runIDs for the current workflow
-            		this.runIDs.add (elemDcterms.attributeValue("ref"));
-            	}
-            	else {
-            		this.dataRunID.put(activityId, this.dataRunID.get(elemDcterms.attributeValue("ref")));
-            		this.runIDs.add(this.dataRunID.get(elemDcterms.attributeValue("ref")));
-            	}
-            }
+			Element activityElem = (Element) i.next();
+			String activityId = activityElem.attributeValue("id");
+			
+			Element elemVtType = activityElem.element(new QName("type", this.vtNS));
+			Element elementVtDesc=activityElem.element(new QName("desc", this.vtNS));
+			Element elementVtCache=activityElem.element(new QName("cached", this.vtNS));
+			Element elementVtCompleted=activityElem.element(new QName("completed", this.vtNS));
+			Element elemDcterms = activityElem.element(new QName("isPartOf", this.dcterms));
+			
+			this.dataType.put(activityId, elemVtType.getText());  
+			if( ! elemVtType.getText().equals("vt:wf_exec") )
+				this.activities.put(activityId, activityElem);
+			if( elementVtDesc != null )
+				this.activityCache.put(activityId, elementVtCache.getText());
+			if( elementVtCompleted != null )
+				this.activityCompleted.put(activityId, elementVtCompleted.getText());
+			String refType = null;
+			if( elemDcterms != null ) {
+				refType = this.dataType.get(elemDcterms.attributeValue("ref"));
+				if ( refType.equals("vt:wf_exec") ) {
+					this.dataRunID.put(activityId, elemDcterms.attributeValue("ref"));
+					// add this runID to the list of runIDs for the current workflow
+					this.runIDs.add (elemDcterms.attributeValue("ref"));
+				}
+				else {
+					this.dataRunID.put(activityId, this.dataRunID.get(elemDcterms.attributeValue("ref")));
+					this.runIDs.add(this.dataRunID.get(elemDcterms.attributeValue("ref")));
+				}
+			}
 		}
 	}
 
@@ -288,13 +291,13 @@ public class PROVRDFBuilder {
 			String nodeId = this.dataEntityFullName.get(key);
 			Data data = new Data();
 			data.id = nodeId;		
-		    data.vtType = this.dataType.get(key);
-		    data.desc = this.dataDesc.get(key);
-		    data.value = this.dataValue.get(key);
-		    data.runID = this.dataRunID.get(key);
-		    data.wfID = this.wfID;
-		    data.entityId = key;
-		    data.label = this.dataLabel.get(key);
+			data.vtType = this.dataType.get(key);
+			data.desc = this.dataDesc.get(key);
+			data.value = this.dataValue.get(key);
+			data.runID = this.dataRunID.get(key);
+			data.wfID = this.wfID;
+			data.entityId = key;
+			data.label = this.dataLabel.get(key);
 			dataObjs.add(data);
 		}
 	}
@@ -306,14 +309,14 @@ public class PROVRDFBuilder {
 			String nodeId = this.dataEntityFullName.get(key);
 			Module module = new Module();
 			module.id = nodeId;		
-		    module.vtType = this.dataType.get(key);
-		    module.desc = this.dataDesc.get(key);
-            module.vtPackage = this.modulePackage.get(key);
-            module.version = this.moduleVersion.get(key);
-            module.cache = this.activityCache.get(key);
-		    module.wfID = this.wfID;
-		    module.entityId = key;
-		    module.name = moduleName.get(key);
+			module.vtType = this.dataType.get(key);
+			module.desc = this.dataDesc.get(key);
+			module.vtPackage = this.modulePackage.get(key);
+			module.version = this.moduleVersion.get(key);
+			module.cache = this.activityCache.get(key);
+			module.wfID = this.wfID;
+			module.entityId = key;
+			module.name = moduleName.get(key);
 			this.moduleObjs.add(module);
 			this.moduleHM.put(key, module);
 		}
@@ -353,22 +356,24 @@ public class PROVRDFBuilder {
 			this.edges.add(edge);
 		}
 		for ( Iterator i = root.elementIterator("connection"); i.hasNext(); ) {
-			Element elemconnect = (Element) i.next();
-			Element elemSource = elemconnect.element(new QName("source", this.vtNS));
+			Element elemConnect = (Element) i.next();
+			Element elemSource = elemConnect.element(new QName("source", this.vtNS));
 			String source = elemSource.getText();
-			Element elemDest = elemconnect.element(new QName("dest", this.vtNS));
+			Element elemDest = elemConnect.element(new QName("dest", this.vtNS));
 			String dest = elemDest.getText();
-			Element elemSourcePort = elemconnect.element(new QName("source_port", this.vtNS));
+			Element elemSourcePort = elemConnect.element(new QName("source_port", this.vtNS));
 			String sourcePort = elemSourcePort.getText();
-			Element elemDestPort = elemconnect.element(new QName("dest_port", this.vtNS));
+			Element elemDestPort = elemConnect.element(new QName("dest_port", this.vtNS));
 			String destPort = elemDestPort.getText();
-			Element elemSourceSignature = elemconnect.element(new QName("source_signature", this.vtNS));
+			Element elemSourceSignature = elemConnect.element(new QName("source_signature", this.vtNS));
 			String sourceSignature = elemSourceSignature.getText();
-			Element elemDestSignature = elemconnect.element(new QName("dest_signature", this.vtNS));
+			Element elemDestSignature = elemConnect.element(new QName("dest_signature", this.vtNS));
 			String destSignature = elemDestSignature.getText();
 			String startNodeId = this.dataEntityFullName.get(source);
 			String endNodeId = this.dataEntityFullName.get(dest);
+			String id = elemConnect.attributeValue("id");
 			Edge edge = new Edge();
+			edge.id = id;
 			edge.label = "connect";
 			edge.startId = startNodeId;
 			edge.endId = endNodeId;
@@ -402,7 +407,7 @@ public class PROVRDFBuilder {
 			edge.label = "belongsTo";
 			this.edges.add(edge);	
 		}
-
+		
 	}
 	
 	
@@ -511,11 +516,13 @@ public class PROVRDFBuilder {
 	protected void generateRDFTurtleFile(String filename) {
 		
 		OntModel m = this.createOntModel();
+		HashMap<String, Individual> idToInd = new HashMap<String, Individual>();
 		//Generate the Workflow entity
 		OntClass workflowClass = m.getOntClass( SOURCE_URL + "#" + "Workflow" );
 		Individual workflowInd = m.createIndividual( EXAMPLE_NS + "wf", workflowClass );
 		Property wfIdentifierP = m.createProperty(DCTERMS_NS + "identifier");
 		workflowInd.addProperty(wfIdentifierP, this.wfEntityId, XSDDatatype.XSDstring);
+		idToInd.put(this.wfEntityId, workflowInd);
 		Property wfTitleP = m.createProperty(DCTERMS_NS + "title");
 		workflowInd.addProperty(wfTitleP, this.wfLabel, XSDDatatype.XSDstring);
 		// Iterate over the modules to generate Process entities
@@ -527,6 +534,7 @@ public class PROVRDFBuilder {
 			Individual processInd = m.createIndividual( EXAMPLE_NS + "process_" + i, processClass );
 			Property identifierP = m.createProperty(DCTERMS_NS + "identifier");
 			processInd.addProperty(identifierP, module.entityId, XSDDatatype.XSDstring);
+			idToInd.put(module.entityId, processInd);
 			Property titleP = m.createProperty(DCTERMS_NS + "title");
 			processInd.addProperty(titleP, module.name, XSDDatatype.XSDstring);
 			//Uncomment to ad the package property
@@ -540,6 +548,7 @@ public class PROVRDFBuilder {
 				Individual inputPortInd = m.createIndividual( EXAMPLE_NS + "p" + i + "_ip" + ip, inputPortClass );
 				Property ipIdentifierP = m.createProperty(DCTERMS_NS + "identifier");
 				inputPortInd.addProperty(ipIdentifierP, module.entityId + "_" + ipKey, XSDDatatype.XSDstring);
+				idToInd.put(module.entityId + "_" + ipKey, inputPortInd);
 				Property ipTitleP = m.createProperty(DCTERMS_NS + "title");
 				inputPortInd.addProperty(ipTitleP, ipKey, XSDDatatype.XSDstring);
 				//Property signatureP = m.createProperty(WFMS_NS + "signature");
@@ -551,6 +560,7 @@ public class PROVRDFBuilder {
 				Individual outputPortInd = m.createIndividual( EXAMPLE_NS + "p" + i + "_op" + op, outputPortClass );
 				Property opIdentifierP = m.createProperty(DCTERMS_NS + "identifier");
 				outputPortInd.addProperty(opIdentifierP, module.entityId + "_" + opKey, XSDDatatype.XSDstring);
+				idToInd.put(module.entityId + "_" + opKey, outputPortInd);
 				Property opTitleP = m.createProperty(DCTERMS_NS + "title");
 				outputPortInd.addProperty(opTitleP, opKey, XSDDatatype.XSDstring);
 				//Property signatureP = m.createProperty(WFMS_NS + "signature");
@@ -567,6 +577,7 @@ public class PROVRDFBuilder {
 				Individual dataLinkInd = m.createIndividual( EXAMPLE_NS + "dl" + dl, dataLinkClass );
 				Property identifierP = m.createProperty(DCTERMS_NS + "identifier");
 				dataLinkInd.addProperty(identifierP, edge.source + "_" + edge.dest + "DL", XSDDatatype.XSDstring);
+				idToInd.put(edge.id, dataLinkInd);
 				dl++;
 			}
 		}
@@ -577,6 +588,7 @@ public class PROVRDFBuilder {
 			Individual userInd = m.createIndividual( EXAMPLE_NS + "user" + i, userClass );
 			Property userIdentifierP = m.createProperty(DCTERMS_NS + "identifier");
 			userInd.addProperty(userIdentifierP, this.personHM.get(personKey), XSDDatatype.XSDstring);
+			idToInd.put(personKey, userInd);
 			i++;
 		}
 		// Iterate over the data objects to generate Data entities
@@ -586,6 +598,7 @@ public class PROVRDFBuilder {
 			Individual dataInd = m.createIndividual( EXAMPLE_NS + "data_" + i, dataClass );
 			Property identifierP = m.createProperty(DCTERMS_NS + "identifier");
 			dataInd.addProperty(identifierP, data.entityId, XSDDatatype.XSDstring);
+			idToInd.put(data.entityId, dataInd);
 			Property labelP = m.createProperty(DCTERMS_NS + "label");
 			if( data.label != null )
 				dataInd.addProperty(labelP, data.label, XSDDatatype.XSDstring);
@@ -597,6 +610,12 @@ public class PROVRDFBuilder {
 			//if( data.vtType != null )
 			//dataInd.addProperty(typeP, data.vtType, XSDDatatype.XSDstring);
 			i++;
+		}
+		// Iterate over the modules to generate hasSubprocess object properties
+		for( Module module: this.moduleObjs) {
+			ObjectProperty hasSubProcessOP = m.createObjectProperty(SOURCE_URL + "#" + "hasSubProcess");
+			if( this.isPartOf.get(module.entityId) != null )
+				m.add(idToInd.get(this.isPartOf.get(module.entityId)), hasSubProcessOP, idToInd.get(module.entityId));
 		}
 		/*
 		for( Actor actor: this.actors) {
