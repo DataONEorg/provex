@@ -13,7 +13,6 @@ import com.hp.hpl.jena.util.FileManager;
 import org.apache.jena.riot.*;
 
 
-
 public class PROVRDFBuilder {
 
 	private HashMap<String, Element> dataEntities;
@@ -41,8 +40,8 @@ public class PROVRDFBuilder {
 	private ArrayList<Module> moduleObjs;
 	private ArrayList<Edge> edges;
 	private Set<String> runIDs;
-    private HashMap<String, Module> moduleHM;
-    private HashMap<String, String> personHM;
+	private HashMap<String, Module> moduleHM;
+	private HashMap<String, String> personHM;
 	
 	private Namespace provNS;
 	private Namespace vtNS;
@@ -379,6 +378,8 @@ public class PROVRDFBuilder {
 			edge.endId = endNodeId;
 			edge.source = source;
 			edge.dest = dest;
+			edge.sourcePort = sourcePort;
+			edge.destPort = destPort;
 			this.edges.add(edge);
 			this.moduleHM.get(source).outputPorts.put(sourcePort, sourceSignature);
 			this.moduleHM.get(dest).inputPorts.put(destPort, destSignature);
@@ -611,11 +612,26 @@ public class PROVRDFBuilder {
 			//dataInd.addProperty(typeP, data.vtType, XSDDatatype.XSDstring);
 			i++;
 		}
-		// Iterate over the modules to generate hasSubprocess object properties
+		// Iterate over the modules to generate hasSubprocess, hasInputPort, and hasOutputPort object properties
 		for( Module module: this.moduleObjs) {
 			ObjectProperty hasSubProcessOP = m.createObjectProperty(SOURCE_URL + "#" + "hasSubProcess");
 			if( this.isPartOf.get(module.entityId) != null )
 				m.add(idToInd.get(this.isPartOf.get(module.entityId)), hasSubProcessOP, idToInd.get(module.entityId));
+			ObjectProperty hasInputPortOP = m.createObjectProperty(SOURCE_URL + "#" + "hasInputPort");
+			for(String ipKey: module.inputPorts.keySet())
+				m.add(idToInd.get(module.entityId), hasInputPortOP, idToInd.get(module.entityId + "_" + ipKey));
+			ObjectProperty hasOutputPortOP = m.createObjectProperty(SOURCE_URL + "#" + "hasOutputPort");
+			for(String opKey: module.outputPorts.keySet())
+				m.add(idToInd.get(module.entityId), hasOutputPortOP, idToInd.get(module.entityId + "_" + opKey));
+		}
+		// Iterate over the edge objects to generate DLToInPort and outPortToDL object properties
+		for( Edge edge: this.edges) {
+			ObjectProperty DLToInPortOP = m.createObjectProperty(SOURCE_URL + "#" + "DLToInPort");
+			if( edge.label.equals("connect") ) {
+				m.add(idToInd.get(edge.id), DLToInPortOP, idToInd.get(edge.dest + "_" + edge.destPort));
+				ObjectProperty outPortToDLOP = m.createObjectProperty(SOURCE_URL + "#" + "outPortToDL");
+				m.add(idToInd.get(edge.id), outPortToDLOP, idToInd.get(edge.source + "_" + edge.sourcePort));
+			}
 		}
 		/*
 		for( Actor actor: this.actors) {

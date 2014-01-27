@@ -11,6 +11,8 @@ public class Edge {
 	String runID;
 	String source;
 	String dest;
+	String sourcePort;
+	String destPort;
 	String id;
 	
 	
@@ -20,7 +22,7 @@ public class Edge {
 	
 	
 	public Edge(String startId, String endId, String label, String startName, String endName, String runID,
-			String source, String dest, String id) {
+			String source, String dest, String sourcePort, String destPort, String id) {
 		this.startId = startId;
 		this.endId = endId;
 		this.label = label;
@@ -29,6 +31,8 @@ public class Edge {
 		this.runID = runID;
 		this.source = source;
 		this.dest = dest;
+		this.sourcePort = sourcePort;
+		this.destPort = destPort;
 		this.id = id;
 	}
 
