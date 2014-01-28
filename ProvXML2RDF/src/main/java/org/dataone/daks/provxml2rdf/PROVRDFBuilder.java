@@ -27,8 +27,10 @@ public class PROVRDFBuilder {
 	private HashMap<String, String> dataValue;
 	private HashMap<String, String> dataRunID;
 	private HashMap<String, String> dataLabel;
-	private HashMap<String, String> activityCache;
+	private HashMap<String, String> activityCached;
 	private HashMap<String, String> activityCompleted;
+	private HashMap<String, String> activityStartTime;
+	private HashMap<String, String> activityEndTime;
 	private HashMap<String, String> moduleVersion;
 	private HashMap<String, String> modulePackage;
 	private HashMap<String, String> moduleName;
@@ -75,7 +77,9 @@ public class PROVRDFBuilder {
 		this.dataRunID = new HashMap<String, String>();
 		this.dataLabel = new HashMap<String, String>();
 		this.activityCompleted = new HashMap<String, String>();
-		this.activityCache = new HashMap<String, String>();
+		this.activityCached = new HashMap<String, String>();
+		this.activityStartTime = new HashMap<String, String>();
+		this.activityEndTime = new HashMap<String, String>();
 		this.moduleVersion = new HashMap<String, String>();
 		this.modulePackage = new HashMap<String, String>();
 		this.moduleName = new HashMap<String, String>();
@@ -121,7 +125,7 @@ public class PROVRDFBuilder {
 			Element elemVtDesc = entityElem.element(new QName("desc", this.vtNS));
 			Element elemVtValue = entityElem.element(new QName("value", this.provNS));
 			Element elemRunID = entityElem.element(new QName("isPartOf", this.dcterms));
-			Element elemCache = entityElem.element(new QName("cache", this.vtNS));
+			Element elemCached = entityElem.element(new QName("cache", this.vtNS));
 			Element elemVersion = entityElem.element(new QName("version", this.vtNS));
 			Element elemPackage = entityElem.element(new QName("package", this.vtNS));
 			Element elemId = entityElem.element(new QName("id", this.vtNS));
@@ -152,8 +156,8 @@ public class PROVRDFBuilder {
 							this.dataEntityFullName.put(entityId, entityId + "_" + elemProvLabel.getText());
 						else
 							this.dataEntityFullName.put(entityId, entityId);
-						if ( elemCache != null )
-							this.activityCache.put(entityId, elemCache.getText());
+						if ( elemCached != null )
+							this.activityCached.put(entityId, elemCached.getText());
 						if (elemVersion != null)
 							this.moduleVersion.put(entityId, elemVersion.getText());
 						if (elemPackage != null)
@@ -191,18 +195,24 @@ public class PROVRDFBuilder {
 			String activityId = activityElem.attributeValue("id");
 			
 			Element elemVtType = activityElem.element(new QName("type", this.vtNS));
-			Element elementVtDesc=activityElem.element(new QName("desc", this.vtNS));
-			Element elementVtCache=activityElem.element(new QName("cached", this.vtNS));
-			Element elementVtCompleted=activityElem.element(new QName("completed", this.vtNS));
+			Element elemVtDesc = activityElem.element(new QName("desc", this.vtNS));
+			Element elemVtCached = activityElem.element(new QName("cached", this.vtNS));
+			Element elemVtCompleted = activityElem.element(new QName("completed", this.vtNS));
 			Element elemDcterms = activityElem.element(new QName("isPartOf", this.dcterms));
+			Element elemStartTime = activityElem.element(new QName("startTime", this.provNS));
+			Element elemEndTime = activityElem.element(new QName("endTime", this.provNS));
 			
 			this.dataType.put(activityId, elemVtType.getText());  
 			if( ! elemVtType.getText().equals("vt:wf_exec") )
 				this.activities.put(activityId, activityElem);
-			if( elementVtDesc != null )
-				this.activityCache.put(activityId, elementVtCache.getText());
-			if( elementVtCompleted != null )
-				this.activityCompleted.put(activityId, elementVtCompleted.getText());
+			if( elemVtCached != null )
+				this.activityCached.put(activityId, elemVtCached.getText());
+			if( elemVtCompleted != null )
+				this.activityCompleted.put(activityId, elemVtCompleted.getText());
+			if( elemStartTime != null )
+				this.activityStartTime.put(activityId, elemStartTime.getText());
+			if( elemEndTime != null )
+				this.activityEndTime.put(activityId, elemEndTime.getText());
 			String refType = null;
 			if( elemDcterms != null ) {
 				refType = this.dataType.get(elemDcterms.attributeValue("ref"));
@@ -273,10 +283,14 @@ public class PROVRDFBuilder {
 			Actor actor = new Actor();
 			actor.id = nodeId;		
 			actor.vtType = this.dataType.get(key);
-			actor.cache = this.activityCache.get(key);
-			actor.completed = this.activityCompleted.get(key);
+			if( this.activityCached.get(key) != null )
+				actor.cached = Integer.parseInt(this.activityCached.get(key));
+			if( this.activityCompleted.get(key) != null )
+				actor.completed = Integer.parseInt(this.activityCompleted.get(key));
 			actor.module = this.actorModule.get(key);
 			actor.runID = this.dataRunID.get(key);
+			actor.startTime = this.activityStartTime.get(key);
+			actor.endTime = this.activityEndTime.get(key);
 		    actor.wfID = this.wfID;
 		    actor.activityId = key;
 			this.actors.add(actor);
@@ -312,7 +326,7 @@ public class PROVRDFBuilder {
 			module.desc = this.dataDesc.get(key);
 			module.vtPackage = this.modulePackage.get(key);
 			module.version = this.moduleVersion.get(key);
-			module.cache = this.activityCache.get(key);
+			module.cache = this.activityCached.get(key);
 			module.wfID = this.wfID;
 			module.entityId = key;
 			module.name = moduleName.get(key);
@@ -385,19 +399,21 @@ public class PROVRDFBuilder {
 			this.moduleHM.get(dest).inputPorts.put(destPort, destSignature);
 		}
 		for ( Iterator i = root.elementIterator("wasAssociatedWith"); i.hasNext(); ) {
-			Element elemassociatedWith= (Element) i.next();
-			Element elemPlan = elemassociatedWith.element("plan");
-			String source = elemPlan.attributeValue("ref");
-			Element elemAct = elemassociatedWith.element("activity");
-			String destNodeId = elemAct.attributeValue("ref");
-			String startNodeId = this.dataEntityFullName.get(source);
-			String endNodeId = this.activityFullName.get(destNodeId);
-			this.actorModule.put(destNodeId,startNodeId);
+			Element elemWasAssocWith = (Element) i.next();
+			Element elemPlan = elemWasAssocWith.element("plan");
+			String dest = elemPlan.attributeValue("ref");
+			Element elemAct = elemWasAssocWith.element("activity");
+			String source = elemAct.attributeValue("ref");
+			String startNodeId = this.activityFullName.get(source);
+			String endNodeId = this.dataEntityFullName.get(dest);
+			this.actorModule.put(source, dest);
 			Edge edge = new Edge();
 			edge.label = "associatedWith";
 			edge.startId = startNodeId;
 			edge.endId = endNodeId;
-			edge.runID = this.dataRunID.get(destNodeId);
+			edge.runID = this.dataRunID.get(dest);
+			edge.source = source;
+			edge.dest = dest;
 			this.edges.add(edge);
 		}
 		//create edges between workflow and its runs
@@ -409,108 +425,6 @@ public class PROVRDFBuilder {
 			this.edges.add(edge);	
 		}
 		
-	}
-	
-	
-	protected void createTextCypherFile(String filename) {
-		/*
-       		CREATE n={name:"name_val"}
-       		...
-       		START n=node:node_auto_index(name='name1'), m=node:node_auto_index(name='name2') CREATE n-[r:USED/WASGENBY]-m
-       		...
-		*/
-		try {
-			StringBuilder sb = new StringBuilder();
-			// Iterate over the data items and actors
-			for( Data data: this.dataObjs ) {
-				sb.append("CREATE n={");
-				sb.append("name:\""+ data.id + "\"," );
-				if (data.vtType!=null)
-					sb.append("vtType:\""+ data.vtType + "\"," );
-				if (data.desc!=null)
-					sb.append("description:\""+ data.desc + "\"," );
-				if (data.value!=null)
-					sb.append("value:\""+ data.value + "\"," );
-				if (data.runID!=null)
-					sb.append("runID:\""+ data.runID + "\"," );		
-				sb.append("wfID:\""+ data.wfID + "\"," );
-				sb.append("type:\""+ "data" + "\"" );		
-				sb.append("};"+"\n" );
-			}
-			for( Actor actor: this.actors) {
-				sb.append("CREATE n={");
-				sb.append("name:\""+ actor.id + "\"," );
-				if (actor.vtType!=null)
-					sb.append("vtType:\""+ actor.vtType + "\"," );
-				if (actor.cache!=null)
-					sb.append("cache:\""+ actor.cache + "\"," );
-				if (actor.completed!=null)
-					sb.append("completed:\""+ actor.completed + "\"," );
-				if (actor.runID!=null)
-					sb.append("runID:\""+ actor.runID + "\"," );
-				sb.append("module:\""+ actor.module + "\"," );
-				sb.append("wfID:\""+ actor.wfID + "\"," );
-				sb.append("type:\""+ "activity" + "\"" );		
-				sb.append("};"+"\n" );
-			}
-			for( Module module: this.moduleObjs) {
-				sb.append("CREATE n={");
-				sb.append("name:\""+ module.id + "\"," );
-			    if (module.vtType!=null)
-			    	sb.append("vtType:\""+ module.vtType + "\"," );
-			    if (module.cache!=null)
-			    	sb.append("cache:\""+ module.cache + "\"," );
-			    if (module.desc!=null)
-			    	sb.append("description:\""+ module.desc + "\"," );
-			    if (module.vtPackage!=null)
-			    	sb.append("package:\""+ module.vtPackage + "\"," );
-			    if (module.version!=null)
-			    	sb.append("version:\""+ module.version + "\"," );
-				sb.append("wfID:\""+ module.wfID + "\"," );	
-				sb.append("type:\""+ "module" + "\"" );		
-				sb.append("};"+"\n" );
-			}
-			//Add an extra node representing the workflow to the graph
-			sb.append("CREATE n={");
-			sb.append("name:\""+ this.wfID + "\"," );
-			sb.append("wfID:\""+ this.wfID + "\"," );
-			sb.append("type:\""+ "workflow" + "\"" );				
-			sb.append("};"+"\n" );
-			//Add runID nodes
-  			for( String runIDNode: this.runIDs ) {
-  				sb.append("CREATE n={");
-  				sb.append("name:\""+ runIDNode + "\"," );
-  				sb.append("wfID:\""+ this.wfID + "\"," );
-  				sb.append("runID:\""+ runIDNode + "\"," );
-  				sb.append("type:\""+ "run" + "\"" );				
-  				sb.append("};"+"\n" );
-  			}
-			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
-			//out.println("BEGIN");
-			out.println(sb);
-			String reqLabel = null;
-			// Create the edges for the 'used' and 'wasGeneratedBy' relations
-			for ( Edge edge: this.edges ) {
-				if( edge.label.equals("used") )
-					reqLabel = "used";
-				else if( edge.label.equals("genBy") )
-					reqLabel = "wasGeneratedBy";
-				else if( edge.label.equals("connect") )
-					reqLabel = "isConnectedWith";
-				else if( edge.label.equals("associatedWith") )
-					reqLabel = "wasAssociatedWith";
-				else if( edge.label.equals("belongsTo") )
-					reqLabel = "belongsTo";
-			    out.print("START n=node:node_auto_index(name='" + edge.startId + "'), ");
-			    out.print("m=node:node_auto_index(name='" + edge.endId + "') ");
-			    out.println("CREATE n-[r:" + reqLabel + "]->m;");
-			}
-	        out.println();
-			out.close();
-	    }
-		catch (IOException e) {
-			e.printStackTrace();
-	    }
 	}
 	
 	
@@ -633,23 +547,35 @@ public class PROVRDFBuilder {
 				m.add(idToInd.get(edge.id), outPortToDLOP, idToInd.get(edge.source + "_" + edge.sourcePort));
 			}
 		}
-		/*
+		// Iterate over actor objects to generate ProcessExec entities
+		i = 1;
 		for( Actor actor: this.actors) {
-			sb.append("CREATE n={");
-			sb.append("name:\""+ actor.id + "\"," );
-			if (actor.vtType!=null)
-				sb.append("vtType:\""+ actor.vtType + "\"," );
-			if (actor.cache!=null)
-				sb.append("cache:\""+ actor.cache + "\"," );
-			if (actor.completed!=null)
-				sb.append("completed:\""+ actor.completed + "\"," );
-			if (actor.runID!=null)
-				sb.append("runID:\""+ actor.runID + "\"," );
-			sb.append("module:\""+ actor.module + "\"," );
-			sb.append("wfID:\""+ actor.wfID + "\"," );
-			sb.append("type:\""+ "activity" + "\"" );		
-			sb.append("};"+"\n" );
+			OntClass processExecClass = m.getOntClass( SOURCE_URL + "#" + "ProcessExec" );
+			Individual processExecInd = m.createIndividual( EXAMPLE_NS + "processExec_" + i, processExecClass );
+			Property identifierP = m.createProperty(DCTERMS_NS + "identifier");
+			processExecInd.addProperty(identifierP, actor.activityId, XSDDatatype.XSDstring);
+			idToInd.put(actor.activityId, processExecInd);
+			Property startTimeP = m.createProperty(PROV_NS + "startTime");
+			if( actor.startTime != null )
+				processExecInd.addProperty(startTimeP, actor.startTime, XSDDatatype.XSDstring);
+			Property endTimeP = m.createProperty(PROV_NS + "endTime");
+			if( actor.endTime != null )
+				processExecInd.addProperty(endTimeP, actor.endTime, XSDDatatype.XSDstring);
+			Property cachedP = m.createProperty(WFMS_NS + "cached");
+			if( actor.cached != -1 )
+				processExecInd.addProperty(cachedP, actor.cached + "", XSDDatatype.XSDinteger);
+			Property completedP = m.createProperty(WFMS_NS + "completed");
+			if( actor.completed != -1 )
+				processExecInd.addProperty(completedP, actor.completed + "", XSDDatatype.XSDinteger);
+			i++;
 		}
+		// Iterate over the edge objects to wasAssociatedWith object properties between ProcessExec and Process entities
+		for( Edge edge: this.edges) {
+			ObjectProperty wasAssociatedWithOP = m.createObjectProperty(PROV_NS + "wasAssociatedWith");
+			if( edge.label.equals("associatedWith") )
+				m.add(idToInd.get(edge.source), wasAssociatedWithOP, idToInd.get(edge.dest));
+		}
+		/*
 		//Add an extra node representing the workflow to the graph
 		sb.append("CREATE n={");
 		sb.append("name:\""+ this.wfID + "\"," );
