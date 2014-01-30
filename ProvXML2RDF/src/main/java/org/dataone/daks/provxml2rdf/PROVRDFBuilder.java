@@ -351,6 +351,8 @@ public class PROVRDFBuilder {
 			edge.label = "used";
 			edge.startId = startNodeId;
 			edge.endId = endNodeId;
+			edge.source = actRef;
+			edge.dest = entRef;
 			this.edges.add(edge);
 		}
 		for ( Iterator i = root.elementIterator("wasGeneratedBy"); i.hasNext(); ) {
@@ -366,6 +368,8 @@ public class PROVRDFBuilder {
 			edge.label = "genBy";
 			edge.startId = startNodeId;
 			edge.endId = endNodeId;
+			edge.source = entRef;
+			edge.dest = actRef;
 			this.edges.add(edge);
 		}
 		for ( Iterator i = root.elementIterator("connection"); i.hasNext(); ) {
@@ -569,47 +573,24 @@ public class PROVRDFBuilder {
 				processExecInd.addProperty(completedP, actor.completed + "", XSDDatatype.XSDinteger);
 			i++;
 		}
-		// Iterate over the edge objects to wasAssociatedWith object properties between ProcessExec and Process entities
+		// Iterate over the edge objects to generate wasAssociatedWith object properties between ProcessExec and Process entities  
 		for( Edge edge: this.edges) {
 			ObjectProperty wasAssociatedWithOP = m.createObjectProperty(PROV_NS + "wasAssociatedWith");
 			if( edge.label.equals("associatedWith") )
 				m.add(idToInd.get(edge.source), wasAssociatedWithOP, idToInd.get(edge.dest));
 		}
-		/*
-		//Add an extra node representing the workflow to the graph
-		sb.append("CREATE n={");
-		sb.append("name:\""+ this.wfID + "\"," );
-		sb.append("wfID:\""+ this.wfID + "\"," );
-		sb.append("type:\""+ "workflow" + "\"" );				
-		sb.append("};"+"\n" );
-		//Add runID nodes
-  		for( String runIDNode: this.runIDs ) {
-  			sb.append("CREATE n={");
-  			sb.append("name:\""+ runIDNode + "\"," );
-  			sb.append("wfID:\""+ this.wfID + "\"," );
-  			sb.append("runID:\""+ runIDNode + "\"," );
-  			sb.append("type:\""+ "run" + "\"" );				
-  			sb.append("};"+"\n" );
-  		}
-		String reqLabel = null;
-		// Create the edges for the 'used' and 'wasGeneratedBy' relations
-		for ( Edge edge: this.edges ) {
+		// Iterate over the edge objects to generate used object properties between ProcessExec and Data entities  
+		for( Edge edge: this.edges) {
+			ObjectProperty usedOP = m.createObjectProperty(PROV_NS + "used");
 			if( edge.label.equals("used") )
-				reqLabel = "used";
-			else if( edge.label.equals("genBy") )
-				reqLabel = "wasGeneratedBy";
-			else if( edge.label.equals("connect") )
-				reqLabel = "isConnectedWith";
-			else if( edge.label.equals("associatedWith") )
-				reqLabel = "wasAssociatedWith";
-			else if( edge.label.equals("belongsTo") )
-				reqLabel = "belongsTo";
-		    //out.print("START n=node:node_auto_index(name='" + edge.startId + "'), ");
-		    //out.print("m=node:node_auto_index(name='" + edge.endId + "') ");
-		    //out.println("CREATE n-[r:" + reqLabel + "]->m;");
+				m.add(idToInd.get(edge.source), usedOP, idToInd.get(edge.dest));
 		}
-		*/
-		
+		// Iterate over the edge objects to generate wasGeneratedBy object properties between Data and ProcessExec entities  
+		for( Edge edge: this.edges) {
+			ObjectProperty wasGeneratedByOP = m.createObjectProperty(PROV_NS + "wasGeneratedBy");
+			if( edge.label.equals("genBy") )
+				m.add(idToInd.get(edge.source), wasGeneratedByOP, idToInd.get(edge.dest));
+		}		
 		try {
 			FileOutputStream fos = new FileOutputStream(new File("tempTrace.xml"));
 			m.write(fos, "RDF/XML");

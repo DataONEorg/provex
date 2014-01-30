@@ -28,7 +28,6 @@ public class JenaExample {
 		model = RDFDataMgr.loadModel("wf.xml");
 		//RDFDataMgr.write(System.out, model, Lang.TURTLE);
 		RDFDataMgr.write(System.out, model, RDFFormat.TURTLE_PRETTY);
-		System.out.println("Process completed.");
 	}
 	
 	
