@@ -9,6 +9,8 @@ import javax.ws.rs.core.Response;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
+import org.dataone.daks.provxml2rdf.*;
+
 @Path("/provtraceupload")
 public class ProvTraceUploadService {
 
@@ -21,6 +23,9 @@ public class ProvTraceUploadService {
 		
 		String uploadedFileName = dbname + ".xml";
 		writeToFile(uploadedInputStream, uploadedFileName);
+		String[] params = {""};
+		params[0] = uploadedFileName;
+		ProvXML2RDF.main(params);
 
 		String output = "Database created with the name : " + dbname;
 
