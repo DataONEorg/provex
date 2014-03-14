@@ -432,8 +432,9 @@ public class PROVRDFBuilder {
 	}
 	
 	
-	protected void generateRDFTurtleFile(String filename) {
+	protected String generateRDFTurtleFile(String filename) {
 		
+		String tempXMLRDFFile = "tempTrace.xml";
 		OntModel m = this.createOntModel();
 		HashMap<String, Individual> idToInd = new HashMap<String, Individual>();
 		//Generate the Workflow entity
@@ -592,15 +593,16 @@ public class PROVRDFBuilder {
 				m.add(idToInd.get(edge.source), wasGeneratedByOP, idToInd.get(edge.dest));
 		}		
 		try {
-			FileOutputStream fos = new FileOutputStream(new File("tempTrace.xml"));
+			FileOutputStream fos = new FileOutputStream(new File(tempXMLRDFFile));
 			m.write(fos, "RDF/XML");
 			FileOutputStream out = new FileOutputStream(new File(filename));
-			Model model = RDFDataMgr.loadModel("tempTrace.xml");
+			Model model = RDFDataMgr.loadModel(tempXMLRDFFile);
 	        RDFDataMgr.write(out, model, RDFFormat.TURTLE_PRETTY);
 		}
 		catch (IOException e) {
 			e.printStackTrace();
 	    }
+		return tempXMLRDFFile;
 	}
 	
 	

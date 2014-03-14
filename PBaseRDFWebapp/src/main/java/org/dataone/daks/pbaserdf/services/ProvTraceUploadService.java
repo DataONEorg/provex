@@ -1,14 +1,19 @@
 package org.dataone.daks.pbaserdf.services;
 
 import java.io.*;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
+import com.hp.hpl.jena.rdf.model.*;
 
+import org.apache.jena.riot.RDFDataMgr;
+import org.dataone.daks.pbaserdf.dao.LDBDAO;
 import org.dataone.daks.provxml2rdf.*;
 
 @Path("/provtraceupload")
@@ -23,9 +28,15 @@ public class ProvTraceUploadService {
 		
 		String uploadedFileName = dbname + ".xml";
 		writeToFile(uploadedInputStream, uploadedFileName);
-		String[] params = {""};
-		params[0] = uploadedFileName;
-		ProvXML2RDF.main(params);
+		ProvXML2RDF converter = new ProvXML2RDF();
+		String tempXMLRDFFile = converter.doMapping(uploadedFileName);
+		
+		Model m = RDFDataMgr.loadModel(tempXMLRDFFile);
+		
+		LDBDAO dao = LDBDAO.getInstance();
+		dao.init(dbname);
+		dao.addModel(m);
+		dao.shutdown();
 
 		String output = "Database created with the name : " + dbname;
 

@@ -15,14 +15,15 @@ public class ProvXML2RDF {
 		mapper.doMapping(args[0]);
 	}
 	
-	private void doMapping(String filePath) {
+	public String doMapping(String filePath) {
 		Document doc = XMLLoader.getDocument(filePath);
 		Element provRoot = doc.getRootElement();
 		PROVRDFBuilder provBuilder = new PROVRDFBuilder();
 		provBuilder.processDocument(provRoot);
 		//remove the .xml suffix from the filePath
 		filePath = filePath.substring(0, filePath.length()-4);
-		provBuilder.generateRDFTurtleFile(filePath + ".ttl");
+		String tempXMLRDFFile = provBuilder.generateRDFTurtleFile(filePath + ".ttl");
+		return tempXMLRDFFile;
 	}
 	
 	
