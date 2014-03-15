@@ -24,12 +24,13 @@ public class ProvTraceUploadService {
 	public Response uploadProvTrace(
 			@FormDataParam("file") InputStream uploadedInputStream,
 			@FormDataParam("file") FormDataContentDisposition fileDetail,
-			@FormDataParam("dbname") String dbname) {
+			@FormDataParam("dbname") String dbname,
+			@FormDataParam("wfid") String wfid) {
 		
 		String uploadedFileName = dbname + ".xml";
 		writeToFile(uploadedInputStream, uploadedFileName);
 		ProvXML2RDF converter = new ProvXML2RDF();
-		String tempXMLRDFFile = converter.doMapping(uploadedFileName);
+		String tempXMLRDFFile = converter.doMapping(uploadedFileName, wfid);
 		
 		Model m = RDFDataMgr.loadModel(tempXMLRDFFile);
 		
@@ -38,7 +39,8 @@ public class ProvTraceUploadService {
 		dao.addModel(m);
 		dao.shutdown();
 
-		String output = "Database created with the name : " + dbname;
+		String output = "Database created/updated with the name : " + dbname +
+				" and workflow id: " + wfid;
 
 		return Response.status(200).entity(output).build();
 	}

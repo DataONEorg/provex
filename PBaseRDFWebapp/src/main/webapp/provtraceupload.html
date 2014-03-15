@@ -1,16 +1,31 @@
 <html>
+<head>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+	<script type="text/javascript">
+	$(document).ready(function(e) {   
+		$("#formSubmit").click( function() {
+	    	var value = $("#fileSelect").val().split(/[\/\\]/).pop();
+	    	value = value.substring(0, value.indexOf("."));
+	    	$("#wfid").val(value);
+	    	$("#uploadForm").submit();
+	    	
+		});
+	 });
+	</script>
+</head>
 <body>
 	<h1>Upload ProvONE XML trace to PBase</h1>
  
-	<form action="webresources/provtraceupload" method="post" enctype="multipart/form-data">
+	<form id="uploadForm" action="webresources/provtraceupload" method="post" enctype="multipart/form-data">
  		
  		<p>
-		Select a file : <input type="file" name="file" size="45" />
+		Select a file : <input type="file" id="fileSelect" name="file" size="45" />
 		</p>
  		<p>
- 			Name for workflow: <input type="text" name="dbname" id="dbname">
+ 			Database name: <input type="text" name="dbname" id="dbname">
  		</p>
- 		<input type="submit" value="Upload It" />
+ 		<input type="hidden" name="wfid" id="wfid" value="">
+ 		<input type="submit" id="formSubmit" value="Upload It" />
  	</form>
  
 </body>

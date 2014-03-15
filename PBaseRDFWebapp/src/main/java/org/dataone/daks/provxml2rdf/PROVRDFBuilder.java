@@ -432,16 +432,17 @@ public class PROVRDFBuilder {
 	}
 	
 	
-	protected String generateRDFTurtleFile(String filename) {
+	protected String generateRDFTurtleFile(String filename, String wfID) {
 		
 		String tempXMLRDFFile = "tempTrace.xml";
 		OntModel m = this.createOntModel();
 		HashMap<String, Individual> idToInd = new HashMap<String, Individual>();
 		//Generate the Workflow entity
 		OntClass workflowClass = m.getOntClass( SOURCE_URL + "#" + "Workflow" );
-		Individual workflowInd = m.createIndividual( EXAMPLE_NS + "wf", workflowClass );
+		Individual workflowInd = m.createIndividual( EXAMPLE_NS + wfID + "/wf", workflowClass );
 		Property wfIdentifierP = m.createProperty(DCTERMS_NS + "identifier");
-		workflowInd.addProperty(wfIdentifierP, this.wfEntityId, XSDDatatype.XSDstring);
+		workflowInd.addProperty(wfIdentifierP, wfID, XSDDatatype.XSDstring);
+		//workflowInd.addProperty(wfIdentifierP, this.wfEntityId, XSDDatatype.XSDstring);
 		idToInd.put(this.wfEntityId, workflowInd);
 		Property wfTitleP = m.createProperty(DCTERMS_NS + "title");
 		workflowInd.addProperty(wfTitleP, this.wfLabel, XSDDatatype.XSDstring);
@@ -451,7 +452,7 @@ public class PROVRDFBuilder {
 		int op = 1;
 		for( Module module: this.moduleObjs) {
 			OntClass processClass = m.getOntClass( SOURCE_URL + "#" + "Process" );
-			Individual processInd = m.createIndividual( EXAMPLE_NS + "process_" + i, processClass );
+			Individual processInd = m.createIndividual( EXAMPLE_NS + wfID + "/process_" + i, processClass );
 			Property identifierP = m.createProperty(DCTERMS_NS + "identifier");
 			processInd.addProperty(identifierP, module.entityId, XSDDatatype.XSDstring);
 			idToInd.put(module.entityId, processInd);
@@ -465,7 +466,7 @@ public class PROVRDFBuilder {
 			OntClass outputPortClass = m.getOntClass( SOURCE_URL + "#" + "OutputPort" );
 			ip = 1;
 			for( String ipKey : module.inputPorts.keySet()) {
-				Individual inputPortInd = m.createIndividual( EXAMPLE_NS + "p" + i + "_ip" + ip, inputPortClass );
+				Individual inputPortInd = m.createIndividual( EXAMPLE_NS + wfID + "/p" + i + "_ip" + ip, inputPortClass );
 				Property ipIdentifierP = m.createProperty(DCTERMS_NS + "identifier");
 				inputPortInd.addProperty(ipIdentifierP, module.entityId + "_" + ipKey, XSDDatatype.XSDstring);
 				idToInd.put(module.entityId + "_" + ipKey, inputPortInd);
@@ -477,7 +478,7 @@ public class PROVRDFBuilder {
 			}
 			op = 1;
 			for( String opKey : module.outputPorts.keySet()) {
-				Individual outputPortInd = m.createIndividual( EXAMPLE_NS + "p" + i + "_op" + op, outputPortClass );
+				Individual outputPortInd = m.createIndividual( EXAMPLE_NS + wfID + "/p" + i + "_op" + op, outputPortClass );
 				Property opIdentifierP = m.createProperty(DCTERMS_NS + "identifier");
 				outputPortInd.addProperty(opIdentifierP, module.entityId + "_" + opKey, XSDDatatype.XSDstring);
 				idToInd.put(module.entityId + "_" + opKey, outputPortInd);
@@ -494,7 +495,7 @@ public class PROVRDFBuilder {
 		for ( Edge edge: this.edges ) {
 			if( edge.label.equals("connect") ) {
 				OntClass dataLinkClass = m.getOntClass( SOURCE_URL + "#" + "DataLink" );
-				Individual dataLinkInd = m.createIndividual( EXAMPLE_NS + "dl" + dl, dataLinkClass );
+				Individual dataLinkInd = m.createIndividual( EXAMPLE_NS + wfID + "/dl" + dl, dataLinkClass );
 				Property identifierP = m.createProperty(DCTERMS_NS + "identifier");
 				dataLinkInd.addProperty(identifierP, edge.source + "_" + edge.dest + "DL", XSDDatatype.XSDstring);
 				idToInd.put(edge.id, dataLinkInd);
@@ -505,7 +506,7 @@ public class PROVRDFBuilder {
 		i = 1;
 		for( String personKey : this.personHM.keySet()) {
 			OntClass userClass = m.getOntClass( SOURCE_URL + "#" + "User" );
-			Individual userInd = m.createIndividual( EXAMPLE_NS + "user" + i, userClass );
+			Individual userInd = m.createIndividual( EXAMPLE_NS + wfID + "/user" + i, userClass );
 			Property userIdentifierP = m.createProperty(DCTERMS_NS + "identifier");
 			userInd.addProperty(userIdentifierP, this.personHM.get(personKey), XSDDatatype.XSDstring);
 			idToInd.put(personKey, userInd);
@@ -515,7 +516,7 @@ public class PROVRDFBuilder {
 		i = 1;
 		for( Data data: this.dataObjs ) {
 			OntClass dataClass = m.getOntClass( SOURCE_URL + "#" + "Data" );
-			Individual dataInd = m.createIndividual( EXAMPLE_NS + "data_" + i, dataClass );
+			Individual dataInd = m.createIndividual( EXAMPLE_NS + wfID + "/data_" + i, dataClass );
 			Property identifierP = m.createProperty(DCTERMS_NS + "identifier");
 			dataInd.addProperty(identifierP, data.entityId, XSDDatatype.XSDstring);
 			idToInd.put(data.entityId, dataInd);
@@ -556,7 +557,7 @@ public class PROVRDFBuilder {
 		i = 1;
 		for( Actor actor: this.actors) {
 			OntClass processExecClass = m.getOntClass( SOURCE_URL + "#" + "ProcessExec" );
-			Individual processExecInd = m.createIndividual( EXAMPLE_NS + "processExec_" + i, processExecClass );
+			Individual processExecInd = m.createIndividual( EXAMPLE_NS + wfID + "/processExec_" + i, processExecClass );
 			Property identifierP = m.createProperty(DCTERMS_NS + "identifier");
 			processExecInd.addProperty(identifierP, actor.activityId, XSDDatatype.XSDstring);
 			idToInd.put(actor.activityId, processExecInd);

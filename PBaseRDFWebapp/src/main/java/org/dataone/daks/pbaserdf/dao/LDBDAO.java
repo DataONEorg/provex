@@ -83,7 +83,7 @@ public class LDBDAO {
 	}
 	
 	
-    public String getProcesses(String wfID) {
+    public JSONArray getProcesses(String wfID) {
     	String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
         		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
         		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
@@ -113,11 +113,11 @@ public class LDBDAO {
 			e.printStackTrace();
 		}
         qexec.close();
-        return nodesArray.toString();
+        return nodesArray;
     }
     
     
-    public String getDataLinks(String wfID) {
+    public JSONArray getDataLinks(String wfID) {
     	String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
         		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
         		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
@@ -152,7 +152,22 @@ public class LDBDAO {
 			e.printStackTrace();
 		}
         qexec.close();
-        return edgesArray.toString();
+        return edgesArray;
+    }
+    
+    
+    public String getWorkflow(String wfID) {
+    	JSONArray processesArray = this.getProcesses(wfID);
+    	JSONArray edgesArray = this.getDataLinks(wfID);
+    	JSONObject jsonObj = new JSONObject();
+    	try {
+			jsonObj.put("nodes", processesArray);
+			jsonObj.put("edges", edgesArray);
+		}
+    	catch (JSONException e) {
+			e.printStackTrace();
+		}
+    	return jsonObj.toString();
     }
 	
     

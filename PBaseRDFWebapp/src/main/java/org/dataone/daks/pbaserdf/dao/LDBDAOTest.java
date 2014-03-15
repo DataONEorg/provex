@@ -15,8 +15,8 @@ public class LDBDAOTest {
         LDBDAOTest test = new LDBDAOTest();
         //test.countQuery(dataset);
         //test.wfIDsQuery(dataset);
-        //test.triplesQuery(dataset);
-        test.processesQuery(dataset, "e0");
+        test.triplesQuery(dataset);
+        //test.processesQuery(dataset, "e0");
         //test.wfIDQuery(dataset, "e0");
     }
     
