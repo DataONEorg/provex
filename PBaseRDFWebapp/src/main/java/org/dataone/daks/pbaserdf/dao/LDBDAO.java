@@ -11,6 +11,7 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.tdb.TDBFactory;
 
 import org.json.*;
+import org.dataone.daks.pbase.treecover.*;
 
 
 public class LDBDAO {
@@ -169,60 +170,34 @@ public class LDBDAO {
 		}
     	return jsonObj.toString();
     }
-	
     
-	/*
-	public String getWorkflow(String wfID) throws JSONException {
-		ExecutionEngine engine = new ExecutionEngine(graphDB, StringLogger.SYSTEM); 
-		//Get the modules
-		String modulesQuery = "START n=node(*) WHERE HAS(n.name) AND HAS(n.type) AND HAS(n.wfID) " +
-					   "AND n.type='module' AND n.wfID='" + wfID + "' " +
-					   "RETURN distinct n;";
-		ExecutionResult nodesResult = engine.execute(modulesQuery);
-		ResourceIterator<Node> nodesIt = nodesResult.columnAs("n");
-		JSONObject resultObj = new JSONObject();
-		JSONArray nodesArray = new JSONArray();
-		while (nodesIt.hasNext()) {
-			Node node = nodesIt.next();
-			JSONObject nodeObj = new JSONObject();
-			nodeObj.put("nodeId", node.getProperty("name"));
-			for (String propertyKey : node.getPropertyKeys())
-				if( ! (propertyKey.equals("wfID") || propertyKey.equals("name")) ) 
-					nodeObj.put(propertyKey, node.getProperty(propertyKey) );
-			nodesArray.put(nodeObj);
+    
+    public String getWorkflowReachEncoding(String wfID) {
+    	JSONArray nodesArray = this.getProcesses(wfID);
+    	JSONArray edgesArray = this.getDataLinks(wfID);
+    	JSONObject jsonObj = new JSONObject();
+    	try {
+    		Digraph coverDigraph = new Digraph();
+        	for( int i = 0; i < edgesArray.length(); i++ ) {
+        		JSONObject edgeObj = edgesArray.getJSONObject(i);
+        		coverDigraph.addEdge(edgeObj.getString("startNodeId"), edgeObj.getString("endNodeId"));	
+        	}
+        	TreeCover cover = new TreeCover();
+    		cover.createCover(coverDigraph);
+    		for(int i = 0; i < nodesArray.length(); i++) {
+    			JSONObject nodeObj = nodesArray.getJSONObject(i);
+    			String nodeIdStr = nodeObj.getString("nodeId");
+    			nodeObj.put("intervals", "[" + cover.getCode(nodeIdStr).toString() + "]");
+    			nodeObj.put("postorder", cover.getPostorder(nodeIdStr));
+    		}
+			jsonObj.put("nodes", nodesArray);
+			jsonObj.put("edges", edgesArray);
 		}
-		//Get the modules edges
-		String edgesQuery = "START n=node(*) " +
-							"MATCH m-[:isConnectedWith]->n " +
-							"WHERE HAS(m.name) AND HAS(n.name) " +
-							"RETURN distinct m.name, n.name;";
-		ExecutionResult edgesResult = engine.execute(edgesQuery);
-		ResourceIterator<Map<String,Object>> edgesIt = edgesResult.iterator();
-		JSONArray edgesArray = new JSONArray();
-		Digraph coverDigraph = new Digraph();
-		while (edgesIt.hasNext()) {
-			Map<String,Object> map = edgesIt.next();
-			JSONObject edgeObj = new JSONObject();
-			edgeObj.put("startNodeId", map.get("m.name").toString());
-			edgeObj.put("edgeLabel", "");
-			edgeObj.put("endNodeId", map.get("n.name").toString());
-			edgesArray.put(edgeObj);
-			coverDigraph.addEdge(map.get("m.name").toString(), map.get("n.name").toString());
+    	catch (JSONException e) {
+			e.printStackTrace();
 		}
-		resultObj.put("edges", edgesArray);
-		TreeCover cover = new TreeCover();
-		cover.createCover(coverDigraph);
-		for(int i = 0; i < nodesArray.length(); i++) {
-			JSONObject nodeObj = nodesArray.getJSONObject(i);
-			String nodeIdStr = nodeObj.getString("nodeId");
-			//nodeObj.put("treecover", cover.getPostorder(nodeIdStr) + ":" + cover.getCode(nodeIdStr).toString());
-			nodeObj.put("intervals", "[" + cover.getCode(nodeIdStr).toString() + "]");
-			nodeObj.put("postorder", cover.getPostorder(nodeIdStr));
-		}
-		resultObj.put("nodes", nodesArray);
-        return resultObj.toString();
-	}
-	*/
+    	return jsonObj.toString();
+    }
 	
 	
 }

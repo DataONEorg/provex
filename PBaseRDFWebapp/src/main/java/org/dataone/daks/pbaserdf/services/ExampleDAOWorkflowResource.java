@@ -27,7 +27,7 @@ public class ExampleDAOWorkflowResource {
     		if( wfid == null )
     			System.out.println("ERROR: wfid parameter is null.");
     		else
-    			retVal = dao.getWorkflow(wfid);
+    			retVal = dao.getWorkflowReachEncoding(wfid);
     	}
     	catch(Exception e) {
     		e.printStackTrace();
