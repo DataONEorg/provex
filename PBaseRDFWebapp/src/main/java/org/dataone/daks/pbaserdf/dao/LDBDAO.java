@@ -3,7 +3,6 @@ package org.dataone.daks.pbaserdf.dao;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
 
 import com.hp.hpl.jena.query.Dataset ;
 import com.hp.hpl.jena.query.Query;
@@ -353,7 +352,7 @@ public class LDBDAO {
             String pexecId = soln.getLiteral("pexec_id").getString();
             String label = "wasGenBy";
             jsonObj.put("startNodeId", dataId);
-            jsonObj.put("endNodeId", dataId);
+            jsonObj.put("endNodeId", pexecId);
             jsonObj.put("edgeLabel", label);
             edgesList.add(jsonObj);
         }
@@ -388,8 +387,8 @@ public class LDBDAO {
             JSONObject jsonObj = new JSONObject();
             String dataId = soln.getLiteral("data_id").getString();
             String pexecId = soln.getLiteral("pexec_id").getString();
-            String label = "wasGenBy";
-            jsonObj.put("startNodeId", dataId);
+            String label = "used";
+            jsonObj.put("startNodeId", pexecId);
             jsonObj.put("endNodeId", dataId);
             jsonObj.put("edgeLabel", label);
             edgesList.add(jsonObj);

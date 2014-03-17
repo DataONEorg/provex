@@ -1,7 +1,7 @@
 package org.dataone.daks.pbaserdf.dao;
 
 import com.hp.hpl.jena.query.*;
-import com.hp.hpl.jena.tdb.TDBFactory ;
+import com.hp.hpl.jena.tdb.TDBFactory;
 
 
 public class LDBDAOTest {
@@ -18,7 +18,11 @@ public class LDBDAOTest {
         //test.triplesQuery(dataset);
         //test.processesQuery(dataset, "e0");
         //test.wfIDQuery(dataset, "e0");
-        test.getProcessExecNodes(dataset, "spatialtemporal_summary", "a0");
+        //test.getProcessExecNodes(dataset, "spatialtemporal_summary", "a0");
+        //test.getUsedDataNodes(dataset, "spatialtemporal_summary", "a0");
+        //test.getWasGenByDataNodes(dataset, "spatialtemporal_summary", "a0");
+        //test.getWasGenByEdges(dataset, "spatialtemporal_summary", "a0");
+        test.getUsedEdges(dataset, "spatialtemporal_summary", "a0");
     }
     
     
@@ -134,6 +138,124 @@ public class LDBDAOTest {
         qexec.close();
 	}
     
+	
+	public void getUsedDataNodes(Dataset dataset, String wfID, String runID) {
+		String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
+        		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+        		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
+        		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+        		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
+				"SELECT ?id WHERE {  " + 
+        		"?wfpexec prov:wasAssociatedWith ?wf . " +
+        		"?wf rdf:type provone:Workflow . " +
+        		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
+        		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
+        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?data rdf:type provone:Data . " +
+        		"?pexec prov:used ?data . " +
+        		"?data dc:identifier ?id . " +
+        		"}";
+        Query query = QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
+        ResultSet results = qexec.execSelect();
+        for ( ; results.hasNext() ; ) {
+            QuerySolution soln = results.nextSolution();
+            String id = soln.getLiteral("id").getString();
+            System.out.println("id: " + id);
+        }
+        qexec.close();
+	}
+	
+	
+	public void getWasGenByDataNodes(Dataset dataset, String wfID, String runID) {
+		String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
+        		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+        		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
+        		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+        		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
+				"SELECT ?id WHERE {  " + 
+        		"?wfpexec prov:wasAssociatedWith ?wf . " +
+        		"?wf rdf:type provone:Workflow . " +
+        		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
+        		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
+        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?data rdf:type provone:Data . " +
+        		"?data prov:wasGeneratedBy ?pexec . " +
+        		"?data dc:identifier ?id . " +
+        		"}";
+        Query query = QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
+        ResultSet results = qexec.execSelect();
+        for ( ; results.hasNext() ; ) {
+            QuerySolution soln = results.nextSolution();
+            String id = soln.getLiteral("id").getString();
+            System.out.println(id);
+        }
+        qexec.close();
+	}
+	
+	
+	public void getWasGenByEdges(Dataset dataset, String wfID, String runID) {
+		String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
+        		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+        		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
+        		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+        		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
+				"SELECT ?data_id ?pexec_id WHERE {  " + 
+        		"?wfpexec prov:wasAssociatedWith ?wf . " +
+        		"?wf rdf:type provone:Workflow . " +
+        		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
+        		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
+        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?data rdf:type provone:Data . " +
+        		"?data prov:wasGeneratedBy ?pexec . " +
+        		"?data dc:identifier ?data_id . " +
+        		"?pexec dc:identifier ?pexec_id . " +
+        		"}";
+        Query query = QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
+        ResultSet results = qexec.execSelect();
+        for ( ; results.hasNext() ; ) {
+            QuerySolution soln = results.nextSolution();
+            String dataId = soln.getLiteral("data_id").getString();
+            String pexecId = soln.getLiteral("pexec_id").getString();
+            String label = "wasGenBy";
+            System.out.println(dataId + " -> " + pexecId + " : " + label);
+        }
+        qexec.close();
+	}
+	
+	
+	public void getUsedEdges(Dataset dataset, String wfID, String runID) {
+		String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
+        		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+        		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
+        		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+        		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
+				"SELECT ?data_id ?pexec_id WHERE {  " + 
+        		"?wfpexec prov:wasAssociatedWith ?wf . " +
+        		"?wf rdf:type provone:Workflow . " +
+        		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
+        		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
+        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?data rdf:type provone:Data . " +
+        		"?pexec prov:used ?data . " +
+        		"?data dc:identifier ?data_id . " +
+        		"?pexec dc:identifier ?pexec_id . " +
+        		"}";
+        Query query = QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
+        ResultSet results = qexec.execSelect();
+        for ( ; results.hasNext() ; ) {
+            QuerySolution soln = results.nextSolution();
+            String dataId = soln.getLiteral("data_id").getString();
+            String pexecId = soln.getLiteral("pexec_id").getString();
+            String label = "used";
+            System.out.println(dataId + " -> " + pexecId + " : " + label);
+        }
+        qexec.close();
+	}
+	
     
 }
 
