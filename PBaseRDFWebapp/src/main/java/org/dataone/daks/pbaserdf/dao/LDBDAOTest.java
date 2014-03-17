@@ -15,9 +15,10 @@ public class LDBDAOTest {
         LDBDAOTest test = new LDBDAOTest();
         //test.countQuery(dataset);
         //test.wfIDsQuery(dataset);
-        test.triplesQuery(dataset);
+        //test.triplesQuery(dataset);
         //test.processesQuery(dataset, "e0");
         //test.wfIDQuery(dataset, "e0");
+        test.getProcessExecNodes(dataset, "spatialtemporal_summary", "a0");
     }
     
     
@@ -106,6 +107,32 @@ public class LDBDAOTest {
         qexec.close();
         dataset.close();
     }
+    
+    
+	public void getProcessExecNodes(Dataset dataset, String wfID, String runID) {
+		String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
+        		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+        		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
+        		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+        		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
+				"SELECT ?id WHERE {  " + 
+        		"?wfpexec prov:wasAssociatedWith ?wf . " +
+        		"?wf rdf:type provone:Workflow . " +
+        		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
+        		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
+        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?pexec dc:identifier ?id . " +
+        		"}";
+        Query query = QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
+        ResultSet results = qexec.execSelect();
+        for ( ; results.hasNext() ; ) {
+            QuerySolution soln = results.nextSolution();
+            String id = soln.getLiteral("id").getString();
+            System.out.println(id);
+        }
+        qexec.close();
+	}
     
     
 }

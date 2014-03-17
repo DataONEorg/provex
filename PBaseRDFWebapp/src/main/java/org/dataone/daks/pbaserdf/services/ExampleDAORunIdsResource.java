@@ -4,13 +4,14 @@ package org.dataone.daks.pbaserdf.services;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 import org.dataone.daks.pbaserdf.dao.LDBDAO;
 
-/** Example resource class hosted at the URI path "/exampledaowfids"
+/** Example resource class hosted at the URI path "/exampledaorunids"
  */
-@Path("/exampledaowfids")
-public class ExampleDAOWfIdsResource {
+@Path("/exampledaorunids")
+public class ExampleDAORunIdsResource {
     
     /** Method processing HTTP GET requests, producing "text/plain" MIME media
      * type.
@@ -18,12 +19,15 @@ public class ExampleDAOWfIdsResource {
      */
     @GET 
     @Produces("text/plain")
-    public String getIt() {
+    public String getIt(@QueryParam("wfid") String wfid) {
     	LDBDAO dao = LDBDAO.getInstance();
     	dao.init("provone");
     	String retVal = null;
     	try {
-    		retVal = dao.getWfIDs();
+    		if( wfid == null )
+    			System.out.println("ERROR: wfid parameter is null.");
+    		else
+    			retVal = dao.getRunIDs(wfid);
     	}
     	catch(Exception e) {
     		e.printStackTrace();

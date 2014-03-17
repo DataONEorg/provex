@@ -42,6 +42,7 @@ public class PROVRDFBuilder {
 	private ArrayList<Module> moduleObjs;
 	private ArrayList<Edge> edges;
 	private Set<String> runIDs;
+	private HashMap<String, Actor> wfExecActivities;
 	private HashMap<String, Module> moduleHM;
 	private HashMap<String, String> personHM;
 	
@@ -90,6 +91,7 @@ public class PROVRDFBuilder {
 		this.personHM = new HashMap<String, String>();
 		
 		this.runIDs = new HashSet<String>();
+		this.wfExecActivities = new HashMap<String, Actor>();
 		this.wfID = UUID.randomUUID();
 		
 		this.provNS = new Namespace("prov", "http://www.w3.org/ns/prov#");
@@ -220,6 +222,12 @@ public class PROVRDFBuilder {
 					this.dataRunID.put(activityId, elemDcterms.attributeValue("ref"));
 					// add this runID to the list of runIDs for the current workflow
 					this.runIDs.add (elemDcterms.attributeValue("ref"));
+					Actor actor = new Actor();
+					actor.id = elemDcterms.attributeValue("ref");
+					actor.startTime = elemStartTime.getText();
+					actor.endTime = elemEndTime.getText();
+					actor.completed = Integer.parseInt(elemVtCompleted.getText());
+					this.wfExecActivities.put(elemDcterms.attributeValue("ref"), actor);
 				}
 				else {
 					this.dataRunID.put(activityId, this.dataRunID.get(elemDcterms.attributeValue("ref")));
@@ -553,8 +561,30 @@ public class PROVRDFBuilder {
 				m.add(idToInd.get(edge.id), outPortToDLOP, idToInd.get(edge.source + "_" + edge.sourcePort));
 			}
 		}
-		// Iterate over actor objects to generate ProcessExec entities
+		// Iterate over workflow execution activities ids to generate ProcessExec entities corresponding to workflows
 		i = 1;
+		for (String key : this.wfExecActivities.keySet()) {
+	        Actor wfExecActor = this.wfExecActivities.get(key);
+			OntClass processExecClass = m.getOntClass( SOURCE_URL + "#" + "ProcessExec" );
+			Individual processExecInd = m.createIndividual( EXAMPLE_NS + wfID + "/processExec_" + i, processExecClass );
+			Property identifierP = m.createProperty(DCTERMS_NS + "identifier");
+			processExecInd.addProperty(identifierP, key, XSDDatatype.XSDstring);
+			idToInd.put(key, processExecInd);
+			ObjectProperty wasAssociatedWithOP = m.createObjectProperty(PROV_NS + "wasAssociatedWith");
+			m.add(processExecInd, wasAssociatedWithOP, workflowInd);
+			Property startTimeP = m.createProperty(PROV_NS + "startTime");
+			if( wfExecActor.startTime != null )
+				processExecInd.addProperty(startTimeP, wfExecActor.startTime, XSDDatatype.XSDstring);
+			Property endTimeP = m.createProperty(PROV_NS + "endTime");
+			if( wfExecActor.endTime != null )
+				processExecInd.addProperty(endTimeP, wfExecActor.endTime, XSDDatatype.XSDstring);
+			Property completedP = m.createProperty(WFMS_NS + "completed");
+			if( wfExecActor.completed != -1 )
+				processExecInd.addProperty(completedP, wfExecActor.completed + "", XSDDatatype.XSDinteger);
+			i++;
+		}
+		// Iterate over actor objects to generate ProcessExec entities
+		//i = 1;
 		for( Actor actor: this.actors) {
 			OntClass processExecClass = m.getOntClass( SOURCE_URL + "#" + "ProcessExec" );
 			Individual processExecInd = m.createIndividual( EXAMPLE_NS + wfID + "/processExec_" + i, processExecClass );
@@ -573,6 +603,11 @@ public class PROVRDFBuilder {
 			Property completedP = m.createProperty(WFMS_NS + "completed");
 			if( actor.completed != -1 )
 				processExecInd.addProperty(completedP, actor.completed + "", XSDDatatype.XSDinteger);
+			String wfExecId = this.dataRunID.get(actor.activityId);
+			if( wfExecId != null ) {
+				Property isPartOfP = m.createProperty(DCTERMS_NS + "isPartOf");
+				m.add(processExecInd, isPartOfP, idToInd.get(wfExecId));
+			}
 			i++;
 		}
 		// Iterate over the edge objects to generate wasAssociatedWith object properties between ProcessExec and Process entities  

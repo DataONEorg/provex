@@ -1,5 +1,10 @@
 package org.dataone.daks.pbaserdf.dao;
 
+import java.util.Hashtable;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+
 import com.hp.hpl.jena.query.Dataset ;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
@@ -198,6 +203,240 @@ public class LDBDAO {
 		}
     	return jsonObj.toString();
     }
+	
+    
+	/**
+	 * Returns a String representation of a JSON array containing the runIDs of the workflows in the database.
+	 */
+	public String getRunIDs(String wfID) {
+		String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
+        		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+        		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
+        		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+        		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
+				"SELECT ?v WHERE {  " + 
+        		"?pexec dc:identifier ?v . " +
+        		"?pexec prov:wasAssociatedWith ?wf . " +
+        		"?wf rdf:type provone:Workflow . " +
+        		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
+        		"}";
+        Query query = QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(query, this.ds);
+        ResultSet results = qexec.execSelect();
+        JSONArray array = new JSONArray();
+        for ( ; results.hasNext() ; ) {
+            QuerySolution soln = results.nextSolution();
+            String id = soln.getLiteral("v").getString();
+            array.put(id);
+        }
+        qexec.close();
+		return array.toString();
+	}
+	
+	
+	public void getProcessExecNodes(String wfID, String runID, Hashtable<String, JSONObject> nodesHT) 
+			throws JSONException {
+		String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
+        		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+        		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
+        		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+        		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
+				"SELECT ?id WHERE {  " + 
+        		"?wfpexec prov:wasAssociatedWith ?wf . " +
+        		"?wf rdf:type provone:Workflow . " +
+        		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
+        		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
+        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?pexec dc:identifier ?id . " +
+        		"}";
+        Query query = QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(query, this.ds);
+        ResultSet results = qexec.execSelect();
+        for ( ; results.hasNext() ; ) {
+            QuerySolution soln = results.nextSolution();
+            JSONObject jsonObj = new JSONObject();
+            String id = soln.getLiteral("id").getString();
+            jsonObj.put("nodeId", id);
+            nodesHT.put(id, jsonObj);
+        }
+        qexec.close();
+	}
+	
+	
+	public void getUsedDataNodes(String wfID, String runID, Hashtable<String, JSONObject> nodesHT) 
+			throws JSONException {
+		String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
+        		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+        		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
+        		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+        		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
+				"SELECT ?id WHERE {  " + 
+        		"?wfpexec prov:wasAssociatedWith ?wf . " +
+        		"?wf rdf:type provone:Workflow . " +
+        		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
+        		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
+        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?data rdf:type provone:Data . " +
+        		"?pexec prov:used ?data . " +
+        		"?data dc:identifier ?id . " +
+        		"}";
+        Query query = QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(query, this.ds);
+        ResultSet results = qexec.execSelect();
+        for ( ; results.hasNext() ; ) {
+            QuerySolution soln = results.nextSolution();
+            JSONObject jsonObj = new JSONObject();
+            String id = soln.getLiteral("id").getString();
+            jsonObj.put("nodeId", id);
+            nodesHT.put(id, jsonObj);
+        }
+        qexec.close();
+	}
+	
+	
+	public void getWasGenByDataNodes(String wfID, String runID, Hashtable<String, JSONObject> nodesHT)
+			throws JSONException {
+		String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
+        		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+        		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
+        		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+        		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
+				"SELECT ?id WHERE {  " + 
+        		"?wfpexec prov:wasAssociatedWith ?wf . " +
+        		"?wf rdf:type provone:Workflow . " +
+        		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
+        		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
+        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?data rdf:type provone:Data . " +
+        		"?data prov:wasGeneratedBy ?pexec . " +
+        		"?data dc:identifier ?id . " +
+        		"}";
+        Query query = QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(query, this.ds);
+        ResultSet results = qexec.execSelect();
+        for ( ; results.hasNext() ; ) {
+            QuerySolution soln = results.nextSolution();
+            JSONObject jsonObj = new JSONObject();
+            String id = soln.getLiteral("id").getString();
+            jsonObj.put("nodeId", id);
+            nodesHT.put(id, jsonObj);
+        }
+        qexec.close();
+	}
+	
+	
+	public List<JSONObject> getWasGenByEdges(String wfID, String runID) throws JSONException {
+		String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
+        		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+        		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
+        		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+        		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
+				"SELECT ?data_id ?pexec_id WHERE {  " + 
+        		"?wfpexec prov:wasAssociatedWith ?wf . " +
+        		"?wf rdf:type provone:Workflow . " +
+        		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
+        		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
+        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?data rdf:type provone:Data . " +
+        		"?data prov:wasGeneratedBy ?pexec . " +
+        		"?data dc:identifier ?data_id . " +
+        		"?pexec dc:identifier ?pexec_id . " +
+        		"}";
+		List<JSONObject> edgesList = new ArrayList<JSONObject>();
+        Query query = QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(query, this.ds);
+        ResultSet results = qexec.execSelect();
+        for ( ; results.hasNext() ; ) {
+            QuerySolution soln = results.nextSolution();
+            JSONObject jsonObj = new JSONObject();
+            String dataId = soln.getLiteral("data_id").getString();
+            String pexecId = soln.getLiteral("pexec_id").getString();
+            String label = "wasGenBy";
+            jsonObj.put("startNodeId", dataId);
+            jsonObj.put("endNodeId", dataId);
+            jsonObj.put("edgeLabel", label);
+            edgesList.add(jsonObj);
+        }
+        qexec.close();
+		return edgesList;
+	}
+	
+	
+	public List<JSONObject> getUsedEdges(String wfID, String runID) throws JSONException {
+		String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
+        		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+        		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
+        		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+        		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
+				"SELECT ?data_id ?pexec_id WHERE {  " + 
+        		"?wfpexec prov:wasAssociatedWith ?wf . " +
+        		"?wf rdf:type provone:Workflow . " +
+        		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
+        		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
+        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?data rdf:type provone:Data . " +
+        		"?pexec prov:used ?data . " +
+        		"?data dc:identifier ?data_id . " +
+        		"?pexec dc:identifier ?pexec_id . " +
+        		"}";
+		List<JSONObject> edgesList = new ArrayList<JSONObject>();
+        Query query = QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(query, this.ds);
+        ResultSet results = qexec.execSelect();
+        for ( ; results.hasNext() ; ) {
+            QuerySolution soln = results.nextSolution();
+            JSONObject jsonObj = new JSONObject();
+            String dataId = soln.getLiteral("data_id").getString();
+            String pexecId = soln.getLiteral("pexec_id").getString();
+            String label = "wasGenBy";
+            jsonObj.put("startNodeId", dataId);
+            jsonObj.put("endNodeId", dataId);
+            jsonObj.put("edgeLabel", label);
+            edgesList.add(jsonObj);
+        }
+        qexec.close();
+		return edgesList;
+	}
+	
+	
+	public String getTrace(String wfID, String runID) throws JSONException {
+		JSONObject resultObj = new JSONObject();
+		//Get the data nodes
+		Hashtable<String, JSONObject> nodesHT = new Hashtable<String, JSONObject>();
+		this.getUsedDataNodes(wfID, runID, nodesHT);
+		this.getWasGenByDataNodes(wfID, runID, nodesHT);
+		//Get the activity nodes
+		this.getProcessExecNodes(wfID, runID, nodesHT);
+		//Get the edges
+		List<JSONObject> usedEdges = getUsedEdges(wfID, runID);
+		List<JSONObject> wasGenByEdges = getWasGenByEdges(wfID, runID);
+		JSONArray edgesArray = new JSONArray();
+		Digraph digraph = new Digraph();
+		Digraph coverDigraph = new Digraph();
+		for(JSONObject usedEdge: usedEdges) {
+			edgesArray.put(usedEdge);
+			digraph.addEdge(usedEdge.getString("startNodeId"), usedEdge.getString("endNodeId"));
+			coverDigraph.addEdge(usedEdge.getString("startNodeId"), usedEdge.getString("endNodeId"));
+		}
+		for(JSONObject wasGenByEdge: wasGenByEdges) {
+			edgesArray.put(wasGenByEdges);
+			digraph.addEdge(wasGenByEdge.getString("startNodeId"), wasGenByEdge.getString("endNodeId"));
+			coverDigraph.addEdge(wasGenByEdge.getString("startNodeId"), wasGenByEdge.getString("endNodeId"));
+		}
+		resultObj.put("edges", edgesArray);
+		JSONArray nodesArray = new JSONArray();
+		TreeCover cover = new TreeCover();
+		cover.createCover(coverDigraph);
+		List<String> revTopSortList = digraph.reverseTopSort();
+		for(String nodeStr : revTopSortList) {
+			JSONObject nodeObj = nodesHT.get(nodeStr);
+			nodeObj.put("intervals", "[" + cover.getCode(nodeStr).toString() + "]");
+			nodeObj.put("postorder", cover.getPostorder(nodeStr));
+			nodesArray.put(nodeObj);
+		}
+		resultObj.put("nodes", nodesArray);
+        return resultObj.toString();
+	}
 	
 	
 }
