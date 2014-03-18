@@ -21,8 +21,8 @@ public class LDBDAOTest {
         //test.getProcessExecNodes(dataset, "spatialtemporal_summary", "a0");
         //test.getUsedDataNodes(dataset, "spatialtemporal_summary", "a0");
         //test.getWasGenByDataNodes(dataset, "spatialtemporal_summary", "a0");
-        //test.getWasGenByEdges(dataset, "spatialtemporal_summary", "a0");
-        test.getUsedEdges(dataset, "spatialtemporal_summary", "a0");
+        test.getWasGenByEdges(dataset, "spatialtemporal_summary", "a0");
+        //test.getUsedEdges(dataset, "spatialtemporal_summary", "a0");
     }
     
     

@@ -1,0 +1,912 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.3.0pr3/build/cssreset/reset-min.css"> 
+	<link rel="stylesheet" type="text/css" href="http://axosoft.github.com/yui3-gallery/layout/build/assets/skins/sam/gallery-axo-layout.css"> 
+	<link rel="stylesheet" type="text/css" href="http://axosoft.github.com/yui3-gallery/layout/build/assets/skins/sam/gallery-axo-layout-skin.css"> 
+
+	<script type="text/javascript" src="http://jgraph.github.io/mxgraph/javascript/src/js/mxClient.js"></script>
+
+	<script type="text/javascript" src="http://yui.yahooapis.com/3.3.0pr3/build/yui/yui.js"></script>
+
+	<script type="text/javascript" src="http://axosoft.github.com/yui3-gallery/layout/build/gallery-axo-layout.js"></script>
+
+    <title>PBase Provenance Database</title>
+
+	<style>
+
+	.yui3-skin-sam .yui3-layout-vertical > .yui3-layout-content {
+		border:2px solid black;
+		padding:1px;
+	}
+
+	.yui3-skin-sam .yui3-layoutchild {
+		opacity:0.8;
+		border:1px solid black;
+	}
+
+	#left {
+		background:white;
+	}
+
+	#right {
+		background:white;
+	}
+
+	#top {
+		/*background:blue;*/
+		background:#90A1CE;
+		opacity:1.0;
+	}
+
+	#bottom {
+		background:#FFFFAD;
+		opacity:1.0;
+		/*z-index:100;*/
+	}
+
+	#center1 {
+		background:white;
+		overflow:scroll;
+	}
+	
+	#center2 {
+		background:white;
+		overflow:scroll;
+	}
+
+	#bottom .yui3-layoutchild {
+		background:white;
+		border:1px solid black;
+	}
+
+	#bottom1 {
+		opacity:0.1;
+	}
+
+	.yui3-layoutchild-content .yui3-widget-hd {
+		background: white;
+		color: black;
+		border:solid black 1px;
+		padding-left:5px;
+		height:23px;
+	}
+
+	.yui3-layoutChild-button-collapse, .yui3-layoutChild-button-expand {
+		width: 17px;
+		height: 13px;
+		right:5px;
+		top:5px;
+		position: absolute;
+		background: transparent url(http://developer.yahoo.com/yui/build/layout/assets/skins/sam/layout_sprite.png) no-repeat;
+	}
+
+	#left .yui3-layoutChild-button-collapse {
+		background-position: -20px -160px;
+	} 
+
+	#left .yui3-layoutChild-button-expand {
+		background-position: -20px -140px;
+	} 
+	
+	#center1 .yui3-layoutChild-button-collapse {
+		background-position: -20px -160px;
+	} 
+
+	#center1 .yui3-layoutChild-button-expand {
+		background-position: -20px -140px;
+	}
+
+	#right .yui3-layoutChild-button-collapse {
+		background-position: -20px -200px;
+	} 
+
+	#right .yui3-layoutChild-button-expand {
+		background-position: -20px -120px;
+	} 
+	
+	#center1 > .yui3-widget-content-expanded {
+		height: 25px;
+	}
+	
+	#center1 > .yui3-widget-content-expanded > .yui3-widget-hd {
+		border: 0px;
+	}
+	
+	#center2 > .yui3-widget-content-expanded > .yui3-widget-hd {
+		border: 0px;
+	}
+	
+	#left > .yui3-widget-content-expanded {
+		height: 25px;
+	}
+	
+	#center2 > .yui3-widget-content-expanded {
+		height: 25px;
+	}
+	
+	#right > .yui3-widget-content-expanded {
+		height: 25px;
+	}
+	
+	#loadWFTabContainer, #queryWFTabContainer, #loadTraceTabContainer, #queryTraceTabContainer {
+		height: 540px;
+		padding-top: 20px;
+		z-index: -1;
+	}
+
+	</style>
+
+</head>
+
+<body class="yui3-skin-sam">
+
+<script>
+
+function displayGraphJSON(container, graphJSON, btnContainer, isTrace, Y) {
+	// Checks if the browser is supported
+	if (!mxClient.isBrowserSupported()) {
+		// Displays an error message if the browser is not supported.
+		mxUtils.error('Browser is not supported!', 200, false);
+	}
+	else {
+		container.innerHTML = "";
+		var propertiesLabel = 'propertiesLabel';
+		var encodingLabel = 'encodingLabel';
+		mxEvent.disableContextMenu(document.body);
+		// Enables crisp rendering of rectangles in SVG
+		mxRectangleShape.prototype.crisp = true;	
+		// Creates the graph inside the given container
+		var graph = new mxGraph(container);
+		graph.graphHandler.scaleGrid = true;
+		graph.setPanning(true);
+		// Enables rubberband selection
+		new mxRubberband(graph);
+		// Gets the default parent for inserting new cells. This
+		// is normally the first child of the root (ie. layer 0).
+		var parent = graph.getDefaultParent();
+		var graphNodesArray = new Array();
+		var graphEdgesArray = new Array();
+		// Adds cells to the model in a single step
+		graph.getModel().beginUpdate();
+		try {
+			if( !isTrace )
+				fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray, 
+						propertiesLabel, encodingLabel);
+			else
+				fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray,
+						propertiesLabel, encodingLabel);
+			var hierLayout = new mxHierarchicalLayout(graph);
+			hierLayout.execute(parent);
+		}
+		finally {
+			// Updates the display
+			graph.getModel().endUpdate();
+		}
+		graph.centerZoom = false;
+		var bounds = graph.getGraphBounds();
+		graph.view.setTranslate( (container.clientWidth/2) - (bounds.width/2), 
+				(container.clientHeight/2) - (bounds.height/2) );
+		activateButtons(graph, hierLayout, parent, btnContainer, Y);
+		
+		//Add properties and encoding labels
+		graph[propertiesLabel + 'Visible'] = false;
+		graph[encodingLabel + 'Visible'] = false;
+		prepareGraphForLabels(graph);
+		addLabel(graph, propertiesLabel, true);
+		addLabel(graph, encodingLabel, false);
+		activateLabelButton(graph, btnContainer, 'PropertiesBtn', propertiesLabel, Y);
+		activateLabelButton(graph, btnContainer, 'EncodingBtn', encodingLabel, Y);
+		//Set the flag for node highlighting on query results
+		graph['highlighted'] = false;
+		//Set the flag for node highlighting for reachability
+		graph['reachHighlighted'] = false;
+		//Set global variables on MYAPP
+		if( isTrace ) {
+			MYAPP.traceGraph = graph;
+			MYAPP.traceGraphNodesArray = graphNodesArray;
+		}
+		else {
+			MYAPP.wfGraph = graph;
+			MYAPP.wfGraphNodesArray = graphNodesArray;
+		}
+		//Activate reachability button
+		activateReachabilityButton(isTrace, Y);
+	}
+}
+
+
+function fillWFGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray, propertiesLabel, encodingLabel) {
+	var vertex = null;
+	var edge = null;
+	var tuple = null;
+	for(var i = 0; i < graphJSON.nodes.length; i++) {
+		tuple = graphJSON.nodes[i];
+		if( graphNodesArray[tuple.nodeId] == undefined ) {
+			vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, 'strokeColor=' + MYAPP.wfRectStrokeColor + 
+					';fillColor=' + MYAPP.wfRectFillColor + ';fontColor=#000000');
+			vertex['defFillColor'] = MYAPP.wfRectFillColor;
+			graphNodesArray[tuple.nodeId] = vertex;
+			vertex[propertiesLabel] = generateNodeText(tuple);
+			//Must use a string, otherwise an error occurs
+			//vertex[encodingLabel] = '' + i;
+			vertex['intervals'] = '' + tuple.intervals.replace(/:/g, ",");
+			vertex['postorder'] = '' + tuple.postorder;
+			vertex[encodingLabel] = '' + tuple.postorder + ':' + tuple.intervals.substring(1, tuple.intervals.length-1);
+		}
+	}
+	for(var i = 0; i < graphJSON.edges.length; i++) {
+		tuple = graphJSON.edges[i];
+		edge = graph.insertEdge(parent, null, tuple.edgeLabel, graphNodesArray[tuple.startNodeId], 
+				graphNodesArray[tuple.endNodeId], "strokeColor=#2E2E2E;startArrow=oval");
+		graphEdgesArray[tuple.startNodeId + "_" + tuple.endNodeId] = edge;
+	}
+}
+
+
+function fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArray, propertiesLabel, encodingLabel) {
+	var vertex = null;
+	var edge = null;
+	var tuple = null;
+	for(var i = 0; i < graphJSON.nodes.length; i++) {
+		tuple = graphJSON.nodes[i];
+		if( graphNodesArray[tuple.nodeId] == undefined ) {
+			if(tuple.type == "data") {
+				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, 'shape=ellipse;strokeColor=' + 
+						MYAPP.traceEllipseStrokeColor + ';fillColor=' + MYAPP.traceEllipseFillColor + ';fontColor=#000000');
+				vertex['defFillColor'] = MYAPP.traceEllipseFillColor;
+			}
+			else {
+				vertex = graph.insertVertex(parent, null, tuple.nodeId, 0, 0, 150, 30, 'strokeColor=' + MYAPP.traceRectStrokeColor
+						+ ';fillColor=' + MYAPP.traceRectFillColor + ';fontColor=#000000');
+				vertex['defFillColor'] = MYAPP.traceRectFillColor;
+			}
+			graphNodesArray[tuple.nodeId] = vertex;
+			vertex[propertiesLabel] = generateNodeText(tuple);
+			//vertex[encodingLabel] = '' + i;
+			vertex['intervals'] = '' + tuple.intervals.replace(/:/g, ",");
+			vertex['postorder'] = '' + tuple.postorder;
+			vertex[encodingLabel] = '' + tuple.postorder + ':' + tuple.intervals.substring(1, tuple.intervals.length-1);
+		}
+	}
+	for(var i = 0; i < graphJSON.edges.length; i++) {
+		tuple = graphJSON.edges[i];
+		edge = graph.insertEdge(parent, null, tuple.edgeLabel, graphNodesArray[tuple.endNodeId], 
+    			graphNodesArray[tuple.startNodeId], "strokeColor=#2E2E2E;fontColor=#000000;startArrow=classic;endArrow=oval");
+		graphEdgesArray[tuple.endNodeId + "_" + tuple.startNodeId] = edge;
+	}
+}
+
+
+function generateNodeText(jsonObj) {
+	var nodeText = '';
+	for(var key in jsonObj) {
+		if( jsonObj.hasOwnProperty(key) ) {
+			if( key == 'postorder' || key == 'intervals' || key == 'encodingLabel' )
+				continue;
+			var propertyVal = jsonObj[key];
+			if( (key.length + propertyVal.length) <= 35 )
+				nodeText += key + ':' + propertyVal + '\n';
+		}
+	}
+	return nodeText.substring(0, nodeText.length-1);
+}
+
+
+function activateLabelButton(graph, containerID, btnName, labelName, Y) {
+	var mLabelName = labelName;
+	var btn = Y.one('#' + containerID + btnName);
+	var btnFunc = function(evt) {
+		graph[mLabelName + 'Visible'] = !graph[mLabelName + 'Visible'];
+		graph.refresh();
+	}
+	btn.set('onclick', btnFunc);
+}
+
+
+function activateReachabilityButton(isTrace, Y) {
+	var btnPrefix = null;
+	var graph = null;
+	var graphNodesArray = null;
+	if( isTrace ) {
+		btnPrefix = 'trace';
+		graph = MYAPP.traceGraph;
+		graphNodesArray = MYAPP.traceGraphNodesArray;
+	}
+	else {
+		btnPrefix = 'wf';
+		graph = MYAPP.wfGraph;
+		graphNodesArray = MYAPP.wfGraphNodesArray;
+	}
+	var btn = Y.one('#' + btnPrefix + 'ReachabilityBtn');
+	var btnFunc = function(evt) {
+		highlightReachability(graph, graphNodesArray);	
+	}
+	btn.set('onclick', btnFunc);
+}
+
+
+function prepareGraphForLabels(graph) {
+	// Overrides method to hide relative child vertices
+	graph.isCellVisible = function(cell) {
+		return !this.model.isVertex(cell) || cell.geometry == null ||
+			!cell.geometry.relative ;
+	};
+}
+
+
+function addLabel(graph, labelName, isTop) {
+	
+	var mLabelName = labelName;
+	var mIsTop = isTop;
+	
+	graph['get' + mLabelName] = function(cell) {
+		if (!this.model.isEdge(cell)) {
+			// Possible to return any string here
+			//return "ID=" + cell.id + ' mIsTop=' + mIsTop + ' mLabelName=' + mLabelName;
+			return cell[mLabelName];
+		}
+		return null;
+	};
+	
+	// Creates the shape for the shape number and puts it into the draw pane
+	var createShape = graph.cellRenderer.createShape;
+	graph.cellRenderer.createShape = function(state) {
+		createShape.apply(this, arguments);
+		if( graph[mLabelName + 'Visible'] && !state.cell.geometry.relative ) {
+			var label = graph['get' + mLabelName](state.cell);
+			if( label != null && state.shape != null && state[mLabelName] == null ) {
+				state[mLabelName] = new mxText(label, new mxRectangle(),
+						mxConstants.ALIGN_LEFT, mxConstants.ALIGN_BOTTOM);
+				// Styles the label
+				state[mLabelName].color = 'black';
+				state[mLabelName].family = 'Verdana';
+				state[mLabelName].size = 8;
+				state[mLabelName].fontStyle = mxConstants.FONT_ITALIC;
+				state[mLabelName].background = 'yellow';
+				state[mLabelName].border = 'black';
+				
+				state[mLabelName].dialect = state.shape.dialect;
+				state[mLabelName].init(state.view.getDrawPane());
+			}
+		}
+	};
+	
+	// Redraws the shape number after the cell has been moved/resized
+	var redraw = graph.cellRenderer.redraw;
+	graph.cellRenderer.redraw = function(state) {
+		redraw.apply(this, arguments);
+		if( state.shape != null && state[mLabelName] != null ) {
+			var scale = graph.getView().getScale();
+			var bounds = null;
+			if( mIsTop )
+				bounds = new mxRectangle(state.x + state.width - 8 * scale, state.y + 8 * scale, 0, 0);
+			else
+				bounds = new mxRectangle(state.x + state.width - 8 * scale, state.y + state.height + 8 * scale, 0, 0);
+			state[mLabelName].state = state;
+			state[mLabelName].value = graph['get' + mLabelName](state.cell);
+			state[mLabelName].scale = scale;
+			state[mLabelName].bounds = bounds;
+			state[mLabelName].redraw();
+		}
+	};
+	
+	// Destroys the shape number
+	var destroy = graph.cellRenderer.destroy;
+	graph.cellRenderer.destroy = function(state) {
+		destroy.apply(this, arguments);
+		if (state[mLabelName] != null) {
+			state[mLabelName].destroy();
+			state[mLabelName] = null;
+		}
+	};
+	
+}
+
+
+function createButtons(containerID, Y) {
+	var container = Y.one('#' + containerID);
+	var btnContainerHTML = '<div id="' + containerID + 'BtnContainer"></div>';
+	container.get('children').slice(-1).item(0).insert(btnContainerHTML, 'after');
+	var btnContainer = Y.one('#' + containerID + 'BtnContainer');
+	var zoomInBtn = createButton(btnContainer, ' + ', containerID + 'ZoomInBtn');
+	var zoomOutBtn = createButton(btnContainer, ' - ', containerID + 'ZoomOutBtn');
+	var hierLayoutBtn = createButton(btnContainer, 'layout', containerID + 'HierLayoutBtn');
+}
+
+
+function activateButtons(graph, hierLayout, parent, containerID, Y) {
+	var zoomInBtn = Y.one('#' + containerID + 'ZoomInBtn');
+	var zoomInBtnFunc = function() { graph.zoomIn(); } ;
+	zoomInBtn.set('onclick', zoomInBtnFunc);
+	var zoomOutBtn = Y.one('#' + containerID + 'ZoomOutBtn');
+	var zoomOutBtnFunc = function() { graph.zoomOut(); } ;
+	zoomOutBtn.set('onclick', zoomOutBtnFunc);
+	var hierLayoutBtn = Y.one('#' + containerID + 'HierLayoutBtn');
+	var hierLayoutBtnFunc = function() { hierLayout.execute(parent); } ;
+	hierLayoutBtn.set('onclick', hierLayoutBtnFunc);
+}
+
+
+function createButton(container, label, btnId){
+    var button = document.createElement("input");
+    button.id = btnId;
+    button.type = "button";
+    button.value = label;
+    container.insert(button);
+    return button;
+}
+
+
+function createTabs(containerID, isTrace, Y) {
+	var container = Y.one('#' + containerID);
+	var tabsContainerHTML = '<div id="' + containerID + 'tabsContainer"></div>';
+	container.get('children').slice(-1).item(0).insert(tabsContainerHTML, 'after');
+	var tabsContainer = Y.one('#' + containerID + 'tabsContainer');
+	var prefix = isTrace ? 'Trace' : 'WF';
+	var loadTabContainerID = 'load' + prefix + 'TabContainer';
+	var queryTabContainerID = 'query' + prefix + 'TabContainer';
+	var loadTabContent = null;
+	if( isTrace )
+		loadTabContent = '<div id="' + loadTabContainerID + '">Trace id:<br/>' +
+		'<select id="traceIdsSelect"><option value=""></option></select>' + 
+		'<br/><br/><input id="' + containerID + 'PropertiesBtn" type="button" value="properties">' +
+		'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
+	else
+		loadTabContent = '<div id="' + loadTabContainerID + '">Database name: ' + 
+			'<input type="text" id="dbnameTextfield" size="15"><br/>' +
+			'<input type="button" id="dbnameLoadBtn" value="Load"><br/><br/>Workflow id:<br/>' +
+			'<select id="wfIdsSelect"></select>' + 
+			'<br/><br/><input id="' + containerID + 'PropertiesBtn" type="button" value="properties">' +
+			'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
+	prefix = isTrace ? 'trace' : 'wf';
+	var queryTabContent = '<div id="' + queryTabContainerID + '">' +
+		'<select id="' + prefix + 'QuerySelect"></select>' + '<br/><br/>' + 
+		'<textarea id="' + prefix + 'QueryText" rows="6" cols="50">Query text.</textarea>' + '<br/><br/>' +
+		'<input id="' + prefix + 'QueryExecuteBtn" type="button" value="Execute">' +
+		'<input id="' + prefix + 'QueryClearBtn" type="button" value="Clear">' +
+		'<br/><br/>' +
+		'<input id="' + prefix + 'ReachabilityBtn" type="button" value="View reachability">' +
+		'</div>';
+	var tabview = new Y.TabView({
+        children: [{
+            label: 'Load',
+            content: loadTabContent
+        }, {
+            label: 'Query',
+            content: queryTabContent
+        }]
+    });
+    tabview.render(tabsContainer);
+}
+
+
+function createQueriesMenu(isTrace, Y) {
+	var wfIdsSelect = Y.one('#wfIdsSelect');
+	var wfIdParam = wfIdsSelect.get('value');
+	var traceIdsSelect = Y.one('#traceIdsSelect');
+	var traceIdParam = traceIdsSelect.get('value');
+	var qDescs = null;
+	var queries = null;
+	if( isTrace ) {
+		qDescs =['Select a predefined query:',
+		           'Find the activities that were not completed',
+	               'Find the actors that used data item e10_regrid_method',
+	               'Find the data products influenced by module e7_Regrid'
+	                ];
+		queries =['START n = node(*) \nMATCH \nWHERE \nRETURN ',
+		            'START n=node(*) \n WHERE HAS(n.completed) AND n.completed=-1 AND HAS(n.wfID) AND n.wfID="' + wfIdParam + '" \n RETURN DISTINCT n.name;',
+	                'START n = node:node_auto_index(name="e10_regrid_method") \n MATCH n<-[:used]-a \n RETURN distinct a.name;',
+	                'START n=node(*) \n MATCH n-[*]->a \n WHERE n-[:wasGeneratedBy]->() \n AND HAS(n.wfID) AND n.wfID="' + wfIdParam + '" AND HAS(a.module) AND a.module="e7_Regrid" \n RETURN DISTINCT n.name;'        
+	                ];
+	}
+	else {
+		qDescs =['Select a predefined query:',
+	               'Compute number of invocations of a workflow task',
+	               'Find all inputs of a workflow across runs',
+	               'Find the modules of tasks that were not completed',
+	                ];
+		queries =['START n = node(*) \nMATCH \nWHERE \nRETURN ',
+	                'START n = node:node_auto_index(name="e7_Regrid") \n MATCH m-[:wasAssociatedWith]-n \n RETURN count(m);',
+	                'START n=node(*) \n MATCH (n)<-[:used]-() \n WHERE not ((n)-[:wasGeneratedBy]->()) \n AND HAS(n.wfID) AND (n.wfID="' + wfIdParam + '") \n RETURN DISTINCT n.name;',      
+	                'START n=node(*) \n MATCH n<-[:wasAssociatedWith]-m \n WHERE HAS(n.vtType) AND HAS(n.wfID) AND HAS(n.runID) \n AND n.vtType="vt:module_exec" AND n.completed="-1" \n AND n.wfID="' + wfIdParam + '" \n AND n.runID="' + traceIdParam + '" \n RETURN m.name;',     
+	                ];
+	}
+	var prefix = isTrace ? 'trace' : 'wf';
+	var querySelect = Y.one('#' + prefix + 'QuerySelect');
+	var queryText = Y.one('#' + prefix + 'QueryText');
+	for(var i = 0; i < qDescs.length; i++) {
+		var opt = Y.Node.create('<option value=""></option>');
+		querySelect.append(opt);
+		querySelect.get('options').item(i).set('text', qDescs[i]);
+		querySelect.get('options').item(i).set('value', i);
+	}
+	queryText.set('value', queries[0]);
+	var changeQueryFunc = function() { 
+			var idx = querySelect.get('value');
+			queryText.set('value', queries[idx]);
+		} ;
+	querySelect.set('onchange', changeQueryFunc);
+	//Set action for the Clear button
+	var clearBtn = Y.one('#' + prefix + 'QueryClearBtn');
+	var clearBtnFunc = function() { 
+			var queryText = Y.one('#' + prefix + 'QueryText');
+			queryText.set('value', "");
+		} ;
+	clearBtn.set('onclick', clearBtnFunc);
+	//Set action for the Execute button
+	var executeBtn = Y.one('#' + prefix + 'QueryExecuteBtn');
+	var executeBtnFunc = function() {
+			callQueryWS(isTrace, Y);
+		} ;
+	executeBtn.set('onclick', executeBtnFunc);
+}
+
+
+function callGraphRestfulWS(url, container, btnContainer, isTrace, Y) {
+	Y.io(url, {
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var json = Y.JSON.parse(response.responseText);
+					displayGraphJSON(container, json, btnContainer, isTrace, Y);
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
+	});
+}
+
+
+function callWfWS(Y) {
+	var url = 'webresources/wfresource';
+	var container = document.getElementById('wfContainer');
+	var btnContainer = 'left';
+	var isTrace = false;
+	var dbnameTxtField = Y.one('#dbnameTextfield');
+	var dbnameParam = dbnameTxtField.get('value');
+	var wfIdsSelect = Y.one('#wfIdsSelect');
+	var wfIdParam = wfIdsSelect.get('value');
+	Y.io(url, {
+		data: 'dbname=' + dbnameParam + '&wfid=' + wfIdParam,
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var json = Y.JSON.parse(response.responseText);
+					displayGraphJSON(container, json, btnContainer, isTrace, Y);
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
+	});
+}
+
+
+function callTraceWS(Y) {
+	var url = 'webresources/traceresource';
+	var container = document.getElementById('traceContainer');
+	var btnContainer = 'right';
+	var isTrace = true;
+	var dbnameTxtField = Y.one('#dbnameTextfield');
+	var dbnameParam = dbnameTxtField.get('value');
+	var wfIdsSelect = Y.one('#wfIdsSelect');
+	var wfIdParam = wfIdsSelect.get('value');
+	var traceIdsSelect = Y.one('#traceIdsSelect');
+	var traceIdParam = traceIdsSelect.get('value');
+	Y.io(url, {
+		data: 'dbname=' + dbnameParam + '&wfid=' + wfIdParam + '&traceid=' + traceIdParam,
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var json = Y.JSON.parse(response.responseText);
+					displayGraphJSON(container, json, btnContainer, isTrace, Y);
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
+	});
+}
+
+
+function callWfIdsWS(Y) {
+	var url = 'webresources/wfidsresource';
+	var dbnameTxtField = Y.one('#dbnameTextfield');
+	var dbnameParam = dbnameTxtField.get('value');
+	Y.io(url, {
+		data: 'dbname=' + dbnameParam,
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var jsonArray = Y.JSON.parse(response.responseText);
+					var wfIdsSelect = Y.one('#wfIdsSelect');
+					wfIdsSelect.get('childNodes').remove();
+					for(var i = 0; i < jsonArray.length; i++) {
+						var opt = Y.Node.create('<option value=""></option>');
+						wfIdsSelect.append(opt);
+						wfIdsSelect.get('options').item(i).set('text', i+1);
+						wfIdsSelect.get('options').item(i).set('value', jsonArray[i]);
+					}
+					//CALL
+					callWfWS(Y);
+					callTraceIdsWS(Y);
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
+	});
+}
+
+
+function callTraceIdsWS(Y) {
+	var url = 'webresources/traceidsresource';
+	var dbnameTxtField = Y.one('#dbnameTextfield');
+	var dbnameParam = dbnameTxtField.get('value');
+	var wfIdsSelect = Y.one('#wfIdsSelect');
+	var wfIdParam = wfIdsSelect.get('value');
+	Y.io(url, {
+		data: 'dbname=' + dbnameParam + '&wfid=' + wfIdParam,
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var jsonArray = Y.JSON.parse(response.responseText);
+					var traceIdsSelect = Y.one('#traceIdsSelect');
+					traceIdsSelect.get('childNodes').remove();
+					for(var i = 0; i < jsonArray.length; i++) {
+						var opt = Y.Node.create('<option value=""></option>');
+						traceIdsSelect.append(opt);
+						traceIdsSelect.get('options').item(i).set('text', i+1);
+						traceIdsSelect.get('options').item(i).set('value', jsonArray[i]);
+					}
+					//Add event for loading traces
+					var loadTraceFunc = function() { callTraceWS(Y); } ;
+					traceIdsSelect.set('onchange', loadTraceFunc);
+					//CALL
+					createQueriesMenu(false, Y);
+					createQueriesMenu(true, Y);
+					callTraceWS(Y);
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
+	});
+}
+
+
+function callQueryWS(isTrace, Y) {
+	var url = 'webresources/queryresource';
+	var dbnameTxtField = Y.one('#dbnameTextfield');
+	var dbnameParam = dbnameTxtField.get('value');
+	var prefix = isTrace ? 'trace' : 'wf';
+	var queryText = Y.one('#' + prefix + 'QueryText');
+	var query = queryText.get('value');
+	Y.io(url, {
+		data: 'dbname=' + dbnameParam + '&query=' + query,
+		on: {
+			complete: function (id, response) {
+				if (response.status >= 200 && response.status < 300) {
+					var json = Y.JSON.parse(response.responseText);
+					var results_window = window.open("", "results_window", "menubar=1,resizable=1,width=500,height=600,scrollbars=1");
+					results_window.document['writeln']('<head><link charset="utf-8" href="css/combo.css" rel="stylesheet" type="text/css"></head><body class="yui3-skin-sam"><h3>Results</h3><input id="showResultsBtn" type="button" value="Highlight nodes"><br/><div id="table_content"></div></body>');
+					var cols = [];
+					var colsTypes = [];
+				    var data = [];
+				    var nodeIds = [];
+					var colNames = json.columns;
+					for(var i = 0; i < colNames.length; i++) {
+						var cName = colNames[i];
+						for(var key in cName) {
+							if( cName.hasOwnProperty(key) ) {
+								cols[i] = key;
+								colsTypes[i] = cName[key];
+								break;
+							}
+						}
+					}
+					var dataVals = json.data;
+					for(var i = 0; i < dataVals.length; i++) {
+						data[i] = {};
+						for(var j = 0; j < dataVals[i].length; j++) {
+							if( colsTypes[j] == 'string' ) {
+								data[i][cols[j]] = dataVals[i][j];
+							}
+							else if( colsTypes[j] == 'node' ) {
+								temp = dataVals[i][j];
+								data[i][cols[j]] = temp['nodeId'];
+								nodeIds.push(temp['nodeId']);
+							}
+						}
+					}
+					YUI({win: results_window, doc: results_window.document, fetchCSS: false}).use('datatable-base', 'widget-base', function (childY) {
+						var table = new childY.DataTable.Base({
+					        columnset: cols,
+					        recordset: data
+					    });
+						table.render(childY.one('#table_content'));
+						var showResultsBtn = childY.one('#showResultsBtn');
+						var updateNodesColor = function(graph, graphNodesArray, nodeIds, highlightColor) {
+							graph.getModel().beginUpdate();
+						    try {
+						    	for(var i = 0; i < nodeIds.length; i++) {
+						    		var nodeId = nodeIds[i];
+						    		if( graphNodesArray.hasOwnProperty(nodeId) ) {
+						    			var vtx = graphNodesArray[nodeId];
+						    			if( ! graph['highlighted'] )
+						    				graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, highlightColor, [vtx]);
+						    			else
+						    				graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, vtx['defFillColor'], [vtx]);
+						    		}
+						    	}
+						    }
+						    finally {
+								// Updates the display
+								graph['highlighted'] = !graph['highlighted'];
+								graph.getModel().endUpdate();
+							}
+						}
+						var showResultsFunc = function() {
+								updateNodesColor(MYAPP.wfGraph, MYAPP.wfGraphNodesArray, nodeIds, MYAPP.highlightFillColor);
+								updateNodesColor(MYAPP.traceGraph, MYAPP.traceGraphNodesArray, nodeIds, MYAPP.highlightFillColor);
+							} ;
+						showResultsBtn.set('onclick', showResultsFunc);
+				    });
+				}
+				else {
+					alert('ERROR');
+				}
+			}
+		}
+	});
+}
+
+
+function highlightReachability(graph, graphNodesArray) {
+	var cells = graph.getSelectionCells();
+	if( cells.length > 1 ) {
+		alert('Only one node should be selected.');
+		return;
+	}
+	else if( cells.length == 0 ) {
+		alert('No node is selected.');
+		return;
+	}
+	graph.getModel().beginUpdate();
+	try {
+		var selectedNodeId = cells[0].value;
+		var selectedVtx = graphNodesArray[selectedNodeId];
+		for(var key in graphNodesArray) {
+			if( graphNodesArray.hasOwnProperty(key) && (key != selectedNodeId) ) {
+				var vtx = graphNodesArray[key];
+				//Set the default colors back if the graph is already highlighted for reachability
+				if( graph['reachHighlighted'] )
+					graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, vtx['defFillColor'], [vtx]);
+				//Check if each node is a descendant, ancestor or neither and color accordingly
+				//Let the postorder number of a node n be j, and let the index associated with n be i.
+				//There exists a direct path from node n to some other node m with the postorder number
+				//k iff i <= k < j
+				//Note: change to i <= k <= j, even if in the original paper it is as stated above
+				else {
+					var desc = false;
+					var nIntervalsArray = JSON.parse(selectedVtx['intervals']);
+					var k = parseInt(vtx['postorder']);
+					for(var i = 0; i < nIntervalsArray.length; i++) {
+						var interval = nIntervalsArray[i];
+						if( interval[0] <= k && k <= interval[1] ) {
+							desc = true;
+							break;
+						}
+					}
+					//The vertex is a descendant
+					if( desc )
+						graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, MYAPP.descFillColor, [vtx]);
+					//Check if the vertex is an ancestor instead
+					else {
+						var anc = false;
+						var nIntervalsArray = JSON.parse(vtx['intervals']);
+						var k = parseInt(selectedVtx['postorder']);
+						for(var i = 0; i < nIntervalsArray.length; i++) {
+							var interval = nIntervalsArray[i];
+							if( interval[0] <= k && k <= interval[1] ) {
+								anc = true;
+								break;
+							}
+						}
+						//The vertex is an ancestor
+						if( anc )
+							graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, MYAPP.ancFillColor, [vtx]);
+						//The vertex is neither a descendant or an ancestor
+						else
+							graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, vtx['defFillColor'], [vtx]);
+					}
+				}
+			}
+		}
+	}
+	finally {
+		// Updates the display
+		graph['reachHighlighted'] = !graph['reachHighlighted'];
+		graph.getModel().endUpdate();
+	}
+}
+
+
+YUI().use('gallery-axo-layout', 'resize', function(Y) {
+	var layout = new Y.Layout({orientation: 'vertical', sizeToWindow: true });
+	layout.add(new Y.LayoutChild({id:'top', height:30, resize: true }));
+
+	var centerLayout = new Y.Layout({fluid: true, orientation: 'horizontal' });
+	layout.add(centerLayout);
+
+	var bottomLayout = new Y.Layout({id:'bottom', height:35, orientation: 'horizontal', resize: true });
+	layout.add(bottomLayout);
+	
+	centerLayout.add(new Y.LayoutChildStd({id: 'left', width:155, resize: true, label: 'Workflow'}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'center1', width:530, resize: true, label: ' '}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'center2', fluid: true, label: ' '}));
+	centerLayout.add(new Y.LayoutChildStd({id: 'right', width:120, resize: true, label: 'Trace'}));
+
+	bottomLayout.add(new Y.LayoutChild({id: 'bottom1'}));
+
+	layout.render();
+});
+
+
+YUI().use('node', 'tabview', function (Y) {
+	var center1 = Y.one('#center1');
+	var wfContainerHTML = '<div id="wfContainer"></div>';
+	center1.get('children').slice(-1).item(0).insert(wfContainerHTML, 'after');
+	var center2 = Y.one('#center2');
+	var traceContainerHTML = '<div id="traceContainer"></div>';
+	center2.get('children').slice(-1).item(0).insert(traceContainerHTML, 'after');
+	createButtons('left', Y);
+	createButtons('right', Y);
+	createTabs('left', false, Y);
+	createTabs('right', true, Y);
+});
+
+
+var MYAPP = {};
+MYAPP.wfGraph = null;
+MYAPP.traceGraph = null;
+MYAPP.wfGraphNodesArray = null;
+MYAPP.traceGraphNodesArray = null;
+//Workflow rectangle fill color #BAE3E4 (#7FB4B5 darker)
+//Workflow rectangle stroke color #1AA4A7
+MYAPP.wfRectFillColor = '#7FB4B5';
+MYAPP.wfRectStrokeColor = '##1AA4A7';
+//Trace rectangle fill color #DCF1F1 (#7FB4B5 darker)
+//Trace rectangle stroke color #1AA4A7
+//Trace ellipse fill color #F6F6CC (#C4C489 darker)
+//Trace ellipse stroke color #CCCC00
+MYAPP.traceRectFillColor = '#7FB4B5';
+MYAPP.traceRectStrokeColor = '#1AA4A7';
+MYAPP.traceEllipseFillColor = '#C4C489';
+MYAPP.traceEllipseStrokeColor = '#CCCC00';
+//Highlight fill color (rectangles and ellipses) '#91D89F' 
+MYAPP.highlightFillColor = '#91D89F';
+//Hightlight fill colors for the descendants and ancestors
+MYAPP.descFillColor = '#91D89F';
+MYAPP.ancFillColor = '#A67B97';
+
+
+YUI().use('node', 'json-parse', 'io-base', 'datatable-base', 'widget-base', function (Y) {
+	var dbnameLoadBtn = Y.one('#dbnameLoadBtn');
+	var dbnameLoadBtnFunc = function() { callWfIdsWS(Y); } ;
+	dbnameLoadBtn.set('onclick', dbnameLoadBtnFunc);
+});
+
+</script>
+
+
+</body>
+</html>

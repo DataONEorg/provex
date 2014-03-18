@@ -150,6 +150,7 @@ public class LDBDAO {
 				edgeObj.put("startNodeId", start);
 				String end = soln.getLiteral("ip_process_id").getString();
 	            edgeObj.put("endNodeId", end);
+	            edgeObj.put("edgeLabel", "");
 	            edgesArray.put(edgeObj);
 			}
         }
@@ -256,6 +257,7 @@ public class LDBDAO {
             JSONObject jsonObj = new JSONObject();
             String id = soln.getLiteral("id").getString();
             jsonObj.put("nodeId", id);
+            jsonObj.put("type", "activity");
             nodesHT.put(id, jsonObj);
         }
         qexec.close();
@@ -287,6 +289,7 @@ public class LDBDAO {
             JSONObject jsonObj = new JSONObject();
             String id = soln.getLiteral("id").getString();
             jsonObj.put("nodeId", id);
+            jsonObj.put("type", "data");
             nodesHT.put(id, jsonObj);
         }
         qexec.close();
@@ -318,6 +321,7 @@ public class LDBDAO {
             JSONObject jsonObj = new JSONObject();
             String id = soln.getLiteral("id").getString();
             jsonObj.put("nodeId", id);
+            jsonObj.put("type", "data");
             nodesHT.put(id, jsonObj);
         }
         qexec.close();
@@ -418,7 +422,7 @@ public class LDBDAO {
 			coverDigraph.addEdge(usedEdge.getString("startNodeId"), usedEdge.getString("endNodeId"));
 		}
 		for(JSONObject wasGenByEdge: wasGenByEdges) {
-			edgesArray.put(wasGenByEdges);
+			edgesArray.put(wasGenByEdge);
 			digraph.addEdge(wasGenByEdge.getString("startNodeId"), wasGenByEdge.getString("endNodeId"));
 			coverDigraph.addEdge(wasGenByEdge.getString("startNodeId"), wasGenByEdge.getString("endNodeId"));
 		}
