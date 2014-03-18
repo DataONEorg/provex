@@ -636,6 +636,11 @@ function callWfIdsWS(Y) {
 					//CALL
 					callWfWS(Y);
 					callTraceIdsWS(Y);
+					var selectWFFunc = function() { 
+							callWfWS(Y);
+							callTraceIdsWS(Y);
+						};
+					wfIdsSelect.set('onchange', selectWFFunc);
 				}
 				else {
 					alert('ERROR');
