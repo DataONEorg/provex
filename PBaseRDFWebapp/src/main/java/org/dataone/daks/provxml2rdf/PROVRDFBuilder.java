@@ -60,6 +60,7 @@ public class PROVRDFBuilder {
 	String DCTERMS_NS = "http://purl.org/dc/terms/";
 	String EXAMPLE_NS = "http://example.com/";
 	String WFMS_NS = "http://www.vistrails.org/registry.xsd";
+	String RDFS_NS = "http://www.w3.org/2000/01/rdf-schema#";
 	String SOURCE_URL = "http://purl.org/provone/ontology";
 	String SOURCE_FILE = "./provone.owl";
 
@@ -337,7 +338,7 @@ public class PROVRDFBuilder {
 			module.cache = this.activityCached.get(key);
 			module.wfID = this.wfID;
 			module.entityId = key;
-			module.name = moduleName.get(key);
+			module.name = this.moduleName.get(key);
 			this.moduleObjs.add(module);
 			this.moduleHM.put(key, module);
 		}
@@ -528,9 +529,9 @@ public class PROVRDFBuilder {
 			Property identifierP = m.createProperty(DCTERMS_NS + "identifier");
 			dataInd.addProperty(identifierP, data.entityId, XSDDatatype.XSDstring);
 			idToInd.put(data.entityId, dataInd);
-			Property labelP = m.createProperty(DCTERMS_NS + "label");
+			Property titleP = m.createProperty(DCTERMS_NS + "title");
 			if( data.label != null )
-				dataInd.addProperty(labelP, data.label, XSDDatatype.XSDstring);
+				dataInd.addProperty(titleP, data.label, XSDDatatype.XSDstring);
 			Property valueP = m.createProperty(PROV_NS + "value");
 			if( data.value != null )
 				dataInd.addProperty(valueP, data.value, XSDDatatype.XSDstring);

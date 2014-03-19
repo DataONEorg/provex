@@ -12,6 +12,7 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.tdb.TDBFactory;
 
 import org.json.*;
@@ -271,7 +272,7 @@ public class LDBDAO {
         		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
         		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
         		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
-				"SELECT ?id WHERE {  " + 
+				"SELECT ?id ?t WHERE {  " + 
         		"?wfpexec prov:wasAssociatedWith ?wf . " +
         		"?wf rdf:type provone:Workflow . " +
         		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
@@ -280,6 +281,7 @@ public class LDBDAO {
         		"?data rdf:type provone:Data . " +
         		"?pexec prov:used ?data . " +
         		"?data dc:identifier ?id . " +
+        		"OPTIONAL { ?data dc:title ?t } " +
         		"}";
         Query query = QueryFactory.create(sparqlQueryString);
         QueryExecution qexec = QueryExecutionFactory.create(query, this.ds);
@@ -290,6 +292,9 @@ public class LDBDAO {
             String id = soln.getLiteral("id").getString();
             jsonObj.put("nodeId", id);
             jsonObj.put("type", "data");
+            Literal titleLit = soln.getLiteral("t");
+            if( titleLit != null )
+            	jsonObj.put("title", titleLit.getString());
             nodesHT.put(id, jsonObj);
         }
         qexec.close();
@@ -303,7 +308,7 @@ public class LDBDAO {
         		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
         		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
         		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
-				"SELECT ?id WHERE {  " + 
+				"SELECT ?id ?t WHERE {  " + 
         		"?wfpexec prov:wasAssociatedWith ?wf . " +
         		"?wf rdf:type provone:Workflow . " +
         		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
@@ -312,6 +317,7 @@ public class LDBDAO {
         		"?data rdf:type provone:Data . " +
         		"?data prov:wasGeneratedBy ?pexec . " +
         		"?data dc:identifier ?id . " +
+        		"OPTIONAL { ?data dc:title ?t } " +
         		"}";
         Query query = QueryFactory.create(sparqlQueryString);
         QueryExecution qexec = QueryExecutionFactory.create(query, this.ds);
@@ -322,6 +328,9 @@ public class LDBDAO {
             String id = soln.getLiteral("id").getString();
             jsonObj.put("nodeId", id);
             jsonObj.put("type", "data");
+            Literal titleLit = soln.getLiteral("t");
+            if( titleLit != null )
+            	jsonObj.put("title", titleLit.getString());
             nodesHT.put(id, jsonObj);
         }
         qexec.close();
