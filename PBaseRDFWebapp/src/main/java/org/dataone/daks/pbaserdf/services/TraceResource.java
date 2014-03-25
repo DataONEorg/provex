@@ -8,6 +8,8 @@ import javax.ws.rs.QueryParam;
 
 import org.dataone.daks.pbaserdf.dao.LDBDAO;
 
+import java.io.*;
+
 /** Example resource class hosted at the URI path "/traceresource"
  */
 @Path("/traceresource")
@@ -25,11 +27,36 @@ public class TraceResource {
     	dao.init(dbname);
     	String retVal = null;
     	try {
-    		retVal = dao.getTrace(wfid, traceid);
+    		//retVal = dao.getTrace(wfid, traceid);
+    		retVal = this.getFileContents("jsonTrace.txt");
+    		System.out.println("Read jsonTrace.txt");
     	}
     	catch(Exception e) {
     		e.printStackTrace();
     	}
     	return retVal;
     }
+    
+    
+	private String getFileContents(String filename) {
+		BufferedReader reader = null;
+		StringBuffer buff = new StringBuffer();
+		String line = null;
+		try {
+			reader = new BufferedReader(new FileReader(filename));
+			while( (line = reader.readLine()) != null ) {
+				buff.append(line);
+			}
+			reader.close();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return buff.toString();
+	}
+	
+	
 }
+
+
