@@ -155,6 +155,18 @@
     
 
 
+    <!-- http://purl.org/provone/ontology#partOf -->
+
+    <owl:ObjectProperty rdf:about="http://purl.org/provone/ontology#partOf">
+        <rdfs:label>partOf</rdfs:label>
+        <rdfs:comment>Specifies the structure of ProcessExecution instances, a parent ProcessExecution (associated with a Workflow) has child ProcessExecutions (associated with Processes and subworkflows).</rdfs:comment>
+        <prov:category>trace-specification</prov:category>
+        <rdfs:range rdf:resource="http://purl.org/provone/ontology#ProcessExec"/>
+        <rdfs:domain rdf:resource="http://purl.org/provone/ontology#ProcessExec"/>
+    </owl:ObjectProperty>
+    
+
+
     <!-- http://purl.org/provone/ontology#sourcePToCL -->
 
     <owl:ObjectProperty rdf:about="http://purl.org/provone/ontology#sourcePToCL">
