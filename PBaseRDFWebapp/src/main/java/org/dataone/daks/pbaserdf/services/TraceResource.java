@@ -27,9 +27,9 @@ public class TraceResource {
     	dao.init(dbname);
     	String retVal = null;
     	try {
-    		//retVal = dao.getTrace(wfid, traceid);
-    		retVal = this.getFileContents("jsonTrace.txt");
-    		System.out.println("Read jsonTrace.txt");
+    		retVal = dao.getTrace(wfid, traceid);
+    		//retVal = this.getFileContents("jsonTrace.txt");
+    		//System.out.println("Read jsonTrace.txt");
     	}
     	catch(Exception e) {
     		e.printStackTrace();

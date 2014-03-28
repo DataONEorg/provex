@@ -28,9 +28,9 @@ public class WfResource {
     	dao.init(dbname);
     	String retVal = null;
     	try {
-    		//retVal = dao.getWorkflowReachEncoding(wfid);
-    		retVal = this.getFileContents("jsonWF.txt");
-    		System.out.println("Read jsonWF.txt");
+    		retVal = dao.getWorkflowReachEncoding(wfid);
+    		//retVal = this.getFileContents("jsonWF.txt");
+    		//System.out.println("Read jsonWF.txt");
     	}
     	catch(Exception e) {
     		e.printStackTrace();

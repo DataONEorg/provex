@@ -247,7 +247,7 @@ public class LDBDAO {
         		"?wf rdf:type provone:Workflow . " +
         		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
         		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
-        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?pexec provone:isPartOf ?wfpexec . " +
         		"?pexec dc:identifier ?id . " +
         		"}";
         Query query = QueryFactory.create(sparqlQueryString);
@@ -277,7 +277,7 @@ public class LDBDAO {
         		"?wf rdf:type provone:Workflow . " +
         		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
         		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
-        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?pexec provone:isPartOf ?wfpexec . " +
         		"?data rdf:type provone:Data . " +
         		"?pexec prov:used ?data . " +
         		"?data dc:identifier ?id . " +
@@ -313,7 +313,7 @@ public class LDBDAO {
         		"?wf rdf:type provone:Workflow . " +
         		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
         		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
-        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?pexec provone:isPartOf ?wfpexec . " +
         		"?data rdf:type provone:Data . " +
         		"?data prov:wasGeneratedBy ?pexec . " +
         		"?data dc:identifier ?id . " +
@@ -348,7 +348,7 @@ public class LDBDAO {
         		"?wf rdf:type provone:Workflow . " +
         		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
         		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
-        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?pexec provone:isPartOf ?wfpexec . " +
         		"?data rdf:type provone:Data . " +
         		"?data prov:wasGeneratedBy ?pexec . " +
         		"?data dc:identifier ?data_id . " +
@@ -385,7 +385,7 @@ public class LDBDAO {
         		"?wf rdf:type provone:Workflow . " +
         		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
         		"?wfpexec dc:identifier " + "\"" + runID + "\"^^xsd:string . " +
-        		"?pexec dc:isPartOf ?wfpexec . " +
+        		"?pexec provone:isPartOf ?wfpexec . " +
         		"?data rdf:type provone:Data . " +
         		"?pexec prov:used ?data . " +
         		"?data dc:identifier ?data_id . " +

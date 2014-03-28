@@ -606,7 +606,7 @@ public class PROVRDFBuilder {
 				processExecInd.addProperty(completedP, actor.completed + "", XSDDatatype.XSDinteger);
 			String wfExecId = this.dataRunID.get(actor.activityId);
 			if( wfExecId != null ) {
-				Property isPartOfP = m.createProperty(DCTERMS_NS + "isPartOf");
+				Property isPartOfP = m.createProperty(SOURCE_URL + "#" + "isPartOf");
 				m.add(processExecInd, isPartOfP, idToInd.get(wfExecId));
 			}
 			i++;

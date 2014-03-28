@@ -12,7 +12,7 @@
 
 	<script type="text/javascript" src="http://axosoft.github.com/yui3-gallery/layout/build/gallery-axo-layout.js"></script>
 
-    <title>PBase Provenance Database</title>
+    <title>PBase Provenance Repository</title>
 
 	<style>
 
@@ -264,6 +264,7 @@ function fillTraceGraph(graphJSON, graph, parent, graphNodesArray, graphEdgesArr
 			}
 			graphNodesArray[tuple.nodeId] = vertex;
 			vertex[propertiesLabel] = generateNodeText(tuple);
+			
 			//vertex[encodingLabel] = '' + i;
 			vertex['intervals'] = '' + tuple.intervals.replace(/:/g, ",");
 			vertex['postorder'] = '' + tuple.postorder;
@@ -283,11 +284,15 @@ function generateNodeText(jsonObj) {
 	var nodeText = '';
 	for(var key in jsonObj) {
 		if( jsonObj.hasOwnProperty(key) ) {
-			if( key == 'postorder' || key == 'intervals' || key == 'encodingLabel' )
-				continue;
-			var propertyVal = jsonObj[key];
-			if( (key.length + propertyVal.length) <= 35 )
-				nodeText += key + ':' + propertyVal + '\n';
+			if( key == 'postorder' || key == 'intervals' || key == 'encodingLabel' ) {
+				;
+			}
+			else {
+				var propertyVal = jsonObj[key];
+				if( (key.length + propertyVal.length) <= 35 ) {
+					nodeText += key + ':' + propertyVal + '\n';
+				}
+			}
 		}
 	}
 	return nodeText.substring(0, nodeText.length-1);
@@ -452,14 +457,16 @@ function createTabs(containerID, isTrace, Y) {
 		loadTabContent = '<div id="' + loadTabContainerID + '">Trace id:<br/>' +
 		'<select id="traceIdsSelect"><option value=""></option></select>' + 
 		'<br/><br/><input id="' + containerID + 'PropertiesBtn" type="button" value="properties">' +
-		'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
+		//'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
+		'<input id="' + containerID + 'EncodingBtn" type="button" value="lineage"></div>';
 	else
 		loadTabContent = '<div id="' + loadTabContainerID + '">Database name: ' + 
 			'<input type="text" id="dbnameTextfield" size="15"><br/>' +
 			'<input type="button" id="dbnameLoadBtn" value="Load"><br/><br/>Workflow id:<br/>' +
 			'<select id="wfIdsSelect"></select>' + 
 			'<br/><br/><input id="' + containerID + 'PropertiesBtn" type="button" value="properties">' +
-			'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
+			//'<input id="' + containerID + 'EncodingBtn" type="button" value="encoding"></div>';
+			'<input id="' + containerID + 'EncodingBtn" type="button" value="lineage"></div>';
 	prefix = isTrace ? 'trace' : 'wf';
 	var queryTabContent = '<div id="' + queryTabContainerID + '">' +
 		'<select id="' + prefix + 'QuerySelect"></select>' + '<br/><br/>' + 
@@ -474,7 +481,10 @@ function createTabs(containerID, isTrace, Y) {
             label: 'Load',
             content: loadTabContent
         }, {
-            label: 'Query',
+            label: 'Search',
+            content: queryTabContent
+        }, {
+            label: 'QoS',
             content: queryTabContent
         }]
     });
@@ -602,7 +612,7 @@ function callTraceWS(Y) {
 		data: 'dbname=' + dbnameParam + '&wfid=' + wfIdParam + '&traceid=' + traceIdParam,
 		on: {
 			complete: function (id, response) {
-				if (response.status >= 200 && response.status < 300) {
+				if (response.status >= 200 && response.status < 300) {		
 					var json = Y.JSON.parse(response.responseText);
 					displayGraphJSON(container, json, btnContainer, isTrace, Y);
 				}
