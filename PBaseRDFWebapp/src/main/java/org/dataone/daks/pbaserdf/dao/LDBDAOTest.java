@@ -21,8 +21,10 @@ public class LDBDAOTest {
         //test.getProcessExecNodes(dataset, "spatialtemporal_summary", "a0");
         //test.getUsedDataNodes(dataset, "spatialtemporal_summary", "a0");
         //test.getWasGenByDataNodes(dataset, "spatialtemporal_summary", "a0");
-        test.getWasGenByEdges(dataset, "spatialtemporal_summary", "a0");
+        //test.getWasGenByEdges(dataset, "spatialtemporal_summary", "a0");
         //test.getUsedEdges(dataset, "spatialtemporal_summary", "a0");
+        //test.query1(dataset, "spatialtemporal_summary", "e14");
+        test.query2(dataset, "spatialtemporal_summary");
     }
     
     
@@ -252,6 +254,61 @@ public class LDBDAOTest {
             String pexecId = soln.getLiteral("pexec_id").getString();
             String label = "used";
             System.out.println(dataId + " -> " + pexecId + " : " + label);
+        }
+        qexec.close();
+	}
+	
+	
+	//1. Compute the number of invocations of a process
+	public void query1(Dataset dataset, String wfID, String processID) {
+		System.out.println("Executing query 1");
+		String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
+        		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+        		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
+        		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+        		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
+				"SELECT (count(?pexec) AS ?c) WHERE {  " + 
+        		"?wf rdf:type provone:Workflow . " +
+        		"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
+        		"?wf provone:hasSubProcess ?p . " +
+        		"?p dc:identifier " + "\"" + processID + "\"^^xsd:string . " +
+        		"?pexec prov:wasAssociatedWith ?p . " +
+        		"?pexec dc:identifier ?pexec_id . " +
+        		"}";
+        Query query = QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
+        ResultSet results = qexec.execSelect();
+        for ( ; results.hasNext() ; ) {
+            QuerySolution soln = results.nextSolution();
+            String pexecId = soln.getLiteral("c").getString();
+            System.out.println(pexecId);
+        }
+        qexec.close();
+	}
+	
+	
+	public void query2(Dataset dataset, String wfID) {
+		String sparqlQueryString = "PREFIX provone: <http://purl.org/provone/ontology#> \n" +
+        		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+        		"PREFIX dc: <http://purl.org/dc/terms/> \n" +
+        		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+        		"PREFIX prov: <http://www.w3.org/ns/prov#> \n" +
+				"SELECT DISTINCT ?data_id WHERE {  " + 
+				"?wf rdf:type provone:Workflow . " +
+				"?wf dc:identifier " + "\"" + wfID + "\"^^xsd:string . " +
+				"?wf provone:hasSubProcess ?p . " +
+				"?pexec prov:wasAssociatedWith ?p . " +
+				"?pexec prov:used ?data . " +
+				"?data dc:identifier ?data_id . " +
+				"FILTER NOT EXISTS { ?data prov:wasGeneratedBy ?other_pexec } " +
+        		"} ";
+        Query query = QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
+        ResultSet results = qexec.execSelect();
+        for ( ; results.hasNext() ; ) {
+            QuerySolution soln = results.nextSolution();
+            String dataId = soln.getLiteral("data_id").getString();
+            System.out.println(dataId);
         }
         qexec.close();
 	}
