@@ -18,8 +18,8 @@ public class Actor {
 	String endTime;
 	
 	public Actor() {
-		this.cached = -1;
-		this.completed = -1;
+		this.cached = Integer.MIN_VALUE;
+		this.completed = Integer.MIN_VALUE;
 	}
 	
 	

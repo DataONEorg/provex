@@ -580,7 +580,7 @@ public class PROVRDFBuilder {
 			if( wfExecActor.endTime != null )
 				processExecInd.addProperty(endTimeP, wfExecActor.endTime, XSDDatatype.XSDstring);
 			Property completedP = m.createProperty(WFMS_NS + "completed");
-			if( wfExecActor.completed != -1 )
+			if( wfExecActor.completed != Integer.MIN_VALUE )
 				processExecInd.addProperty(completedP, wfExecActor.completed + "", XSDDatatype.XSDinteger);
 			i++;
 		}
@@ -599,10 +599,10 @@ public class PROVRDFBuilder {
 			if( actor.endTime != null )
 				processExecInd.addProperty(endTimeP, actor.endTime, XSDDatatype.XSDstring);
 			Property cachedP = m.createProperty(WFMS_NS + "cached");
-			if( actor.cached != -1 )
+			if( actor.cached != Integer.MIN_VALUE )
 				processExecInd.addProperty(cachedP, actor.cached + "", XSDDatatype.XSDinteger);
 			Property completedP = m.createProperty(WFMS_NS + "completed");
-			if( actor.completed != -1 )
+			if( actor.completed != Integer.MIN_VALUE )
 				processExecInd.addProperty(completedP, actor.completed + "", XSDDatatype.XSDinteger);
 			String wfExecId = this.dataRunID.get(actor.activityId);
 			if( wfExecId != null ) {
