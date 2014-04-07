@@ -1,0 +1,95 @@
+
+Query 1
+PREFIX provone: <http://purl.org/provone/ontology#> 
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX dc: <http://purl.org/dc/terms/> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX prov: <http://www.w3.org/ns/prov#> 
+SELECT (count(?pexec) AS ?c) 
+WHERE {  ?wf rdf:type provone:Workflow . 
+?wf dc:identifier "spatialtemporal_summary"^^xsd:string . 
+?wf provone:hasSubProcess ?p . 
+?p dc:identifier "e14"^^xsd:string . 
+?pexec prov:wasAssociatedWith ?p . 
+?pexec dc:identifier ?pexec_id . }
+
+Query 2
+PREFIX provone: <http://purl.org/provone/ontology#> 
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX dc: <http://purl.org/dc/terms/> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX prov: <http://www.w3.org/ns/prov#> 
+SELECT DISTINCT ?data_id 
+WHERE {  ?wf rdf:type provone:Workflow . 
+?wf dc:identifier "spatialtemporal_summary"^^xsd:string . 
+?wf provone:hasSubProcess ?p . 
+?pexec prov:wasAssociatedWith ?p . 
+?pexec prov:used ?data . 
+?data dc:identifier ?data_id . 
+FILTER NOT EXISTS { ?data prov:wasGeneratedBy ?other_pexec } } 
+
+Query 3
+PREFIX provone: <http://purl.org/provone/ontology#> 
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX dc: <http://purl.org/dc/terms/> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX prov: <http://www.w3.org/ns/prov#> 
+PREFIX wfms: <http://www.vistrails.org/registry.xsd> 
+SELECT DISTINCT ?p_id 
+WHERE {  ?wf rdf:type provone:Workflow . 
+?wf dc:identifier "eva"^^xsd:string . 
+?wfexec prov:wasAssociatedWith ?wf . 
+?wfexec dc:identifier "a0"^^xsd:string . 
+?pexec provone:isPartOf ?wfexec . 
+?pexec prov:wasAssociatedWith ?p . 
+?p dc:identifier ?p_id . 
+?pexec wfms:completed -1 . }
+
+Query 4
+PREFIX provone: <http://purl.org/provone/ontology#> 
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX dc: <http://purl.org/dc/terms/> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX prov: <http://www.w3.org/ns/prov#> 
+PREFIX wfms: <http://www.vistrails.org/registry.xsd> 
+SELECT DISTINCT ?pexec_id 
+WHERE {  ?wf rdf:type provone:Workflow . 
+?wf dc:identifier "eva"^^xsd:string . 
+?wfexec prov:wasAssociatedWith ?wf . 
+?pexec provone:isPartOf ?wfexec . 
+?pexec dc:identifier ?pexec_id . 
+?pexec wfms:completed -1 . }
+
+Query 5
+PREFIX provone: <http://purl.org/provone/ontology#> 
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX dc: <http://purl.org/dc/terms/> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX prov: <http://www.w3.org/ns/prov#> 
+SELECT DISTINCT ?p_id 
+WHERE {  ?wf rdf:type provone:Workflow . 
+?wf dc:identifier "spatialtemporal_summary"^^xsd:string . 
+?wf provone:hasSubProcess ?p . 
+?p dc:identifier ?p_id . 
+?pexec prov:wasAssociatedWith ?p . 
+?pexec prov:used ?data . 
+?data dc:identifier "e17"^^xsd:string . } 
+
+Query 6
+PREFIX provone: <http://purl.org/provone/ontology#> 
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX dc: <http://purl.org/dc/terms/> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX prov: <http://www.w3.org/ns/prov#> 
+SELECT DISTINCT ?derdata_id 
+WHERE {  ?wf rdf:type provone:Workflow . 
+?wf dc:identifier "spatialtemporal_summary"^^xsd:string . 
+?wf provone:hasSubProcess ?p . 
+?p dc:identifier "e3"^^xsd:string . 
+?pexec prov:wasAssociatedWith ?p . 
+?data prov:wasGeneratedBy ?pexec . 
+?data dc:identifier ?data_id . 
+?derdata (prov:used | prov:wasGeneratedBy)* ?data . 
+?derdata rdf:type provone:Data . 
+?derdata dc:identifier ?derdata_id . } 
+
