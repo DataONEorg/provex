@@ -4,15 +4,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.ArrayList;
 
-import com.hp.hpl.jena.query.Dataset ;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.Literal;
+import com.hp.hpl.jena.query.*;
+import com.hp.hpl.jena.rdf.model.*;
 import com.hp.hpl.jena.tdb.TDBFactory;
 
 import org.json.*;
@@ -448,6 +441,76 @@ public class LDBDAO {
 		}
 		resultObj.put("nodes", nodesArray);
         return resultObj.toString();
+	}
+
+	
+	/**
+	 * Execute a SPARQL query provided as a String.
+	 * 
+	 * @param query
+	 * @return
+	 */
+	public String executeQuery(String sparqlQueryString) {
+		Query query = QueryFactory.create(sparqlQueryString);
+        QueryExecution qexec = QueryExecutionFactory.create(query, this.ds);
+        ResultSet results = qexec.execSelect();
+        Model model = results.getResourceModel();
+        String retVal = null;
+        try {
+        	List<String> columns = results.getResultVars();
+        	JSONObject jsonResult = new JSONObject();
+			JSONArray columnsArray = new JSONArray();
+			for(String s: columns) {
+				JSONObject colVal = new JSONObject();
+				colVal.put(s, "string");
+				columnsArray.put(colVal);
+			}
+			JSONArray dataArray = new JSONArray();
+			boolean first = true;
+			int counter = 0;
+        	for ( ; results.hasNext() ; ) {
+        		QuerySolution soln = results.nextSolution();
+        		JSONArray row = new JSONArray();
+				for(String key: columns) {
+					RDFNode rdfNode = soln.get(key);
+					if ( rdfNode.isResource() ) {
+						row.put(this.generateNodeJSON(soln.getResource(key), model));
+						if( first )
+							columnsArray.getJSONObject(counter).put(columns.get(counter), "node");
+					}
+					else
+						row.put(soln.getLiteral(key).getString());
+					counter++;
+				}
+				dataArray.put(row);
+				first = false;
+        	}
+			jsonResult.put("columns", columnsArray);
+			jsonResult.put("data", dataArray);
+			retVal = jsonResult.toString(); 
+		}
+		catch(JSONException e) {
+			e.printStackTrace();
+		}
+		finally {
+			qexec.close();
+		}
+		return retVal;
+	}
+	
+	
+	public JSONObject generateNodeJSON(Resource resource, Model model) {
+		String DCTERMS_NS = "http://purl.org/dc/terms/";
+		JSONObject nodeObj = new JSONObject();
+		try {
+			Property property = model.createProperty(DCTERMS_NS + "identifier");
+			if( resource.hasProperty(property) )
+				nodeObj.put("nodeId", resource.getProperty(property).getLiteral().getString());
+		}
+		catch(JSONException e) {
+			e.printStackTrace();
+		}
+		return nodeObj;
 	}
 	
 	
