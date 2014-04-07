@@ -491,26 +491,26 @@ function createQueriesMenu(isTrace, Y) {
 	var queries = null;
 	if( isTrace ) {
 		qDescs =['Select a predefined query:',
-		           'Find the activities that were not completed',
-	               'Find the actors that used data item e10_regrid_method',
-	               'Find the data products influenced by module e7_Regrid'
+		           'Find the process executions that were not completed',
+	               'Find the processes that used data item e17',
+	               'Find the data products influenced by process e3'
 	                ];
-		queries =['START n = node(*) \nMATCH \nWHERE \nRETURN ',
-		            'START n=node(*) \n WHERE HAS(n.completed) AND n.completed=-1 AND HAS(n.wfID) AND n.wfID="' + wfIdParam + '" \n RETURN DISTINCT n.name;',
-	                'START n = node:node_auto_index(name="e10_regrid_method") \n MATCH n<-[:used]-a \n RETURN distinct a.name;',
-	                'START n=node(*) \n MATCH n-[*]->a \n WHERE n-[:wasGeneratedBy]->() \n AND HAS(n.wfID) AND n.wfID="' + wfIdParam + '" AND HAS(a.module) AND a.module="e7_Regrid" \n RETURN DISTINCT n.name;'        
+		queries =['PREFIX provone: <http://purl.org/provone/ontology#> \n PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n PREFIX dc: <http://purl.org/dc/terms/> \n PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n PREFIX prov: <http://www.w3.org/ns/prov#> \n SELECT ?s ?p ?o \n WHERE { ?s ?p ?o . }',     
+		            'PREFIX provone: <http://purl.org/provone/ontology#> \n PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n PREFIX dc: <http://purl.org/dc/terms/> \n PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n PREFIX prov: <http://www.w3.org/ns/prov#> \n PREFIX wfms: <http://www.vistrails.org/registry.xsd> \n SELECT DISTINCT ?pexec_id \n WHERE {  ?wf rdf:type provone:Workflow . \n ?wf dc:identifier "' + wfIdParam + '"^^xsd:string . \n ?wfexec prov:wasAssociatedWith ?wf . \n ?pexec provone:isPartOf ?wfexec . \n ?pexec dc:identifier ?pexec_id . \n ?pexec wfms:completed -1 . }',     
+		            'PREFIX provone: <http://purl.org/provone/ontology#> \n PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n PREFIX dc: <http://purl.org/dc/terms/> \n PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n PREFIX prov: <http://www.w3.org/ns/prov#> \n SELECT DISTINCT ?p_id \n WHERE {  ?wf rdf:type provone:Workflow . \n ?wf dc:identifier "' + wfIdParam + '"^^xsd:string . \n ?wf provone:hasSubProcess ?p . \n ?p dc:identifier ?p_id . \n ?pexec prov:wasAssociatedWith ?p . \n ?pexec prov:used ?data . \n ?data dc:identifier "e17"^^xsd:string . }',      
+		            'PREFIX provone: <http://purl.org/provone/ontology#> \n PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n PREFIX dc: <http://purl.org/dc/terms/> \n PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n PREFIX prov: <http://www.w3.org/ns/prov#> \n SELECT DISTINCT ?derdata_id \n WHERE {  ?wf rdf:type provone:Workflow . \n ?wf dc:identifier "' + wfIdParam + '"^^xsd:string . \n ?wf provone:hasSubProcess ?p . \n ?p dc:identifier "e3"^^xsd:string . \n ?pexec prov:wasAssociatedWith ?p . \n ?data prov:wasGeneratedBy ?pexec . \n ?data dc:identifier ?data_id . \n ?derdata (prov:used | prov:wasGeneratedBy)* ?data . \n ?derdata rdf:type provone:Data . \n ?derdata dc:identifier ?derdata_id . }'                
 	                ];
 	}
 	else {
 		qDescs =['Select a predefined query:',
-	               'Compute number of invocations of a workflow task',
-	               'Find all inputs of a workflow across runs',
-	               'Find the modules of tasks that were not completed',
+	               'Compute number of invocations of process e14',
+	               'Find all inputs of a workflow across executions',
+	               'Find the processes of workflows that were not executed'
 	                ];
-		queries =['START n = node(*) \nMATCH \nWHERE \nRETURN ',
-	                'START n = node:node_auto_index(name="e7_Regrid") \n MATCH m-[:wasAssociatedWith]-n \n RETURN count(m);',
-	                'START n=node(*) \n MATCH (n)<-[:used]-() \n WHERE not ((n)-[:wasGeneratedBy]->()) \n AND HAS(n.wfID) AND (n.wfID="' + wfIdParam + '") \n RETURN DISTINCT n.name;',      
-	                'START n=node(*) \n MATCH n<-[:wasAssociatedWith]-m \n WHERE HAS(n.vtType) AND HAS(n.wfID) AND HAS(n.runID) \n AND n.vtType="vt:module_exec" AND n.completed="-1" \n AND n.wfID="' + wfIdParam + '" \n AND n.runID="' + traceIdParam + '" \n RETURN m.name;',     
+		queries =['PREFIX provone: <http://purl.org/provone/ontology#> \n PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n PREFIX dc: <http://purl.org/dc/terms/> \n PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n PREFIX prov: <http://www.w3.org/ns/prov#> \n SELECT ?s ?p ?o \n WHERE { ?s ?p ?o . }',     
+	                'PREFIX provone: <http://purl.org/provone/ontology#> \n PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n PREFIX dc: <http://purl.org/dc/terms/> \n PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n PREFIX prov: <http://www.w3.org/ns/prov#> \n SELECT (count(?pexec) AS ?c) \n WHERE {  ?wf rdf:type provone:Workflow . \n ?wf dc:identifier "' + wfIdParam + '"^^xsd:string . \n ?wf provone:hasSubProcess ?p . \n ?p dc:identifier "e14"^^xsd:string . \n ?pexec prov:wasAssociatedWith ?p . \n ?pexec dc:identifier ?pexec_id . }',            
+	                'PREFIX provone: <http://purl.org/provone/ontology#> \n PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n PREFIX dc: <http://purl.org/dc/terms/> \n PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n PREFIX prov: <http://www.w3.org/ns/prov#> \n SELECT DISTINCT ?data_id \n WHERE { ?wf rdf:type provone:Workflow . \n ?wf dc:identifier "' + wfIdParam + '"^^xsd:string . \n ?wf provone:hasSubProcess ?p . \n ?pexec prov:wasAssociatedWith ?p . \n ?pexec prov:used ?data . \n ?data dc:identifier ?data_id . \n FILTER NOT EXISTS { ?data prov:wasGeneratedBy ?other_pexec } }',     
+	                'PREFIX provone: <http://purl.org/provone/ontology#> \n PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n PREFIX dc: <http://purl.org/dc/terms/> \n PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n PREFIX prov: <http://www.w3.org/ns/prov#> \n PREFIX wfms: <http://www.vistrails.org/registry.xsd> \n SELECT DISTINCT ?p_id \n WHERE {  ?wf rdf:type provone:Workflow . \n ?wf dc:identifier "' + wfIdParam + '"^^xsd:string . \n ?wfexec prov:wasAssociatedWith ?wf . \n ?wfexec dc:identifier "' + traceIdParam + '"^^xsd:string . \n ?pexec provone:isPartOf ?wfexec . \n ?pexec prov:wasAssociatedWith ?p . \n ?p dc:identifier ?p_id . \n ?pexec wfms:completed -1 . }'       
 	                ];
 	}
 	var prefix = isTrace ? 'trace' : 'wf';
