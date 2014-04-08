@@ -696,7 +696,7 @@ function callQueryWS(isTrace, Y) {
 	var queryText = Y.one('#' + prefix + 'QueryText');
 	var query = queryText.get('value');
 	Y.io(url, {
-		data: 'dbname=' + dbnameParam + '&query=' + query,
+		data: 'dbname=' + dbnameParam + '&query=' + encodeURIComponent(query),
 		on: {
 			complete: function (id, response) {
 				if (response.status >= 200 && response.status < 300) {
